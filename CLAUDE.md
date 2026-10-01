@@ -15,6 +15,20 @@ Aquesta prova és l'**etapa 1** del full de ruta. L'objectiu és respondre dues 
 
 > La secció "Emmagatzematge i dispositius" de l'especificació està desfasada: on es guarden els fitxers i com es connecta Drive encara està per decidir. No la seguisques en aquesta prova.
 
+## Prova 0 · Lectura (abans de la Prova 1)
+
+Respon només la pregunta 1, amb el mínim. Si la lectura falla, no té sentit construir la resta.
+
+- **Entrada:** 2-3 fotos d'apunts, les més denses en fórmules. Sense material del professor.
+- **Què es fa:**
+  - Comprovar que les fotos es lligen; si alguna no, avisar.
+  - Transcriure a LaTeX tal qual, amb la notació dels apunts. Sense corregir res ni consultar cap font.
+  - Separar els blocs (definició, teorema, demostració…) tal com apareixen als apunts.
+  - Marcar amb `\dubte{}` el que no es llig segur, en lloc d'endevinar.
+  - Compilar un PDF senzill (classe `article`) per comparar-lo amb el paper.
+- **Com es valora:** l'usuari compta per pàgina, per separat, els errors no marcats (greus) i els dubtes marcats. Eixes xifres són la referència per a les sessions següents.
+- **Després:** si llig bé, es passa a la Prova 1. Si no, es decideix què canviar abans de continuar.
+
 ## Decisions preses
 
 Tenen prioritat sobre l'especificació si hi ha contradicció.
