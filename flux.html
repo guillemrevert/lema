@@ -321,10 +321,10 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
     {
       id: "pas0", num: 0, nom: "Preparació", qui: "claude", fase: "Abans de començar",
       resum: "Deixa a punt la carpeta de treball i la fitxa de la font.",
-      entra: "Les fotos a <code>prova-1/apunts/</code>, el material del professor a <code>prova-1/fets/</code> i un <code>.txt</code> amb dues línies: què és i d'on surt.",
+      entra: "Les fotos a <code>prova-1/apunts/</code>, la font (material del professor o apunts d'un altre alumne) a <code>prova-1/fets/</code> i un <code>.txt</code> amb dues línies: què és i d'on surt.",
       surt: "La carpeta de treball i la fitxa de la font.",
       instr: [
-        "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a Anàlisi II i aquest tema. Res més.",
+        "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a l'assignatura i el tema de la prova. Res més.",
         "Fer la fitxa de la font a partir del <code>.txt</code>."
       ],
       on: "Passos 0 · Materials d'entrada"
@@ -422,6 +422,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 4, data: "2026-10-02",
+      titol: "S'hi suma Estructures Algebraiques, i la font també poden ser apunts d'un altre alumne. La primera prova es va fer així i va funcionar.",
+      passos: {
+        pas0: "La carpeta es prepara per a l'assignatura i el tema de la prova, que ara poden ser d'Anàlisi II o d'Estructures Algebraiques. A <code>fets/</code> també hi poden anar apunts d'un altre alumne."
+      }
+    },
     {
       versio: 3, data: "2026-10-02",
       titol: "El diccionari de notació passa al pas 3, on es compara amb la font. Els passos de CLAUDE.md tenen ara la mateixa numeració que aquest diagrama.",

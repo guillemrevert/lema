@@ -53,7 +53,7 @@ Tenen prioritat sobre l'especificació si hi ha contradicció.
 | 3 | Idioma | Sempre la llengua dels apunts. El que es trau d'una font en una altra llengua es tradueix. Els noms de teoremes coneguts en una altra llengua van entre parèntesis la primera vegada |
 | 4 | Demostracions no fetes a classe | Si els apunts no en diuen res, no s'afegeixen. Si als apunts posa "falta demo" (o la marca equivalent de l'usuari), es busca a les fonts i s'afegeix en una caixa "No vist a classe, tret de [font], p. X". Si no es troba, es marca "Demostració pendent, no trobada a les fonts" |
 | 5 | Preguntes a l'usuari | Dos tipus (vegeu baix) |
-| 6 | Primera prova | Una classe d'Anàlisi II + un material del professor |
+| 6 | Assignatures i primera prova | Anàlisi II i Estructures Algebraiques. La primera prova (02/10/2026) es va fer amb una pàgina d'Estructures Algebraiques i els apunts de Wuolah d'un alumne de l'any passat |
 | 7 | Quina versió s'agafa | Segons la comparació amb la font. **Equivalent:** el text de la font. **Diferent però vàlid** (a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit): la dels apunts, amb noteta. **Apunts falsos:** la de la font, amb la correcció marcada. **Dubtós:** pregunta obligatòria. Si el bloc no és a la font, es fa amb els apunts. El que és als apunts i no a la font (un pas extra, un comentari del professor) es manté |
 | 8 | Notació | Sempre la de l'usuari. Si un símbol només apareix a la font, es manté el de la font |
 
@@ -82,8 +82,8 @@ N2 · Teorema 2.3 · Apunts: "f contínua"; font: "f de classe C¹". He deixat l
 
 L'usuari els deixa a `prova-1/`:
 
-1. `apunts/`: fotos d'una classe d'Anàlisi II.
-2. `fets/`: un material del professor (apunts, diapositives o capítol del llibre que segueix).
+1. `apunts/`: fotos d'una classe d'Anàlisi II o d'Estructures Algebraiques.
+2. `fets/`: un material del professor (apunts, diapositives o capítol del llibre que segueix) o apunts d'un altre alumne.
 3. Un `.txt` amb dues línies sobre eixe material: què és i d'on surt.
 
 ## Passos
@@ -91,7 +91,7 @@ L'usuari els deixa a `prova-1/`:
 Tenen la mateixa numeració que el flux i que `flux.html`.
 
 0. **Preparació.**
-   - Preparar la carpeta de treball amb l'estructura mínima de l'especificació (secció "Formats de dades"), només per a Anàlisi II i aquest tema. Res més.
+   - Preparar la carpeta de treball amb l'estructura mínima de l'especificació (secció "Formats de dades"), només per a l'assignatura i el tema de la prova. Res més.
    - Fer la fitxa de la font a partir de la descripció de l'usuari.
 1. **Lectura general** (Fase 1).
    - Comprovar la qualitat de les fotos; si alguna no es pot llegir, avisar abans de continuar.
