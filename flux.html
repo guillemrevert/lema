@@ -134,8 +134,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 .nota { font-size: 15px; margin: 10px 0 0; }
 .changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .changes li { display: grid; grid-template-columns: 6.4em minmax(0, 1fr); gap: 10px; }
-.changes time { font-family: var(--ui); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); padding-top: 2px; }
-.changes time.nou { color: var(--canvi); font-weight: 600; }
+.when { font-family: var(--ui); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); padding-top: 2px; }
+.when.nou { color: var(--canvi); font-weight: 600; }
 .where { font-family: var(--ui); font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); margin: 22px 0 0; padding-top: 12px; }
 .pager { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
 .btn { font-family: var(--ui); font-size: 13px; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
@@ -149,7 +149,9 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 .hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
 .hist li { border-left: 2px solid var(--rule); padding: 2px 0 2px 16px; }
 .hist li.ultim { border-left-color: var(--canvi); }
-.hist-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-head b { color: var(--ink); font-weight: 600; }
+.hist li.ultim .hist-head b { color: var(--canvi); }
 .hist-title { margin: 2px 0 8px; font-size: 15.5px; }
 .hist-steps { display: flex; flex-wrap: wrap; gap: 6px; }
 .step-chip { font-family: var(--ui); font-size: 12.5px; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
@@ -229,10 +231,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
           <text class="t-row" x="464" y="532" font-weight="600">Perfil de lletra</text>
           <text class="t-sub" x="464" y="549">per llegir millor</text>
 
+          <!-- El diccionari s'omple al pas 3 (comparant amb la font) i es fa servir al pas 5 -->
+          <path class="ln" d="M195 446 H110 V607" marker-end="url(#ah)"/>
+          <text class="lbl" x="116" y="532">omple</text>
           <path class="doc" d="M12 608 H138 L148 618 V656 H12 Z"/>
           <path class="doc-ear" d="M138 608 V618 H148"/>
           <text class="t-row" x="24" y="628" font-weight="600">Diccionari</text>
-          <text class="t-sub" x="24" y="645">de notació (pas 1)</text>
+          <text class="t-sub" x="24" y="645">de notació</text>
           <path class="ln" d="M148 632 H195" marker-end="url(#ah)"/>
 
           <!-- Passos -->
@@ -245,7 +250,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
           <g class="node" data-step="pas1" tabindex="0" role="button" aria-label="Pas 1: Lectura general">
             <rect class="box" x="196" y="112" width="208" height="56" rx="6"/>
             <text class="t-title" x="212" y="136">1 · Lectura general</text>
-            <text class="t-sub" x="212" y="154">qualitat i notació</text>
+            <text class="t-sub" x="212" y="154">qualitat de les fotos</text>
           </g>
 
           <g class="node" data-step="pas2" tabindex="0" role="button" aria-label="Pas 2: Divisió en blocs">
@@ -311,7 +316,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 (function () {
   "use strict";
 
-  // Instruccions de cada pas, tal com estan a CLAUDE.md.
+  // Instruccions de cada pas, tal com estan a CLAUDE.md (mateixa numeració que «Passos»).
   const PASSOS = [
     {
       id: "pas0", num: 0, nom: "Preparació", qui: "claude", fase: "Abans de començar",
@@ -322,19 +327,19 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a Anàlisi II i aquest tema. Res més.",
         "Fer la fitxa de la font a partir del <code>.txt</code>."
       ],
-      on: "Materials d'entrada · Passos 1 i 2"
+      on: "Passos 0 · Materials d'entrada"
     },
     {
       id: "pas1", num: 1, nom: "Lectura general", qui: "claude", fase: "Fase 1",
       resum: "Llig els apunts sencers abans de tocar cap bloc.",
       entra: "Les fotos dels apunts.",
-      surt: "El diccionari de notació, que es fa servir al pas 5.",
+      surt: "Els apunts llegits.",
       instr: [
         "Comprovar la qualitat de les fotos. Si alguna no es pot llegir, avisar abans de continuar.",
         "Llegir els apunts sencers.",
-        "Fer el diccionari de notació de l'usuari."
+        "Si ja hi ha un diccionari de notació d'una sessió anterior, es pot consultar per llegir millor. El diccionari no es fa ací, sinó al pas 3."
       ],
-      on: "Flux 1 · Passos 3 (Fase 1)"
+      on: "Passos 1"
     },
     {
       id: "pas2", num: 2, nom: "Divisió en blocs", qui: "claude", fase: "Fase 1",
@@ -345,22 +350,23 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Fer l'esquema de blocs. Tipus possibles: definició, teorema, proposició, lema, corol·lari, demostració, exemple i observació.",
         "Apuntar la pàgina d'origen de cada bloc."
       ],
-      on: "Flux 2 · Passos 3 (Fase 1)"
+      on: "Passos 2"
     },
     {
       id: "pas3", num: 3, nom: "Per a cada bloc", qui: "claude", fase: "Fase 2",
       resum: "Compara cada bloc dels teus apunts amb la font i decideix quina versió s'escriu.",
       entra: "L'esquema de blocs, les fotos dels apunts i la font amb la seua fitxa.",
-      surt: "La versió decidida de cada bloc, les notetes i les preguntes obligatòries.",
+      surt: "La versió decidida de cada bloc, el diccionari de notació, les notetes i les preguntes obligatòries.",
       instr: [
         "Identificar de quin resultat o demostració es tracta.",
         "Buscar-lo a la font. Amb una sola font, es llig directament; no cal catàleg.",
         "Comparar-lo amb els apunts: hipòtesis, conclusió i, en les demostracions, l'argument.",
+        "Apuntar al diccionari de notació com escriuen els apunts cada concepte, a partir de la comparació amb la font.",
         "Decidir quina versió s'agafa segons la decisió 7 (taula de baix).",
         "Classificar els dubtes que la font no resol en preguntes obligatòries i notetes."
       ],
       decisio7: true,
-      on: "Flux 3 · Passos 4 (Fase 2) · Decisió 7"
+      on: "Passos 3 · Decisió 7"
     },
     {
       id: "pas4", num: 4, nom: "Punt de control", qui: "tu", fase: "Claude s'espera",
@@ -373,21 +379,21 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Claude no continua fins que respons.",
         "Les respostes es guarden al perfil de lletra: símbols, lletres i paraules, i abreviatures."
       ],
-      on: "Flux 4 · Passos 5 · Decisió 5"
+      on: "Passos 4 · Decisió 5"
     },
     {
       id: "pas5", num: 5, nom: "Escriure", qui: "claude", fase: "Fase 2",
       resum: "Escriu cada bloc en LaTeX amb la versió decidida i la teua notació.",
-      entra: "La versió decidida (pas 3), les teues respostes (pas 4) i el diccionari de notació (pas 1).",
+      entra: "La versió decidida i el diccionari de notació (pas 3), i les teues respostes (pas 4).",
       surt: "Un fragment LaTeX per bloc.",
       instr: [
         "Escriure cada bloc amb la versió decidida al pas 3.",
-        "Notació: sempre la de l'usuari. Si un símbol només apareix a la font, es manté el de la font (decisió 8).",
+        "Notació: sempre la de l'usuari, presa del diccionari. Si un símbol només apareix a la font, es manté el de la font (decisió 8).",
         "Citar la font i la pàgina.",
         "«Falta demo» (decisió 4): si els apunts no en diuen res, no s'afegeix cap demostració. Si hi posa «falta demo», es busca a la font i va en una caixa «No vist a classe, tret de [font], p. X». Si no es troba, es marca «Demostració pendent, no trobada a les fonts».",
         "Idioma: sempre el dels apunts. El que ve d'una font en una altra llengua es tradueix (decisió 3)."
       ],
-      on: "Flux 5 · Passos 6 · Decisions 3, 4 i 8"
+      on: "Passos 5 · Decisions 3, 4 i 8"
     },
     {
       id: "pas6", num: 6, nom: "Muntatge i PDF", qui: "claude", fase: "Fase 3",
@@ -401,7 +407,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
         "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>."
       ],
-      on: "Flux 6 · Passos 7 i 8 · Decisió 2"
+      on: "Passos 6 · Decisió 2"
     }
   ];
 
@@ -414,10 +420,18 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
     ["<b>No és a la font</b>", "la versió dels apunts", "sense font"]
   ];
 
-  // Una entrada per cada canvi d'instruccions, la més nova primer.
+  // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
     {
-      data: "2026-10-02", commit: "87a34fb",
+      versio: 3, data: "2026-10-02",
+      titol: "El diccionari de notació passa al pas 3, on es compara amb la font. Els passos de CLAUDE.md tenen ara la mateixa numeració que aquest diagrama.",
+      passos: {
+        pas1: "Ja no fa el diccionari de notació: sense comparar amb la font no se sap segur què vol dir cada símbol. Com a molt, consulta el d'una sessió anterior.",
+        pas3: "Ara omple el diccionari de notació: en comparar cada bloc amb la font es veu com escriuen els apunts cada concepte."
+      }
+    },
+    {
+      versio: 2, data: "2026-10-02",
       titol: "La font del professor passa a ser la base del text, i la notació és sempre la teua.",
       passos: {
         pas0: "Els materials es deixen a <code>prova-1/</code> (<code>apunts/</code>, <code>fets/</code> i un <code>.txt</code>) en lloc d'adjuntar-los a la sessió.",
@@ -428,7 +442,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       }
     },
     {
-      data: "2026-10-01", commit: "db35be0",
+      versio: 1, data: "2026-10-01",
       titol: "Versió inicial de les instruccions de la Prova 1.",
       passos: "tots"
     }
@@ -450,16 +464,16 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
   function canvisDe(id) {
     const llista = [];
     HISTORIAL.forEach(function (h) {
-      if (h.passos === "tots") llista.push({ data: h.data, text: "Versió inicial." });
-      else if (h.passos[id]) llista.push({ data: h.data, text: h.passos[id] });
+      if (h.passos === "tots") llista.push({ versio: h.versio, data: h.data, text: "Versió inicial." });
+      else if (h.passos[id]) llista.push({ versio: h.versio, data: h.data, text: h.passos[id] });
     });
     return llista;
   }
 
   // Capçalera i llegenda a partir de l'última versió.
   document.getElementById("stamp").innerHTML =
-    "Instruccions de <code>CLAUDE.md</code> · última versió " + dataLlarga(ultim.data) + " (<code>" + ultim.commit + "</code>)";
-  document.getElementById("lg-canvi").textContent = "canviat el " + dataCurta(ultim.data);
+    "Instruccions de <code>CLAUDE.md</code> · versió " + ultim.versio + " del " + dataLlarga(ultim.data);
+  document.getElementById("lg-canvi").textContent = "canviat a la v" + ultim.versio;
 
   // Punt taronja als passos canviats en l'última versió.
   nodes.forEach(function (n) {
@@ -471,7 +485,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
     c.setAttribute("cy", String(Number(r.getAttribute("y")) + 12));
     c.setAttribute("r", "4.5");
     const t = document.createElementNS(SVGNS, "title");
-    t.textContent = "Canviat el " + dataLlarga(ultim.data);
+    t.textContent = "Canviat a la v" + ultim.versio;
     c.appendChild(t);
     n.appendChild(c);
   });
@@ -496,7 +510,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
     const qui = p.qui === "tu"
       ? "<span class=\"chip tu\">Ho fas tu</span>"
       : "<span class=\"chip\">Ho fa Claude</span>";
-    const nou = canviatAra(id) ? "<span class=\"chip canvi\">canviat el " + dataCurta(ultim.data) + "</span>" : "";
+    const nou = canviatAra(id) ? "<span class=\"chip canvi\">canviat a la v" + ultim.versio + "</span>" : "";
 
     detall.innerHTML =
       "<p class=\"meta\">" + qui + "<span>" + p.fase + "</span>" + nou + "</p>" +
@@ -508,8 +522,9 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       (p.decisio7 ? taulaDecisio7() : "") +
       "<h3>Canvis</h3>" +
       "<ul class=\"changes\">" + canvis.map(function (c) {
-        return "<li><time datetime=\"" + c.data + "\"" + (c.data === ultim.data && ultim.passos !== "tots" ? " class=\"nou\"" : "") + ">" +
-          dataLlarga(c.data) + "</time><span>" + c.text + "</span></li>";
+        const esNou = c.versio === ultim.versio && ultim.passos !== "tots";
+        return "<li><span class=\"when" + (esNou ? " nou" : "") + "\"><b>v" + c.versio + "</b> · <time datetime=\"" + c.data + "\">" +
+          dataCurta(c.data) + "</time></span><span>" + c.text + "</span></li>";
       }).join("") + "</ul>" +
       "<p class=\"where\">A <code>CLAUDE.md</code>: " + p.on + "</p>" +
       "<nav class=\"pager\" aria-label=\"Passos\">" +
@@ -545,7 +560,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
           return "<button type=\"button\" class=\"step-chip\" data-go=\"" + id + "\">" + perId[id].num + " · " + perId[id].nom + "</button>";
         }).join("");
     return "<li" + (i === 0 ? " class=\"ultim\"" : "") + ">" +
-      "<p class=\"hist-head\"><time datetime=\"" + h.data + "\">" + dataLlarga(h.data) + "</time><code>" + h.commit + "</code></p>" +
+      "<p class=\"hist-head\"><b>v" + h.versio + "</b><time datetime=\"" + h.data + "\">" + dataLlarga(h.data) + "</time></p>" +
       "<p class=\"hist-title\">" + h.titol + "</p>" +
       "<div class=\"hist-steps\">" + passos + "</div></li>";
   }).join("");

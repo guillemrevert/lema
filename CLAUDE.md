@@ -25,7 +25,7 @@ Els apunts de l'usuari diuen què es va fer i en quin ordre. Cada bloc es busca 
    1. Identificar-lo: de quin resultat o demostració es tracta.
    2. Mirar com està fet a la font.
    3. Mirar com està als apunts.
-   4. Decidir quina versió s'agafa i quines petites modificacions cal fer (decisió 7).
+   4. Decidir quina versió s'agafa i quines petites modificacions cal fer (decisió 7), i apuntar al diccionari de notació com escriuen els apunts cada concepte.
 4. Punt de control: l'usuari revisa l'esquema i respon les preguntes obligatòries, en una sola tanda.
 5. Escriure cada bloc, sempre amb la notació de l'usuari (decisió 8).
 6. Muntatge i PDF.
@@ -37,7 +37,7 @@ Els apunts de l'usuari diuen què es va fer i en quin ordre. Cada bloc es busca 
 Quan canvien les instruccions d'un pas, en el mateix commit:
 
 1. S'actualitza el pas a `PASSOS`, dins de `flux.html`.
-2. S'afegeix una entrada al principi d'`HISTORIAL`, amb el commit i el que ha canviat en cada pas.
+2. S'afegeix una entrada al principi d'`HISTORIAL` amb la versió següent (v4, v5…), la data i el que ha canviat en cada pas.
 3. Es republica la pàgina a la mateixa adreça.
 
 Si `flux.html` i `CLAUDE.md` no coincideixen, mana `CLAUDE.md`.
@@ -88,22 +88,27 @@ L'usuari els deixa a `prova-1/`:
 
 ## Passos
 
-1. **Preparar la carpeta de treball** amb l'estructura mínima de l'especificació (secció "Formats de dades"), només per a Anàlisi II i aquest tema. Res més.
-2. **Fitxa de la font** a partir de la descripció de l'usuari.
-3. **Fase 1 · Lectura global.**
+Tenen la mateixa numeració que el flux i que `flux.html`.
+
+0. **Preparació.**
+   - Preparar la carpeta de treball amb l'estructura mínima de l'especificació (secció "Formats de dades"), només per a Anàlisi II i aquest tema. Res més.
+   - Fer la fitxa de la font a partir de la descripció de l'usuari.
+1. **Lectura general** (Fase 1).
    - Comprovar la qualitat de les fotos; si alguna no es pot llegir, avisar abans de continuar.
+   - Llegir els apunts sencers.
+   - Si ja hi ha un diccionari de notació d'una sessió anterior, es pot consultar per llegir millor. El diccionari no es fa ací, sinó al pas 3.
+2. **Divisió en blocs** (Fase 1).
    - Fer l'esquema de blocs (definició, teorema, proposició, lema, corol·lari, demostració, exemple, observació), amb la pàgina d'origen.
-   - Fer el diccionari de notació de l'usuari.
-4. **Fase 2 · Bloc a bloc.** Per a cada bloc:
+3. **Per a cada bloc** (Fase 2).
    - Identificar de quin resultat o demostració es tracta.
    - Buscar-lo a la font. Amb una sola font, llegir-la directament; no cal catàleg.
    - Comparar-lo amb els apunts (hipòtesis, conclusió i, en les demostracions, l'argument) i classificar la diferència: equivalent / diferent però vàlid / versió dels apunts falsa / dubtós.
+   - Apuntar al diccionari de notació com escriuen els apunts cada concepte, a partir de la comparació amb la font.
    - Decidir la versió segons la decisió 7.
    - Classificar els dubtes que la font no resol en obligatoris i notetes.
-5. **Punt de control.** Mostrar a l'usuari, **en una sola tanda**, l'esquema de blocs (amb on s'ha trobat cada bloc a la font) i les preguntes obligatòries. Esperar les respostes i guardar-les al perfil de lletra (símbols, lletres i paraules, abreviatures).
-6. **Escriure cada bloc** amb la versió decidida i la notació dels apunts. Citar la font i la pàgina. Aplicar la regla de "falta demo".
-7. **Fase 3 · Muntatge.** Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF.
-8. **Entregar** el PDF i l'informe.
+4. **Punt de control.** Mostrar a l'usuari, **en una sola tanda**, l'esquema de blocs (amb on s'ha trobat cada bloc a la font) i les preguntes obligatòries. Esperar les respostes i guardar-les al perfil de lletra (símbols, lletres i paraules, abreviatures).
+5. **Escriure cada bloc** amb la versió decidida i la notació del diccionari. Citar la font i la pàgina. Aplicar la regla de "falta demo".
+6. **Muntatge i entrega** (Fase 3). Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF i entregar-lo amb l'informe.
 
 ## Què s'ha d'entregar
 
