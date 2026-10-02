@@ -30,6 +30,18 @@ Els apunts de l'usuari diuen què es va fer i en quin ordre. Cada bloc es busca 
 5. Escriure cada bloc, sempre amb la notació de l'usuari (decisió 8).
 6. Muntatge i PDF.
 
+### Diagrama del flux
+
+[`flux.html`](flux.html) dibuixa aquest flux amb les instruccions i els canvis de cada pas. Està publicat a https://claude.ai/artifact/VgnAEHRNnpvhkr4PyRxV6X.
+
+Quan canvien les instruccions d'un pas, en el mateix commit:
+
+1. S'actualitza el pas a `PASSOS`, dins de `flux.html`.
+2. S'afegeix una entrada al principi d'`HISTORIAL`, amb el commit i el que ha canviat en cada pas.
+3. Es republica la pàgina a la mateixa adreça.
+
+Si `flux.html` i `CLAUDE.md` no coincideixen, mana `CLAUDE.md`.
+
 ## Decisions preses
 
 Tenen prioritat sobre l'especificació si hi ha contradicció.

@@ -1,0 +1,573 @@
+<title>Flux de LEMA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500&family=Fira+Sans:wght@400;500;600&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Quadern i full net: el flux es dibuixa sobre paper quadriculat (els apunts) i el pas triat es compon al costat com una pàgina de LaTeX (el resultat a net). */
+:root {
+  --paper: #F5F7FA;
+  --grid: #E2E8F1;
+  --sheet: #FFFFFF;
+  --ink: #18202E;
+  --muted: #5A6577;
+  --rule: #CAD2DE;
+  --apunts: #2451C6;
+  --font: #0C7865;
+  --tu-bg: #FFE86A;
+  --tu-fg: #2B2500;
+  --canvi: #BF430B;
+  --shadow: rgba(24, 32, 46, 0.22);
+  --display: "STIX Two Text", Cambria, "Times New Roman", serif;
+  --ui: "Fira Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "Fira Mono", Consolas, ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0F131A; --grid: #182030; --sheet: #161B24; --ink: #E4E8EF; --muted: #9BA5B5; --rule: #2C3546;
+    --apunts: #86ABFF; --font: #4ACDB5; --tu-bg: #4A4113; --tu-fg: #FFF0A3; --canvi: #FF9466; --shadow: rgba(0, 0, 0, 0.55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0F131A; --grid: #182030; --sheet: #161B24; --ink: #E4E8EF; --muted: #9BA5B5; --rule: #2C3546;
+  --apunts: #86ABFF; --font: #4ACDB5; --tu-bg: #4A4113; --tu-fg: #FFF0A3; --canvi: #FF9466; --shadow: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.wrap { max-width: 1160px; margin: 0 auto; padding-inline: clamp(16px, 4vw, 40px); padding-block: 36px 64px; }
+
+.eyebrow { font-size: 12px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(32px, 5vw, 46px); line-height: 1.1; margin: 0 0 10px; text-wrap: balance; }
+.lede { max-width: 60ch; margin: 0 0 8px; font-size: 16px; }
+.stamp { font-size: 13px; color: var(--muted); margin: 0; }
+code { font-family: var(--mono); font-size: .86em; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; margin-top: 28px; align-items: start; }
+@media (min-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr) minmax(0, 450px); gap: 40px; }
+  .sheet { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); max-height: calc(100vh - 32px); overflow-y: auto; }
+}
+
+/* Diagrama */
+.fig { margin: 0; min-width: 0; }
+.legend { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 7px; }
+.sw { display: inline-block; flex: none; }
+.sw-ap, .sw-ft { width: 22px; height: 0; border-top: 2px solid; }
+.sw-ap { border-color: var(--apunts); }
+.sw-ft { border-color: var(--font); }
+.sw-tu { width: 16px; height: 12px; background: var(--tu-bg); border-radius: 2px; }
+.sw-canvi { width: 9px; height: 9px; border-radius: 50%; background: var(--canvi); }
+.svg-scroll { overflow-x: auto; }
+.svg-scroll svg { display: block; width: 100%; max-width: 640px; min-width: 520px; height: auto; margin-inline: auto; fill: var(--ink); font-family: var(--ui); }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+@media (min-width: 600px) { .hint { display: none; } }
+figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top: 10px; }
+
+.t-title { font-size: 13.5px; font-weight: 600; }
+.t-sub { font-size: 11.5px; fill: var(--muted); }
+.t-mono { font-family: var(--mono); font-size: 11px; }
+.t-row { font-size: 12.5px; }
+.t-idx { font-size: 11.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.t-ap { fill: var(--apunts); }
+.t-ft { fill: var(--font); }
+.box { fill: var(--sheet); stroke: var(--rule); stroke-width: 1.2; transition: stroke .15s; }
+.node { cursor: pointer; outline: none; }
+.node:hover .box { stroke: var(--muted); }
+.node.is-sel .box { stroke: var(--ink); stroke-width: 2.2; }
+.node:focus-visible .box { stroke: var(--apunts); stroke-width: 3; }
+.node.tu .box { fill: var(--tu-bg); }
+.node.tu text { fill: var(--tu-fg); }
+.node.tu.is-sel .box { stroke: var(--tu-fg); }
+.in-box { fill: var(--paper); stroke-width: 1.6; }
+.in-ap { stroke: var(--apunts); }
+.in-ft { stroke: var(--font); }
+.doc { fill: var(--paper); stroke: var(--muted); stroke-width: 1.1; }
+.doc-ear { fill: none; stroke: var(--muted); stroke-width: 1.1; }
+.ln { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.ln-ap { fill: none; stroke: var(--apunts); stroke-width: 2; }
+.ln-ft { fill: none; stroke: var(--font); stroke-width: 2; }
+.ah-ink { fill: var(--muted); }
+.ah-ap { fill: var(--apunts); }
+.ah-ft { fill: var(--font); }
+.jn-ap { fill: var(--apunts); }
+.lbl { font-size: 11.5px; fill: var(--muted); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+.lbl-ap { fill: var(--apunts); }
+.lbl-ft { fill: var(--font); }
+.div { stroke: var(--rule); stroke-width: 1; }
+.dot { fill: var(--canvi); stroke: var(--sheet); stroke-width: 1.5; }
+.node.tu .dot { stroke: var(--tu-bg); }
+
+/* Full del pas triat */
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 3px; box-shadow: 0 18px 40px -26px var(--shadow); padding-block: 26px 22px; padding-inline: clamp(18px, 3vw, 30px); font-family: var(--display); font-size: 16.5px; line-height: 1.55; min-width: 0; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; font-family: var(--ui); font-size: 12.5px; color: var(--muted); }
+.chip { font-family: var(--ui); font-size: 12px; line-height: 1.6; border: 1px solid var(--rule); border-radius: 999px; padding: 0 9px; color: var(--ink); }
+.chip.tu { background: var(--tu-bg); color: var(--tu-fg); border-color: transparent; }
+.chip.canvi { color: var(--canvi); border-color: currentColor; }
+.thm { font-family: var(--display); font-weight: 400; font-size: 25px; line-height: 1.2; margin: 0 0 8px; text-wrap: balance; }
+.thm b { font-weight: 700; }
+.resum { font-style: italic; margin: 0 0 18px; }
+.sheet h3 { font-family: var(--ui); font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 22px 0 8px; }
+.io { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; }
+.io dt { font-family: var(--ui); font-size: 11.5px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+.io dd { margin: 0; }
+.instr { margin: 0; padding-left: 1.4em; display: grid; gap: 7px; }
+.instr li::marker { font-family: var(--ui); font-size: .85em; color: var(--muted); }
+.table-scroll { overflow-x: auto; }
+.booktabs { width: 100%; border-collapse: collapse; font-size: 15px; line-height: 1.4; }
+.booktabs th { font-family: var(--ui); font-size: 12px; font-weight: 600; text-align: left; padding: 7px 10px 6px 0; border-top: 1.5px solid var(--ink); border-bottom: 0.75px solid var(--ink); }
+.booktabs td { padding: 7px 10px 7px 0; vertical-align: top; }
+.booktabs tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
+.booktabs th:last-child, .booktabs td:last-child { padding-right: 0; }
+.nota { font-size: 15px; margin: 10px 0 0; }
+.changes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.changes li { display: grid; grid-template-columns: 6.4em minmax(0, 1fr); gap: 10px; }
+.changes time { font-family: var(--ui); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); padding-top: 2px; }
+.changes time.nou { color: var(--canvi); font-weight: 600; }
+.where { font-family: var(--ui); font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--rule); margin: 22px 0 0; padding-top: 12px; }
+.pager { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.btn { font-family: var(--ui); font-size: 13px; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { border-color: var(--ink); }
+.btn[disabled] { visibility: hidden; }
+.btn:focus-visible, .step-chip:focus-visible { outline: 2px solid var(--apunts); outline-offset: 2px; }
+
+/* Historial */
+.history { margin-top: 48px; max-width: 760px; }
+.history h2 { font-family: var(--display); font-weight: 600; font-size: 24px; margin: 0 0 14px; }
+.hist { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.hist li { border-left: 2px solid var(--rule); padding: 2px 0 2px 16px; }
+.hist li.ultim { border-left-color: var(--canvi); }
+.hist-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.hist-title { margin: 2px 0 8px; font-size: 15.5px; }
+.hist-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.step-chip { font-family: var(--ui); font-size: 12.5px; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule); border-radius: 999px; padding: 2px 10px; cursor: pointer; }
+.step-chip:hover { border-color: var(--ink); }
+.muted { color: var(--muted); font-size: 13.5px; }
+.foot { margin-top: 36px; font-size: 13px; color: var(--muted); max-width: 70ch; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">LEMA · Prova 1</p>
+    <h1>Flux de LEMA</h1>
+    <p class="lede">Com passen els teus apunts i la font del professor a un PDF net. Clica un pas per veure'n les instruccions i què hi ha canviat.</p>
+    <p class="stamp" id="stamp">Instruccions de <code>CLAUDE.md</code></p>
+  </header>
+
+  <main class="layout">
+    <figure class="fig">
+      <ul class="legend" aria-label="Llegenda">
+        <li><span class="sw sw-ap"></span>apunts</li>
+        <li><span class="sw sw-ft"></span>font oficial</li>
+        <li><span class="sw sw-tu"></span>intervens tu</li>
+        <li><span class="sw sw-canvi"></span><span id="lg-canvi">canviat a l'última versió</span></li>
+      </ul>
+      <div class="svg-scroll">
+        <svg viewBox="0 0 600 852" role="group" aria-labelledby="fig-cap">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="ah-ink" d="M0,0 L10,5 L0,10 Z"/></marker>
+            <marker id="ah-ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="ah-ap" d="M0,0 L10,5 L0,10 Z"/></marker>
+            <marker id="ah-ft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse" orient="auto"><path class="ah-ft" d="M0,0 L10,5 L0,10 Z"/></marker>
+          </defs>
+
+          <!-- Entrades -->
+          <rect class="in-box in-ap" x="12" y="16" width="136" height="56" rx="6"/>
+          <text class="t-title t-ap" x="26" y="40">Apunts</text>
+          <text class="t-sub t-mono" x="26" y="58">prova-1/apunts</text>
+
+          <rect class="in-box in-ft" x="452" y="16" width="136" height="56" rx="6"/>
+          <text class="t-title t-ft" x="466" y="40">Font oficial</text>
+          <text class="t-sub t-mono" x="466" y="58">prova-1/fets</text>
+
+          <!-- Línia dels apunts: entra al pas 1 i al pas 3.3 -->
+          <path class="ln-ap" d="M80 72 V416 H195" marker-end="url(#ah-ap)"/>
+          <path class="ln-ap" d="M80 140 H195" marker-end="url(#ah-ap)"/>
+          <circle class="jn-ap" cx="80" cy="140" r="3.2"/>
+          <text class="lbl lbl-ap" x="138" y="133" text-anchor="middle">fotos</text>
+          <text class="lbl lbl-ap" x="138" y="409" text-anchor="middle">la teua versió</text>
+
+          <!-- Línia de la font: entra al pas 3.2 -->
+          <path class="ln-ft" d="M520 72 V386 H405" marker-end="url(#ah-ft)"/>
+          <text class="lbl lbl-ft" x="462" y="379" text-anchor="middle">text net</text>
+
+          <!-- Connectors del fil principal -->
+          <path class="ln" d="M300 72 V111" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="96">carpeta i fitxa</text>
+          <path class="ln" d="M300 168 V207" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="192">apunts llegits</text>
+          <path class="ln" d="M300 264 V303" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="288">esquema de blocs</text>
+          <path class="ln" d="M300 468 V507" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="492">esquema + preguntes</text>
+          <path class="ln" d="M300 564 V603" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="588">respostes</text>
+          <path class="ln" d="M300 660 V699" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="684">blocs en LaTeX</text>
+          <path class="ln" d="M300 756 V795" marker-end="url(#ah)"/>
+          <text class="lbl" x="310" y="780">entrega</text>
+
+          <!-- Fitxers laterals -->
+          <path class="ln" d="M404 536 H451" marker-end="url(#ah)"/>
+          <path class="doc" d="M452 512 H578 L588 522 V560 H452 Z"/>
+          <path class="doc-ear" d="M578 512 V522 H588"/>
+          <text class="t-row" x="464" y="532" font-weight="600">Perfil de lletra</text>
+          <text class="t-sub" x="464" y="549">per llegir millor</text>
+
+          <path class="doc" d="M12 608 H138 L148 618 V656 H12 Z"/>
+          <path class="doc-ear" d="M138 608 V618 H148"/>
+          <text class="t-row" x="24" y="628" font-weight="600">Diccionari</text>
+          <text class="t-sub" x="24" y="645">de notació (pas 1)</text>
+          <path class="ln" d="M148 632 H195" marker-end="url(#ah)"/>
+
+          <!-- Passos -->
+          <g class="node" data-step="pas0" tabindex="0" role="button" aria-label="Pas 0: Preparació">
+            <rect class="box" x="196" y="16" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="40">0 · Preparació</text>
+            <text class="t-sub" x="212" y="58">carpeta i fitxa de la font</text>
+          </g>
+
+          <g class="node" data-step="pas1" tabindex="0" role="button" aria-label="Pas 1: Lectura general">
+            <rect class="box" x="196" y="112" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="136">1 · Lectura general</text>
+            <text class="t-sub" x="212" y="154">qualitat i notació</text>
+          </g>
+
+          <g class="node" data-step="pas2" tabindex="0" role="button" aria-label="Pas 2: Divisió en blocs">
+            <rect class="box" x="196" y="208" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="232">2 · Divisió en blocs</text>
+            <text class="t-sub" x="212" y="250">esquema amb pàgines</text>
+          </g>
+
+          <g class="node" data-step="pas3" tabindex="0" role="button" aria-label="Pas 3: Per a cada bloc">
+            <rect class="box" x="196" y="304" width="208" height="164" rx="6"/>
+            <text class="t-title" x="212" y="328">3 · Per a cada bloc</text>
+            <line class="div" x1="212" y1="340" x2="388" y2="340"/>
+            <text class="t-idx" x="212" y="360">3.1</text>
+            <text class="t-row" x="238" y="360">Identificar el bloc</text>
+            <text class="t-idx" x="212" y="390">3.2</text>
+            <text class="t-row" x="238" y="390">Mirar-lo a la <tspan class="t-ft">font</tspan></text>
+            <text class="t-idx" x="212" y="420">3.3</text>
+            <text class="t-row" x="238" y="420">Mirar-lo als <tspan class="t-ap">apunts</tspan></text>
+            <text class="t-idx" x="212" y="450">3.4</text>
+            <text class="t-row" x="238" y="450">Decidir quina s'agafa</text>
+          </g>
+
+          <g class="node tu" data-step="pas4" tabindex="0" role="button" aria-label="Pas 4: Punt de control, el fas tu">
+            <rect class="box" x="196" y="508" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="532">4 · Punt de control</text>
+            <text class="t-sub" x="212" y="550">tu: esquema i preguntes</text>
+          </g>
+
+          <g class="node" data-step="pas5" tabindex="0" role="button" aria-label="Pas 5: Escriure">
+            <rect class="box" x="196" y="604" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="628">5 · Escriure</text>
+            <text class="t-sub" x="212" y="646">notació teua, cita la font</text>
+          </g>
+
+          <g class="node" data-step="pas6" tabindex="0" role="button" aria-label="Pas 6: Muntatge i PDF">
+            <rect class="box" x="196" y="700" width="208" height="56" rx="6"/>
+            <text class="t-title" x="212" y="724">6 · Muntatge i PDF</text>
+            <text class="t-sub" x="212" y="742">plantilla LaTeX i compilar</text>
+          </g>
+
+          <!-- Sortida -->
+          <path class="doc" d="M220 796 H370 L380 806 V836 H220 Z"/>
+          <path class="doc-ear" d="M370 796 V806 H380"/>
+          <text class="t-mono" x="300" y="821" text-anchor="middle">tema.pdf · informe</text>
+        </svg>
+      </div>
+      <p class="hint">Llisca cap als costats per veure tot el diagrama.</p>
+      <figcaption id="fig-cap">Els apunts diuen què es va fer i en quin ordre; la font dona el text net. Les dues coses es troben al pas 3, bloc a bloc, i tu només intervens al punt de control.</figcaption>
+    </figure>
+
+    <aside class="sheet" id="detall" aria-live="polite"></aside>
+  </main>
+
+  <section class="history" aria-labelledby="h-hist">
+    <h2 id="h-hist">Historial de canvis</h2>
+    <ol class="hist" id="hist"></ol>
+  </section>
+
+  <p class="foot">Aquesta pàgina es genera a partir de <code>CLAUDE.md</code> del repositori <code>guillemrevert/lema</code> i s'actualitza en el mateix commit cada vegada que canvien les instruccions d'un pas. Si algun dia no coincideixen, mana <code>CLAUDE.md</code>.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // Instruccions de cada pas, tal com estan a CLAUDE.md.
+  const PASSOS = [
+    {
+      id: "pas0", num: 0, nom: "Preparació", qui: "claude", fase: "Abans de començar",
+      resum: "Deixa a punt la carpeta de treball i la fitxa de la font.",
+      entra: "Les fotos a <code>prova-1/apunts/</code>, el material del professor a <code>prova-1/fets/</code> i un <code>.txt</code> amb dues línies: què és i d'on surt.",
+      surt: "La carpeta de treball i la fitxa de la font.",
+      instr: [
+        "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a Anàlisi II i aquest tema. Res més.",
+        "Fer la fitxa de la font a partir del <code>.txt</code>."
+      ],
+      on: "Materials d'entrada · Passos 1 i 2"
+    },
+    {
+      id: "pas1", num: 1, nom: "Lectura general", qui: "claude", fase: "Fase 1",
+      resum: "Llig els apunts sencers abans de tocar cap bloc.",
+      entra: "Les fotos dels apunts.",
+      surt: "El diccionari de notació, que es fa servir al pas 5.",
+      instr: [
+        "Comprovar la qualitat de les fotos. Si alguna no es pot llegir, avisar abans de continuar.",
+        "Llegir els apunts sencers.",
+        "Fer el diccionari de notació de l'usuari."
+      ],
+      on: "Flux 1 · Passos 3 (Fase 1)"
+    },
+    {
+      id: "pas2", num: 2, nom: "Divisió en blocs", qui: "claude", fase: "Fase 1",
+      resum: "Divideix els apunts en blocs, cadascun amb el seu tipus i la seua pàgina.",
+      entra: "Els apunts llegits.",
+      surt: "L'esquema de blocs.",
+      instr: [
+        "Fer l'esquema de blocs. Tipus possibles: definició, teorema, proposició, lema, corol·lari, demostració, exemple i observació.",
+        "Apuntar la pàgina d'origen de cada bloc."
+      ],
+      on: "Flux 2 · Passos 3 (Fase 1)"
+    },
+    {
+      id: "pas3", num: 3, nom: "Per a cada bloc", qui: "claude", fase: "Fase 2",
+      resum: "Compara cada bloc dels teus apunts amb la font i decideix quina versió s'escriu.",
+      entra: "L'esquema de blocs, les fotos dels apunts i la font amb la seua fitxa.",
+      surt: "La versió decidida de cada bloc, les notetes i les preguntes obligatòries.",
+      instr: [
+        "Identificar de quin resultat o demostració es tracta.",
+        "Buscar-lo a la font. Amb una sola font, es llig directament; no cal catàleg.",
+        "Comparar-lo amb els apunts: hipòtesis, conclusió i, en les demostracions, l'argument.",
+        "Decidir quina versió s'agafa segons la decisió 7 (taula de baix).",
+        "Classificar els dubtes que la font no resol en preguntes obligatòries i notetes."
+      ],
+      decisio7: true,
+      on: "Flux 3 · Passos 4 (Fase 2) · Decisió 7"
+    },
+    {
+      id: "pas4", num: 4, nom: "Punt de control", qui: "tu", fase: "Claude s'espera",
+      resum: "Revises l'esquema i respons les preguntes, tot d'una vegada.",
+      entra: "L'esquema de blocs, amb on s'ha trobat cada bloc a la font, i les preguntes obligatòries.",
+      surt: "Les teues respostes, que també es guarden al perfil de lletra.",
+      instr: [
+        "Claude ho mostra tot en una sola tanda: l'esquema de blocs, amb on ha trobat cada bloc a la font, i les preguntes obligatòries.",
+        "Només pregunta el que la font no resol: un símbol dubtós dins d'una fórmula, una hipòtesi que sembla falsa sense saber si és un error dels apunts, o una pàgina o zona il·legible.",
+        "Claude no continua fins que respons.",
+        "Les respostes es guarden al perfil de lletra: símbols, lletres i paraules, i abreviatures."
+      ],
+      on: "Flux 4 · Passos 5 · Decisió 5"
+    },
+    {
+      id: "pas5", num: 5, nom: "Escriure", qui: "claude", fase: "Fase 2",
+      resum: "Escriu cada bloc en LaTeX amb la versió decidida i la teua notació.",
+      entra: "La versió decidida (pas 3), les teues respostes (pas 4) i el diccionari de notació (pas 1).",
+      surt: "Un fragment LaTeX per bloc.",
+      instr: [
+        "Escriure cada bloc amb la versió decidida al pas 3.",
+        "Notació: sempre la de l'usuari. Si un símbol només apareix a la font, es manté el de la font (decisió 8).",
+        "Citar la font i la pàgina.",
+        "«Falta demo» (decisió 4): si els apunts no en diuen res, no s'afegeix cap demostració. Si hi posa «falta demo», es busca a la font i va en una caixa «No vist a classe, tret de [font], p. X». Si no es troba, es marca «Demostració pendent, no trobada a les fonts».",
+        "Idioma: sempre el dels apunts. El que ve d'una font en una altra llengua es tradueix (decisió 3)."
+      ],
+      on: "Flux 5 · Passos 6 · Decisions 3, 4 i 8"
+    },
+    {
+      id: "pas6", num: 6, nom: "Muntatge i PDF", qui: "claude", fase: "Fase 3",
+      resum: "Ajunta els blocs, compila el PDF i entrega l'informe.",
+      entra: "Els blocs en LaTeX.",
+      surt: "<code>tema.tex</code>, <code>tema.pdf</code>, els fitxers de text i l'informe.",
+      instr: [
+        "Plantilla LaTeX mínima amb un entorn per a cada tipus de bloc.",
+        "Marques: dubte, correcció, nota i caixa «no vist a classe».",
+        "Notetes numerades al marge (N1, N2…), les mateixes que a l'informe.",
+        "Compilar el PDF, amb aspecte de llibre (decisió 2).",
+        "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>."
+      ],
+      on: "Flux 6 · Passos 7 i 8 · Decisió 2"
+    }
+  ];
+
+  // Decisió 7: quina versió s'agafa segons la comparació amb la font.
+  const DECISIO7 = [
+    ["<b>Equivalent</b>", "el text de la font", "cap"],
+    ["<b>Diferent però vàlid</b>: a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit", "la versió dels apunts", "noteta"],
+    ["<b>Apunts falsos</b>", "la versió de la font", "correcció marcada"],
+    ["<b>Dubtós</b>", "el que digues tu", "pregunta obligatòria"],
+    ["<b>No és a la font</b>", "la versió dels apunts", "sense font"]
+  ];
+
+  // Una entrada per cada canvi d'instruccions, la més nova primer.
+  const HISTORIAL = [
+    {
+      data: "2026-10-02", commit: "87a34fb",
+      titol: "La font del professor passa a ser la base del text, i la notació és sempre la teua.",
+      passos: {
+        pas0: "Els materials es deixen a <code>prova-1/</code> (<code>apunts/</code>, <code>fets/</code> i un <code>.txt</code>) en lloc d'adjuntar-los a la sessió.",
+        pas1: "Ja no acaba amb les preguntes: passen al punt de control, després de mirar la font.",
+        pas3: "Nova decisió 7: si la font té el mateix resultat o la mateixa demostració, s'escriu el text de la font. Abans, les demostracions seguien sempre l'argument dels apunts.",
+        pas4: "Ara va després de buscar cada bloc a la font i només pregunta el que la font no resol. L'esquema mostra on s'ha trobat cada bloc.",
+        pas5: "Escriu la versió decidida al pas 3, després del punt de control. La notació de l'usuari queda fixada com a decisió 8."
+      }
+    },
+    {
+      data: "2026-10-01", commit: "db35be0",
+      titol: "Versió inicial de les instruccions de la Prova 1.",
+      passos: "tots"
+    }
+  ];
+
+  const perId = {};
+  PASSOS.forEach(function (p) { perId[p.id] = p; });
+  const ultim = HISTORIAL[0];
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const detall = document.getElementById("detall");
+  const nodes = Array.prototype.slice.call(document.querySelectorAll(".node"));
+  const estret = window.matchMedia("(max-width: 999px)");
+  const menysMoviment = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let actual = null;
+
+  function dataLlarga(iso) { const d = iso.split("-"); return d[2] + "/" + d[1] + "/" + d[0]; }
+  function dataCurta(iso) { const d = iso.split("-"); return d[2] + "/" + d[1]; }
+  function canviatAra(id) { return ultim.passos === "tots" || Object.prototype.hasOwnProperty.call(ultim.passos, id); }
+  function canvisDe(id) {
+    const llista = [];
+    HISTORIAL.forEach(function (h) {
+      if (h.passos === "tots") llista.push({ data: h.data, text: "Versió inicial." });
+      else if (h.passos[id]) llista.push({ data: h.data, text: h.passos[id] });
+    });
+    return llista;
+  }
+
+  // Capçalera i llegenda a partir de l'última versió.
+  document.getElementById("stamp").innerHTML =
+    "Instruccions de <code>CLAUDE.md</code> · última versió " + dataLlarga(ultim.data) + " (<code>" + ultim.commit + "</code>)";
+  document.getElementById("lg-canvi").textContent = "canviat el " + dataCurta(ultim.data);
+
+  // Punt taronja als passos canviats en l'última versió.
+  nodes.forEach(function (n) {
+    if (!canviatAra(n.getAttribute("data-step"))) return;
+    const r = n.querySelector(".box");
+    const c = document.createElementNS(SVGNS, "circle");
+    c.setAttribute("class", "dot");
+    c.setAttribute("cx", String(Number(r.getAttribute("x")) + Number(r.getAttribute("width")) - 12));
+    c.setAttribute("cy", String(Number(r.getAttribute("y")) + 12));
+    c.setAttribute("r", "4.5");
+    const t = document.createElementNS(SVGNS, "title");
+    t.textContent = "Canviat el " + dataLlarga(ultim.data);
+    c.appendChild(t);
+    n.appendChild(c);
+  });
+
+  function taulaDecisio7() {
+    const files = DECISIO7.map(function (f) {
+      return "<tr><td>" + f[0] + "</td><td>" + f[1] + "</td><td>" + f[2] + "</td></tr>";
+    }).join("");
+    return "<h3>Decisió 7 · quina versió s'agafa</h3>" +
+      "<div class=\"table-scroll\"><table class=\"booktabs\">" +
+      "<thead><tr><th>Si la comparació diu…</th><th>S'escriu</th><th>Marca</th></tr></thead>" +
+      "<tbody>" + files + "</tbody></table></div>" +
+      "<p class=\"nota\">El que és als apunts i no a la font (un pas de més, un comentari del professor) es manté.</p>";
+  }
+
+  function pinta(id) {
+    const p = perId[id];
+    const i = PASSOS.indexOf(p);
+    const ant = PASSOS[i - 1];
+    const seg = PASSOS[i + 1];
+    const canvis = canvisDe(id);
+    const qui = p.qui === "tu"
+      ? "<span class=\"chip tu\">Ho fas tu</span>"
+      : "<span class=\"chip\">Ho fa Claude</span>";
+    const nou = canviatAra(id) ? "<span class=\"chip canvi\">canviat el " + dataCurta(ultim.data) + "</span>" : "";
+
+    detall.innerHTML =
+      "<p class=\"meta\">" + qui + "<span>" + p.fase + "</span>" + nou + "</p>" +
+      "<h2 class=\"thm\"><b>Pas " + p.num + "</b> (" + p.nom + ").</h2>" +
+      "<p class=\"resum\">" + p.resum + "</p>" +
+      "<dl class=\"io\"><dt>Entra</dt><dd>" + p.entra + "</dd><dt>Surt</dt><dd>" + p.surt + "</dd></dl>" +
+      "<h3>Instruccions</h3>" +
+      "<ol class=\"instr\">" + p.instr.map(function (t) { return "<li>" + t + "</li>"; }).join("") + "</ol>" +
+      (p.decisio7 ? taulaDecisio7() : "") +
+      "<h3>Canvis</h3>" +
+      "<ul class=\"changes\">" + canvis.map(function (c) {
+        return "<li><time datetime=\"" + c.data + "\"" + (c.data === ultim.data && ultim.passos !== "tots" ? " class=\"nou\"" : "") + ">" +
+          dataLlarga(c.data) + "</time><span>" + c.text + "</span></li>";
+      }).join("") + "</ul>" +
+      "<p class=\"where\">A <code>CLAUDE.md</code>: " + p.on + "</p>" +
+      "<nav class=\"pager\" aria-label=\"Passos\">" +
+        "<button type=\"button\" class=\"btn\" data-dir=\"ant\"" + (ant ? " data-go=\"" + ant.id + "\"" : " disabled") + ">← " + (ant ? ant.num + " · " + ant.nom : "") + "</button>" +
+        "<button type=\"button\" class=\"btn\" data-dir=\"seg\"" + (seg ? " data-go=\"" + seg.id + "\"" : " disabled") + ">" + (seg ? seg.num + " · " + seg.nom : "") + " →</button>" +
+      "</nav>";
+  }
+
+  function tria(id, desUsuari, focusDir) {
+    if (!perId[id]) return;
+    actual = id;
+    nodes.forEach(function (n) {
+      const on = n.getAttribute("data-step") === id;
+      n.classList.toggle("is-sel", on);
+      n.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    pinta(id);
+    try { history.replaceState(null, "", "#" + id); } catch (e) { /* el marc pot no deixar-ho */ }
+    if (focusDir) {
+      const b = detall.querySelector(".btn[data-dir=\"" + focusDir + "\"]");
+      if (b && !b.disabled) b.focus({ preventScroll: true });
+    }
+    if (desUsuari && estret.matches) {
+      detall.scrollIntoView({ behavior: menysMoviment.matches ? "auto" : "smooth", block: "start" });
+    }
+  }
+
+  // Historial
+  document.getElementById("hist").innerHTML = HISTORIAL.map(function (h, i) {
+    const passos = h.passos === "tots"
+      ? "<span class=\"muted\">Tots els passos</span>"
+      : Object.keys(h.passos).map(function (id) {
+          return "<button type=\"button\" class=\"step-chip\" data-go=\"" + id + "\">" + perId[id].num + " · " + perId[id].nom + "</button>";
+        }).join("");
+    return "<li" + (i === 0 ? " class=\"ultim\"" : "") + ">" +
+      "<p class=\"hist-head\"><time datetime=\"" + h.data + "\">" + dataLlarga(h.data) + "</time><code>" + h.commit + "</code></p>" +
+      "<p class=\"hist-title\">" + h.titol + "</p>" +
+      "<div class=\"hist-steps\">" + passos + "</div></li>";
+  }).join("");
+
+  // Esdeveniments
+  nodes.forEach(function (n) {
+    n.addEventListener("click", function () { tria(n.getAttribute("data-step"), true); });
+    n.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tria(n.getAttribute("data-step"), true); }
+    });
+  });
+  document.addEventListener("click", function (e) {
+    const b = e.target.closest("[data-go]");
+    if (!b || b.disabled) return;
+    tria(b.getAttribute("data-go"), true, b.getAttribute("data-dir"));
+  });
+  window.addEventListener("hashchange", function () {
+    const h = location.hash.replace("#", "");
+    if (perId[h] && h !== actual) tria(h, false);
+  });
+
+  const inicial = location.hash.replace("#", "");
+  tria(perId[inicial] ? inicial : "pas3", false);
+})();
+</script>
