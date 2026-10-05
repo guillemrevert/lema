@@ -1,0 +1,57 @@
+% Plantilla base de LEMA. Cada tema la carrega amb \input després de \documentclass.
+% Només fa servir paquets que ja hi ha a la instal·lació de MiKTeX de l'usuari.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[catalan]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xcolor}
+
+% Pàgina de llibre amb un marge dret ample per a les fonts i les notetes.
+\setlength{\textwidth}{12.4cm}
+\setlength{\textheight}{22.5cm}
+\setlength{\oddsidemargin}{0.3cm}
+\setlength{\evensidemargin}{0.3cm}
+\setlength{\topmargin}{-0.6cm}
+\setlength{\marginparsep}{0.5cm}
+\setlength{\marginparwidth}{3.7cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.4\baselineskip}
+
+% Entorns de cada tipus de bloc. Numeració comuna dins del tema (1.1, 1.2...).
+\theoremstyle{plain}
+\newtheorem{teorema}{Teorema}[chapter]
+\newtheorem{proposicio}[teorema]{Proposició}
+\newtheorem{lema}[teorema]{Lema}
+\newtheorem{corollari}[teorema]{Corol·lari}
+\theoremstyle{definition}
+\newtheorem{definicio}[teorema]{Definició}
+\newtheorem{exemple}[teorema]{Exemple}
+\newtheorem{observacio}[teorema]{Observació}
+\newtheorem{notacio}[teorema]{Notació}
+\newtheorem{exercici}[teorema]{Exercici}
+% Llistes numerades com als apunts: 1), 2)...
+\renewcommand{\labelenumi}{\theenumi)}
+\addto\captionscatalan{\renewcommand{\proofname}{Demostració}}
+
+% Colors de les marques.
+\definecolor{lemacorr}{HTML}{B4231B}   % canvi respecte als apunts
+\definecolor{lemanota}{HTML}{1F4FB8}   % notes i notetes
+\definecolor{lemapend}{HTML}{B45309}   % dubtes i coses pendents
+\definecolor{lemafont}{HTML}{6B7280}   % d'on ve cada bloc
+\definecolor{lemafons}{HTML}{F1F4F9}
+
+% D'on ve el bloc: font i pàgina dels apunts, al marge.
+\newcommand{\origen}[1]{\marginpar{\raggedright\footnotesize\color{lemafont}#1}}
+% Il·legible o dubtós.
+\newcommand{\dubte}[1]{\textcolor{lemapend}{[#1?]}}
+% Canvi respecte als apunts.
+\newcommand{\correccio}[1]{\textcolor{lemacorr}{#1}\marginpar{\raggedright\footnotesize\color{lemacorr}Correcció respecte als apunts}}
+% Discrepància vàlida amb la font.
+\newcommand{\nota}[1]{\marginpar{\raggedright\footnotesize\color{lemanota}#1}}
+% Noteta numerada: el número al text i al marge; la llista sencera és a l'informe.
+\newcommand{\noteta}[2]{\textsuperscript{\textcolor{lemanota}{\sffamily\bfseries #1}}\marginpar{\raggedright\footnotesize\color{lemanota}\textsf{\textbf{#1}} #2}}
+% Caixa per al que no es va veure a classe i s'ha pres d'una font.
+\newcommand{\noclasse}[2]{\par\smallskip\noindent\fcolorbox{lemanota}{lemafons}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{\footnotesize\textbf{No vist a classe}, tret de #1.\par\normalsize #2}}\par\smallskip}
+% Demostració que encara no tenim.
+\newcommand{\pendent}[1]{\par\noindent\textit{Demostració.}\ \textcolor{lemapend}{\textbf{Pendent:} #1}\par}

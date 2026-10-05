@@ -1,0 +1,16 @@
+services:
+  lema:
+    build: web
+    restart: unless-stopped        # torna a arrancar sola quan s'obri Docker Desktop
+    ports:
+      - "127.0.0.1:8300:8000"   # http://localhost:8300, només des d'este ordinador
+    env_file:
+      - path: .env               # CLAUDE_CODE_OAUTH_TOKEN (vegeu .env.example)
+        required: false
+    volumes:
+      - .:/lema:ro                 # el nucli (CLAUDE.md, scripts, plantilla, web), només de lectura
+      - ./dades:/lema/dades        # assignatures, fonts i classes: l'únic lloc on s'escriu
+      - claude:/home/lema/.claude  # converses de Claude Code, per poder continuar-les
+
+volumes:
+  claude:

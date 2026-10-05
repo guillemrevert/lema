@@ -86,6 +86,8 @@ L'usuari els deixa a `prova-1/`:
 2. `fets/`: un material del professor (apunts, diapositives o capítol del llibre que segueix) o apunts d'un altre alumne.
 3. Un `.txt` amb dues línies sobre eixe material: què és i d'on surt.
 
+Des de la web local ([`web-local.md`](web-local.md)), els materials són a `dades/` i el prompt de la web diu on és cada cosa.
+
 ## Passos
 
 Tenen la mateixa numeració que el flux i que `flux.html`.
