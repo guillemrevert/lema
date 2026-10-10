@@ -384,38 +384,43 @@ function seccioApunts(classe, bloquejat) {
 
 function seccioFont(classe, assig, desa, bloquejat) {
   const seccio = h("section", { class: "targeta", "aria-labelledby": "t-font" });
-  // La font triada, o «nova» mentre s'omple el formulari d'una font nova.
-  let triada = assig.fonts.some((f) => f.id === classe.font) ? classe.font : (assig.fonts.length ? null : "nova");
+  // Les fonts triades, amb els temes (PDF) de cada una. Les que ja no existeixen no compten.
+  const triades = classe.fonts.filter((t) => assig.fonts.some((f) => f.id === t.id));
+  let nova = !assig.fonts.length;  // el formulari d'una font nova, obert
 
-  function opcio(id, titol, detall, cos) {
-    const actiu = triada === id;
+  async function canvia(fonts) {
+    await desa({ fonts });
+    pinta();
+  }
+
+  function opcio(titol, detall, actiu, onchange, cos) {
     return h("div", { class: "opcio" + (actiu ? " triada" : "") },
       h("label", { class: "opcio-cap" },
-        h("input", { type: "radio", name: "font", value: id, checked: actiu, disabled: bloquejat,
-          onchange: async () => {
-            triada = id;
-            if (id === "nova") pintaSeccio();
-            else { await desa({ font: id, tema_font: null }); pinta(); }
-          } }),
+        h("input", { type: "checkbox", checked: actiu, disabled: bloquejat, onchange }),
         h("span", {}, h("strong", {}, titol), h("span", { class: "detall" }, detall))),
       actiu && cos ? cos() : null);
   }
 
   function cosFont(f) {
+    const temes = triades.find((t) => t.id === f.id).temes;
+    const marca = (nom, si) => canvia(triades.map((t) => (t.id !== f.id ? t : {
+      id: t.id,
+      // En l'ordre de la font, no en el que s'han marcat.
+      temes: f.pdfs.map((p) => p.nom).filter((n) => (n === nom ? si : temes.includes(n))),
+    })));
     return h("div", { class: "opcio-cos" },
-      h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
-        icona("doc", 16),
-        h("span", { class: "nom" }, p.nom),
-        p.amb_text
-          ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
-          : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge")))),
-      camp("En quin tema de la font és la classe? ",
-        h("select", { id: "tema", disabled: bloquejat,
-          onchange: async (e) => { await desa({ tema_font: e.target.value || null }); pinta(); } },
-        h("option", { value: "" }, "No ho sé: Claude mirarà l'índex"),
-        f.pdfs.map((p) => h("option", { value: p.nom, selected: p.nom === classe.tema_font }, p.nom))),
-        h("span", { class: "opcional" }, "(opcional)")),
-      h("p", { class: "nota-petita" }, "Si ho saps, Claude no llig pàgines que no calen."));
+      h("fieldset", { class: "temes" },
+        h("legend", {}, "En quins temes de la font és la classe? ", h("span", { class: "opcional" }, "(opcional)")),
+        h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
+          h("label", { class: "nom" },
+            h("input", { type: "checkbox", checked: temes.includes(p.nom), disabled: bloquejat,
+              onchange: (e) => marca(p.nom, e.target.checked) }),
+            p.nom),
+          p.amb_text
+            ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
+            : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge"))))),
+      h("p", { class: "nota-petita" },
+        "Si no en marques cap, Claude mirarà l'índex. Si els marques, no llig pàgines que no calen."));
   }
 
   function cosNova() {
@@ -448,8 +453,7 @@ function seccioFont(classe, assig, desa, bloquejat) {
         boto.textContent = "Pujant i extraient el text…";
         try {
           const font = await api(`/api/assignatures/${classe.assignatura}/fonts`, { method: "POST", body: f });
-          await desa({ font: font.id, tema_font: null });
-          pinta();
+          await canvia([...triades, { id: font.id, temes: [] }]);
         } catch (err) {
           avisa(err.message);
           boto.disabled = false;
@@ -467,18 +471,23 @@ function seccioFont(classe, assig, desa, bloquejat) {
   function pintaSeccio() {
     seccio.replaceChildren(
       h("div", { class: "cap-seccio" },
-        h("h2", { id: "t-font" }, "Font"),
-        h("p", {}, "D'on es reconstrueix cada bloc. Una per classe.")),
+        h("h2", { id: "t-font" }, "Fonts"),
+        h("p", {}, "D'on es reconstrueix cada bloc. Pots marcar-ne més d'una: si un bloc és a més d'una i no coincideixen, Claude en tria una i t'ho diu en una noteta.")),
       h("fieldset", { class: "opcions" },
-        h("legend", { class: "ocult" }, "Tria la font"),
+        h("legend", { class: "ocult" }, "Tria les fonts"),
         assig.fonts.map((f) => {
           const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
           const detall = [f.que_es, `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades`]
             .filter(Boolean).join(" · ");
-          return opcio(f.id, f.nom, detall, () => cosFont(f));
+          return opcio(f.nom, detall, triades.some((t) => t.id === f.id),
+            (e) => canvia(e.target.checked
+              ? [...triades, { id: f.id, temes: [] }]
+              : triades.filter((t) => t.id !== f.id)),
+            () => cosFont(f));
         }),
-        bloquejat ? null : opcio("nova", "Puja una font nova",
-          "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.", cosNova)));
+        bloquejat ? null : opcio("Puja una font nova",
+          "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.", nova,
+          (e) => { nova = e.target.checked; pintaSeccio(); }, cosNova)));
   }
 
   pintaSeccio();
@@ -499,11 +508,13 @@ function seccioNota(classe, desa, bloquejat) {
 function barraPassa(classe, assig) {
   const a = classe.assignatura;
   const c = classe.id;
-  const font = assig.fonts.find((f) => f.id === classe.font);
+  const fonts = classe.fonts
+    .map((t) => ({ ...t, nom: assig.fonts.find((f) => f.id === t.id)?.nom }))
+    .filter((t) => t.nom);
   const n = classe.apunts.length;
   let falta = null;
   if (!n) falta = "Falten les fotos dels apunts.";
-  else if (!font) falta = "Falta triar la font.";
+  else if (!fonts.length) falta = "Falta triar la font.";
   const enMarxa = classe.estat === "en_marxa";
   const repetir = classe.estat !== "nova";
 
@@ -524,7 +535,8 @@ function barraPassa(classe, assig) {
 
   const resum = falta || [
     `${n} ${n === 1 ? "foto" : "fotos"}`,
-    `Font: ${font.nom}${classe.tema_font ? ", " + classe.tema_font : ""}`,
+    (fonts.length > 1 ? "Fonts: " : "Font: ") +
+      fonts.map((t) => t.nom + (t.temes.length ? ` (${t.temes.join(", ")})` : "")).join(", "),
     "Es fa en una conversa nova de Claude Code",
   ].join(" · ");
   return h("div", { class: "barra-accio" },

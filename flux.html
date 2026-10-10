@@ -359,7 +359,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       surt: "La versió decidida de cada bloc, el diccionari de notació, les notetes i les preguntes obligatòries.",
       instr: [
         "Identificar de quin resultat o demostració es tracta.",
-        "Buscar-lo a la font. Amb una sola font, es llig directament; no cal catàleg.",
+        "Buscar-lo a la font. Si n'hi ha diverses (des de la web es poden triar), a totes. Es lligen directament; no cal catàleg.",
         "Comparar-lo amb els apunts: hipòtesis, conclusió i, en les demostracions, l'argument.",
         "Apuntar al diccionari de notació com escriuen els apunts cada concepte, a partir de la comparació amb la font.",
         "Decidir quina versió s'agafa segons la decisió 7 (taula de baix).",
@@ -417,11 +417,19 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
     ["<b>Diferent però vàlid</b>: a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit", "la versió dels apunts", "noteta"],
     ["<b>Apunts falsos</b>", "la versió de la font", "correcció marcada"],
     ["<b>Dubtós</b>", "el que digues tu", "pregunta obligatòria"],
-    ["<b>No és a la font</b>", "la versió dels apunts", "sense font"]
+    ["<b>No és a la font</b>", "la versió dels apunts", "sense font"],
+    ["<b>A més d'una font, i no coincideixen</b>", "la que quadra millor amb els apunts", "noteta"]
   ];
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 5, data: "2026-10-07",
+      titol: "Des de la web es poden triar diverses fonts per classe. Si un bloc és a més d'una i no coincideixen, Claude en tria una i deixa una noteta.",
+      passos: {
+        pas3: "Busca cada bloc a totes les fonts triades, no només a una. Nova fila a la decisió 7: si un bloc és a més d'una font i no coincideixen, s'agafa la que quadra millor amb els apunts, amb noteta."
+      }
+    },
     {
       versio: 4, data: "2026-10-02",
       titol: "S'hi suma Estructures Algebraiques, i la font també poden ser apunts d'un altre alumne. La primera prova es va fer així i va funcionar.",

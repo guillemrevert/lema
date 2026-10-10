@@ -54,7 +54,7 @@ Tenen prioritat sobre l'especificació si hi ha contradicció.
 | 4 | Demostracions no fetes a classe | Si els apunts no en diuen res, no s'afegeixen. Si als apunts posa "falta demo" (o la marca equivalent de l'usuari), es busca a les fonts i s'afegeix en una caixa "No vist a classe, tret de [font], p. X". Si no es troba, es marca "Demostració pendent, no trobada a les fonts" |
 | 5 | Preguntes a l'usuari | Dos tipus (vegeu baix) |
 | 6 | Assignatures i primera prova | Anàlisi II i Estructures Algebraiques. La primera prova (02/10/2026) es va fer amb una pàgina d'Estructures Algebraiques i els apunts de Wuolah d'un alumne de l'any passat |
-| 7 | Quina versió s'agafa | Segons la comparació amb la font. **Equivalent:** el text de la font. **Diferent però vàlid** (a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit): la dels apunts, amb noteta. **Apunts falsos:** la de la font, amb la correcció marcada. **Dubtós:** pregunta obligatòria. Si el bloc no és a la font, es fa amb els apunts. El que és als apunts i no a la font (un pas extra, un comentari del professor) es manté |
+| 7 | Quina versió s'agafa | Segons la comparació amb la font. **Equivalent:** el text de la font. **Diferent però vàlid** (a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit): la dels apunts, amb noteta. **Apunts falsos:** la de la font, amb la correcció marcada. **Dubtós:** pregunta obligatòria. Si el bloc no és a la font, es fa amb els apunts. El que és als apunts i no a la font (un pas extra, un comentari del professor) es manté. Si el bloc és a més d'una font i no coincideixen, s'agafa la que quadra millor amb els apunts, amb noteta |
 | 8 | Notació | Sempre la de l'usuari. Si un símbol només apareix a la font, es manté el de la font |
 
 ### Decisió 5 en detall: dos tipus de preguntes
@@ -103,7 +103,7 @@ Tenen la mateixa numeració que el flux i que `flux.html`.
    - Fer l'esquema de blocs (definició, teorema, proposició, lema, corol·lari, demostració, exemple, observació), amb la pàgina d'origen.
 3. **Per a cada bloc** (Fase 2).
    - Identificar de quin resultat o demostració es tracta.
-   - Buscar-lo a la font. Amb una sola font, llegir-la directament; no cal catàleg.
+   - Buscar-lo a la font. Si n'hi ha diverses (des de la web es poden triar), a totes. Es lligen directament; no cal catàleg.
    - Comparar-lo amb els apunts (hipòtesis, conclusió i, en les demostracions, l'argument) i classificar la diferència: equivalent / diferent però vàlid / versió dels apunts falsa / dubtós.
    - Apuntar al diccionari de notació com escriuen els apunts cada concepte, a partir de la comparació amb la font.
    - Decidir la versió segons la decisió 7.
@@ -138,12 +138,13 @@ La valoració final la fa l'usuari revisant el PDF.
 
 - Drive, GitHub Actions i qualsevol automatització.
 - Vista web de revisió amb subratllat i xinxetes.
-- Catàleg de fonts i diverses fonts alhora.
+- Catàleg de fonts.
 - Document incremental entre sessions.
 
 ## Com treballar amb l'usuari
 
 - Respondre en valencià, de manera concisa i directa.
 - Si hi ha diverses maneres de fer una cosa, preguntar quina prefereix abans de fer-la.
+- Abans d'implementar qualsevol canvi a l'eina, una guia d'implementació i esperar el vist-i-plau (skill `guia-implementacio`).
 - Fer el mínim que funcione; res de sobreenginyeria.
 - Ser sincer amb els resultats, també si la prova ix malament.

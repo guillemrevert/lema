@@ -99,8 +99,16 @@ def carpeta_classe(a, c):
     return dins(carpeta_assig(a) / "classes", c)
 
 
+def migra(dades):
+    """Abans del 07/10/2026, cada classe tenia una sola font (`font` i `tema_font`)."""
+    if "font" in dades:
+        font, tema = dades.pop("font"), dades.pop("tema_font", None)
+        dades["fonts"] = [{"id": font, "temes": [tema] if tema else []}] if font else []
+    return dades
+
+
 def llig_classe(a, c):
-    dades = llig(carpeta_classe(a, c) / "classe.json")
+    dades = migra(llig(carpeta_classe(a, c) / "classe.json"))
     if dades["estat"] == "en_marxa" and (a, c) not in processos:
         dades["estat"] = "aturada"  # el servidor s'ha reiniciat a mitges
     return dades
@@ -108,7 +116,7 @@ def llig_classe(a, c):
 
 def desa_classe(a, c, **canvis):
     ruta = carpeta_classe(a, c) / "classe.json"
-    dades = llig(ruta)
+    dades = migra(llig(ruta))
     dades.update(canvis)
     escriu(ruta, dades)
     return dades
@@ -199,10 +207,14 @@ class NovaClasse(BaseModel):
     titol: str = ""
 
 
+class FontClasse(BaseModel):
+    id: str
+    temes: list[str] = []  # els PDF de la font on és la classe; buit: Claude mira l'índex
+
+
 class CanvisClasse(BaseModel):
     titol: str | None = None
-    font: str | None = None
-    tema_font: str | None = None
+    fonts: list[FontClasse] | None = None
     nota: str | None = None
     apunts: list[str] | None = None
 
@@ -220,8 +232,9 @@ def crea_classe(nova: NovaClasse):
     dades = {
         "id": id_classe, "assignatura": nova.assignatura, "data": nova.data,
         "titol": nova.titol.strip(), "apunts": [],
-        "font": fonts[0].parent.name if len(fonts) == 1 else None,  # si només n'hi ha una, eixa
-        "tema_font": None, "nota": "", "estat": "nova", "pas": None,
+        # Si l'assignatura només en té una, ja va triada.
+        "fonts": [{"id": fonts[0].parent.name, "temes": []}] if len(fonts) == 1 else [],
+        "nota": "", "estat": "nova", "pas": None,
         "sessio": None, "tokens": 0, "creada": ara(),
     }
     escriu(base / id_classe / "classe.json", dades)
@@ -250,6 +263,14 @@ def modifica_classe(a: str, c: str, canvis: CanvisClasse):
     nous = canvis.model_dump(exclude_unset=True)
     if "apunts" in nous and sorted(nous["apunts"]) != sorted(actual["apunts"]):
         raise HTTPException(400, "L'ordre ha de tindre les mateixes fotos")
+    if "fonts" in nous:
+        ids = [f["id"] for f in nous["fonts"]]
+        if len(set(ids)) != len(ids):
+            raise HTTPException(400, "Hi ha una font repetida")
+        for f in nous["fonts"]:
+            carpeta = dins(carpeta_assig(a) / "fonts", f["id"])
+            for tema in f["temes"]:
+                dins(carpeta, tema)
     return desa_classe(a, c, **nous)
 
 
@@ -294,14 +315,19 @@ def ordre_claude(missatge, sessio=None):
 def prompt_classe(a, dades):
     base = f"dades/assignatures/{a}"
     carpeta = f"{base}/classes/{dades['id']}"
+    fonts = []
+    for f in dades["fonts"]:
+        nom = llig(carpeta_assig(a) / "fonts" / f["id"] / "font.json")["nom"]
+        temes = ", ".join(f"`{t}`" for t in f["temes"]) or "no ho sap; mira l'índex"
+        fonts.append(f"  - {nom}: `{base}/fonts/{f['id']}`. "
+                     f"{'Temes' if len(f['temes']) > 1 else 'Tema'} on és la classe: {temes}.")
     valors = {
         "assignatura": ASSIGNATURES[a],
         "carpeta": carpeta,
         "carpeta_assig": base,
-        "carpeta_font": f"{base}/fonts/{dades['font']}",
+        "fonts": "\n".join(fonts),
         "apunts": "\n".join(f"  {i}. `{carpeta}/apunts/{n}`"
                             for i, n in enumerate(dades["apunts"], 1)),
-        "tema_font": f"`{dades['tema_font']}`" if dades["tema_font"] else "no ho sap; mira l'índex",
         "nota": dades["nota"].strip() or "cap",
         # De la carpeta de la classe a l'arrel del repositori hi ha cinc nivells.
         "plantilla": "../../../../../plantilla-base",
@@ -415,7 +441,8 @@ async def passa_a_net(a: str, c: str):
         raise HTTPException(409, "Ja està en marxa")
     if not dades["apunts"]:
         raise HTTPException(400, "Falten les fotos dels apunts")
-    if not dades["font"] or not (carpeta_assig(a) / "fonts" / dades["font"] / "font.json").exists():
+    if not dades["fonts"] or not all((carpeta_assig(a) / "fonts" / f["id"] / "font.json").exists()
+                                     for f in dades["fonts"]):
         raise HTTPException(400, "Falta triar la font")
     afegeix_event(carpeta_classe(a, c), t="inici")
     processos[(a, c)] = None  # reservat fins que arranca el procés
