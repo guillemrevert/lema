@@ -9,6 +9,7 @@ Dades (fora de git):
   dades/assignatures/<assignatura>/
     notacio.yaml
     fonts/<font>/          font.json, els PDF, el text extret i index.txt
+    temes/<tema>/          tema.json, tema.tex, tema.pdf i blocs/<classe>/ de cada classe que s'hi afegeix
     classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/ i el que escriu Claude
 """
 
@@ -26,6 +27,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from pypdf import PdfReader
 
 ARREL = Path(__file__).resolve().parent.parent
 DADES = ARREL / "dades"
@@ -99,11 +101,18 @@ def carpeta_classe(a, c):
     return dins(carpeta_assig(a) / "classes", c)
 
 
+def carpeta_tema(a, t):
+    return dins(carpeta_assig(a) / "temes", t)
+
+
 def migra(dades):
-    """Abans del 07/10/2026, cada classe tenia una sola font (`font` i `tema_font`)."""
+    """Abans del 07/10/2026, cada classe tenia una sola font (`font` i `tema_font`).
+    Abans del 10/10/2026, les classes no tenien tema."""
     if "font" in dades:
         font, tema = dades.pop("font"), dades.pop("tema_font", None)
         dades["fonts"] = [{"id": font, "temes": [tema] if tema else []}] if font else []
+    dades.setdefault("tema", None)
+    dades.setdefault("fusiona", False)
     return dades
 
 
@@ -147,6 +156,45 @@ def compta_font(carpeta):
     return {"pdfs": pdfs, "entrades": entrades}
 
 
+def ordre_natural(text):
+    """Per ordenar «Tema 2» abans que «Tema 10»."""
+    return [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", text.lower())]
+
+
+pagines_vistes = {}  # ruta d'un PDF -> (data de modificació, pàgines)
+
+
+def pagines_pdf(pdf, modificat):
+    if pagines_vistes.get(pdf, (None,))[0] != modificat:
+        try:
+            pagines_vistes[pdf] = (modificat, len(PdfReader(pdf).pages))
+        except Exception:  # p. ex. a mig escriure mentre Claude compila
+            return None
+    return pagines_vistes[pdf][1]
+
+
+def info_tema(carpeta):
+    """El que diu tema.json i, si el tema ja s'ha compilat, les pàgines i la data del PDF."""
+    dades = llig(carpeta / "tema.json")
+    info = {"id": carpeta.name, "nom": dades["nom"], "creat": dades.get("creat"), "pdf": None}
+    pdf = carpeta / "tema.pdf"
+    if pdf.exists():
+        st = pdf.stat()
+        info["pdf"] = {"pagines": pagines_pdf(pdf, st.st_mtime_ns),
+                       "data": datetime.fromtimestamp(st.st_mtime).astimezone().isoformat(timespec="seconds")}
+    return info
+
+
+def al_tema(a, dades):
+    """La carpeta del tema si la classe hi té blocs i el tema ja té PDF; si no, None."""
+    if not dades.get("tema"):
+        return None
+    carpeta = carpeta_assig(a) / "temes" / dades["tema"]
+    if (carpeta / "blocs" / dades["id"]).is_dir() and (carpeta / "tema.pdf").exists():
+        return carpeta
+    return None
+
+
 def afegeix_event(carpeta, **event):
     (carpeta / "registre").mkdir(exist_ok=True)
     event["ts"] = ara()
@@ -159,7 +207,7 @@ def nombre_events(carpeta):
     return ruta.read_text(encoding="utf-8").count("\n") if ruta.exists() else 0
 
 
-# ---------- Assignatures i fonts ----------
+# ---------- Assignatures, fonts i temes ----------
 
 @app.get("/api/assignatures")
 def assignatures():
@@ -169,10 +217,30 @@ def assignatures():
         classes = []
         for fitxa in sorted((base / "classes").glob("*/classe.json"), reverse=True):
             d = llig_classe(a, fitxa.parent.name)
-            classes.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas")})
+            classes.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "tema", "fusiona")})
         fonts = [info_font(f.parent) for f in sorted((base / "fonts").glob("*/font.json"))]
-        resultat.append({"id": a, "nom": nom, "classes": classes, "fonts": fonts})
+        temes = sorted((info_tema(f.parent) for f in (base / "temes").glob("*/tema.json")),
+                       key=lambda t: ordre_natural(t["nom"]))
+        resultat.append({"id": a, "nom": nom, "classes": classes, "fonts": fonts, "temes": temes})
     return resultat
+
+
+class NouTema(BaseModel):
+    nom: str
+
+
+@app.post("/api/assignatures/{a}/temes")
+def crea_tema(a: str, nou: NouTema):
+    nom = nou.nom.strip()
+    id_tema = slug(nom)
+    if not id_tema:
+        raise HTTPException(400, "El tema necessita un nom")
+    carpeta = carpeta_assig(a) / "temes" / id_tema
+    if carpeta.exists():
+        raise HTTPException(409, f"Ja hi ha un tema que es diu «{nom}»")
+    carpeta.mkdir(parents=True)
+    escriu(carpeta / "tema.json", {"nom": nom, "creat": ara()})
+    return info_tema(carpeta)
 
 
 @app.post("/api/assignatures/{a}/fonts")
@@ -205,6 +273,8 @@ class NovaClasse(BaseModel):
     assignatura: str
     data: str
     titol: str = ""
+    tema: str | None = None
+    fusiona: bool = True  # afegir-la al document del tema; només compta si hi ha tema
 
 
 class FontClasse(BaseModel):
@@ -214,6 +284,8 @@ class FontClasse(BaseModel):
 
 class CanvisClasse(BaseModel):
     titol: str | None = None
+    tema: str | None = None
+    fusiona: bool = False
     fonts: list[FontClasse] | None = None
     nota: str | None = None
     apunts: list[str] | None = None
@@ -224,6 +296,8 @@ def crea_classe(nova: NovaClasse):
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", nova.data):
         raise HTTPException(400, "Data no vàlida")
     base = carpeta_assig(nova.assignatura) / "classes"
+    if nova.tema:
+        carpeta_tema(nova.assignatura, nova.tema)  # 404 si no existeix
     id_classe, n = nova.data, 2
     while (base / id_classe).exists():
         id_classe, n = f"{nova.data}-{n}", n + 1
@@ -232,6 +306,7 @@ def crea_classe(nova: NovaClasse):
     dades = {
         "id": id_classe, "assignatura": nova.assignatura, "data": nova.data,
         "titol": nova.titol.strip(), "apunts": [],
+        "tema": nova.tema or None, "fusiona": bool(nova.tema) and nova.fusiona,
         # Si l'assignatura només en té una, ja va triada.
         "fonts": [{"id": fonts[0].parent.name, "temes": []}] if len(fonts) == 1 else [],
         "nota": "", "estat": "nova", "pas": None,
@@ -243,6 +318,8 @@ def crea_classe(nova: NovaClasse):
 
 @app.get("/api/classes/{a}/{c}")
 def classe(a: str, c: str):
+    """La classe, amb els fitxers i el PDF en rutes relatives a la carpeta de l'assignatura."""
+    dades = llig_classe(a, c)
     carpeta = carpeta_classe(a, c)
     fitxers = []
     for arrel, carpetes, noms in os.walk(carpeta):
@@ -252,9 +329,18 @@ def classe(a: str, c: str):
         fitxers += [(rel / n).as_posix() for n in noms
                     if Path(n).suffix not in SOROLL and n != "classe.json"]
     fitxers.sort()
-    pdfs = [f for f in fitxers if f.endswith(".pdf") and "/" not in f]
-    return {**llig_classe(a, c), "fitxers": fitxers, "pdf": pdfs[0] if pdfs else None,
-            "events": nombre_events(carpeta)}
+    propis = [f for f in fitxers if f.endswith(".pdf") and "/" not in f]
+    fitxers = [f"classes/{c}/{f}" for f in fitxers]
+    pdf = f"classes/{c}/{propis[0]}" if propis else None
+    tema = al_tema(a, dades)
+    if tema:
+        # Els blocs de la classe són al document del tema: el PDF és el del tema, tret que
+        # l'interruptor estiga apagat i la classe tinga un PDF propi.
+        if dades["fusiona"] or not propis:
+            pdf = f"temes/{tema.name}/tema.pdf"
+        fitxers += [f"temes/{tema.name}/{n}" for n in ("tema.tex", "tema.pdf") if (tema / n).exists()]
+        fitxers += sorted(f"temes/{tema.name}/blocs/{c}/{b.name}" for b in (tema / "blocs" / c).iterdir())
+    return {**dades, "fitxers": fitxers, "pdf": pdf, "events": nombre_events(carpeta)}
 
 
 @app.put("/api/classes/{a}/{c}")
@@ -263,6 +349,13 @@ def modifica_classe(a: str, c: str, canvis: CanvisClasse):
     nous = canvis.model_dump(exclude_unset=True)
     if "apunts" in nous and sorted(nous["apunts"]) != sorted(actual["apunts"]):
         raise HTTPException(400, "L'ordre ha de tindre les mateixes fotos")
+    if {"tema", "fusiona"} & nous.keys():
+        if (a, c) in processos:
+            raise HTTPException(409, "Claude està treballant: canvia el tema quan pare")
+        if nous.get("tema"):
+            carpeta_tema(a, nous["tema"])
+        if not (nous["tema"] if "tema" in nous else actual["tema"]):
+            nous["tema"], nous["fusiona"] = None, False  # sense tema no hi ha document del tema
     if "fonts" in nous:
         ids = [f["id"] for f in nous["fonts"]]
         if len(set(ids)) != len(ids):
@@ -312,6 +405,54 @@ def ordre_claude(missatge, sessio=None):
     return ordre + ["--disallowedTools", "AskUserQuestion"]
 
 
+# Bloc {document} de prompt.md: on va el document, segons si la classe s'afegeix al tema.
+DOCUMENT_CLASSE = """\
+- Tot el que generes, dins de `{carpeta}`: `esquema.yaml`, `blocs/`, `tema.tex` i `tema.pdf`, `informe.md` i `millores.md`.{nota_tema}
+- Per compilar: `python compila.py {carpeta}`. `tema.tex` ha de ser l'únic `.tex` de l'arrel de la classe."""
+
+DOCUMENT_TEMA = """\
+- **Document del tema «{tema_nom}»**, a `{carpeta_tema}`. Esta classe, del {data}, s'hi afegeix (decisió 9 de `CLAUDE.md`):
+  - Els blocs d'esta classe van a `{carpeta_tema}/blocs/{classe}/`, numerats B01, B02… Si la carpeta ja té blocs d'una passada anterior d'esta classe, esborra'ls i lleva'n els `\\input` de `tema.tex` abans d'escriure'n de nous.
+  - `tema.tex` és a l'arrel de `{carpeta_tema}`. Si no existeix, crea'l amb el nom del tema com a títol. Si existeix, no toques els blocs de les altres classes: afegeix-hi només els `\\input{blocs/{classe}/Bnn}` d'esta classe, en ordre de data de classe. {classes_tema}
+  - Les notetes continuen la numeració del tema: mira quina és l'última als blocs que ja hi ha.
+  - Per compilar: `python compila.py {carpeta_tema}`. `tema.tex` ha de ser l'únic `.tex` de l'arrel del tema.
+  - A la carpeta de la classe, `{carpeta}`, van `esquema.yaml`, `informe.md` i `millores.md`. A l'informe, digues a quines pàgines del PDF del tema és esta classe."""
+
+
+def omple(plantilla, valors):
+    return re.sub(r"\{(\w+)\}", lambda m: str(valors.get(m.group(1), m.group(0))), plantilla)
+
+
+def data_llarga(iso):
+    return "/".join(reversed(iso.split("-")))
+
+
+def document_classe(a, dades, valors):
+    """El bloc {document} del prompt."""
+    tema = dades.get("tema")
+    fitxa = carpeta_assig(a) / "temes" / tema / "tema.json" if tema else None
+    if not fitxa or not fitxa.exists():
+        return omple(DOCUMENT_CLASSE, {**valors, "nota_tema": ""})
+    nom = llig(fitxa)["nom"]
+    if not dades.get("fusiona"):
+        nota = f" La classe és del tema «{nom}», però té el seu document a banda."
+        return omple(DOCUMENT_CLASSE, {**valors, "nota_tema": nota})
+    altres = []
+    for carpeta in sorted(p for p in (fitxa.parent / "blocs").glob("*") if p.is_dir()):
+        if carpeta.name == dades["id"]:
+            continue
+        if carpeta.name == "inicial":
+            altres.append("`inicial` (el document que ja hi havia abans dels temes de la web: va primer i no el toques)")
+            continue
+        fitxa_classe = carpeta_assig(a) / "classes" / carpeta.name / "classe.json"
+        data = llig(fitxa_classe)["data"] if fitxa_classe.exists() else None
+        altres.append(f"`{carpeta.name}`" + (f" ({data_llarga(data)})" if data else ""))
+    classes = ("Classes que ja hi són, amb la carpeta dels seus blocs: " + ", ".join(altres) + "."
+               if altres else "Encara no n'hi ha cap altra: el tema comença amb esta classe.")
+    return omple(DOCUMENT_TEMA, {**valors, "tema_nom": nom, "carpeta_tema": f"dades/assignatures/{a}/temes/{tema}",
+                                 "data": data_llarga(dades["data"]), "classes_tema": classes})
+
+
 def prompt_classe(a, dades):
     base = f"dades/assignatures/{a}"
     carpeta = f"{base}/classes/{dades['id']}"
@@ -329,11 +470,12 @@ def prompt_classe(a, dades):
         "apunts": "\n".join(f"  {i}. `{carpeta}/apunts/{n}`"
                             for i, n in enumerate(dades["apunts"], 1)),
         "nota": dades["nota"].strip() or "cap",
-        # De la carpeta de la classe a l'arrel del repositori hi ha cinc nivells.
+        # De la carpeta de la classe, o de la del tema, a l'arrel del repositori hi ha cinc nivells.
         "plantilla": "../../../../../plantilla-base",
+        "classe": dades["id"],
     }
-    plantilla = (ARREL / "web" / "prompt.md").read_text(encoding="utf-8")
-    return re.sub(r"\{(\w+)\}", lambda m: valors.get(m.group(1), m.group(0)), plantilla)
+    valors["document"] = document_classe(a, dades, valors)
+    return omple((ARREL / "web" / "prompt.md").read_text(encoding="utf-8"), valors)
 
 
 def detall_eina(nom, entrada):
@@ -444,6 +586,8 @@ async def passa_a_net(a: str, c: str):
     if not dades["fonts"] or not all((carpeta_assig(a) / "fonts" / f["id"] / "font.json").exists()
                                      for f in dades["fonts"]):
         raise HTTPException(400, "Falta triar la font")
+    if dades["fusiona"] and not (carpeta_assig(a) / "temes" / dades["tema"] / "tema.json").exists():
+        raise HTTPException(400, "El tema d'esta classe ja no existeix: tria'n un altre a Materials")
     afegeix_event(carpeta_classe(a, c), t="inici")
     processos[(a, c)] = None  # reservat fins que arranca el procés
     desa_classe(a, c, estat="en_marxa", pas=None, sessio=None)

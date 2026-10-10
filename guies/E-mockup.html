@@ -1,0 +1,1190 @@
+<title>Temes i pàgina d'assignatura</title>
+<!--
+  Mock-up estàtic de la guia guies/E-temes.md (10/10/2026). No funciona res: només ensenya com es veuria.
+  Les pantalles fan servir el mateix CSS que la web (web/static/style.css, inserit baix) més els estils nous
+  que la guia proposa afegir. Es publica com a artifact; també s'obri en local.
+-->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Pàgina d'explicació: una columna, pantalles senceres (1180 px, amb desplaçament dins del marc si no cap)
+   i, davall, cada part amb les alternatives una al costat de l'altra. */
+:root {
+  --pg-bg: #F3F2EE;
+  --pg-surface: #FFFFFF;
+  --pg-fg: #1B1E24;
+  --pg-muted: #5A606B;
+  --pg-line: #DCDAD2;
+  --pg-accent: #1F4FB8;
+  --pg-accent-soft: #E8EEFA;
+  --pg-serif: 'Newsreader', Georgia, serif;
+  --pg-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --pg-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pg-bg: #15171C; --pg-surface: #1E2127; --pg-fg: #ECEAE4; --pg-muted: #A4A9B3;
+    --pg-line: #343842; --pg-accent: #8FAAF0; --pg-accent-soft: #263455; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --pg-bg: #15171C; --pg-surface: #1E2127; --pg-fg: #ECEAE4; --pg-muted: #A4A9B3;
+  --pg-line: #343842; --pg-accent: #8FAAF0; --pg-accent-soft: #263455; color-scheme: dark;
+}
+
+/* ---------- CSS de la web (web/static/style.css, copiat tal qual) ---------- */
+:root {
+  --fons: #F7F6F2;
+  --lateral: #EFEEE8;
+  --superficie: #FFFFFF;
+  --tinta: #1B1E24;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora: #DEDCD4;
+  --vora-forta: #CFCDC4;
+  --linia: #ECEBE5;
+  /* Els mateixos colors que les marques del PDF (plantilla-base.tex). */
+  --blau: #1F4FB8;
+  --blau-fosc: #183F94;
+  --blau-clar: #E8EEFA;
+  --blau-fons: #F6F8FD;
+  --blau-text: #1A43A0;
+  --taronja: #B45309;
+  --taronja-clar: #FDF1E4;
+  --taronja-text: #8F4207;
+  --roig: #B4231B;
+  --roig-clar: #FBE9E7;
+  --roig-text: #9A1E17;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fons); color: var(--tinta); font: 15px/1.5 var(--sans); }
+a { color: var(--blau); }
+a:hover { color: var(--blau-fosc); }
+:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; }
+.ocult { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Estructura ---------- */
+.app { min-height: 100vh; display: flex; flex-wrap: wrap; }
+.lateral {
+  flex: 1 1 232px; max-width: 100%; background: var(--lateral); border-right: 1px solid var(--vora);
+  padding: 28px 18px; display: flex; flex-direction: column; gap: 28px;
+}
+.principal { flex: 999 1 560px; min-width: 0; padding: 40px clamp(16px, 4vw, 56px) 64px; }
+.contingut { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+.contingut.estret { max-width: 880px; }
+.columnes { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.col-principal { flex: 2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.col-lateral { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+
+/* ---------- Lateral ---------- */
+.logo { text-decoration: none; color: var(--tinta); display: flex; flex-direction: column; gap: 2px; padding: 0 6px; }
+.logo:hover { color: var(--tinta); }
+.logo-nom { font: 600 30px/1 var(--serif); letter-spacing: 0.04em; }
+.logo-sub { font-size: 12px; color: var(--suau); line-height: 1.35; }
+.grup { display: flex; flex-direction: column; gap: 6px; }
+.grup h2 { padding: 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.buit { margin: 0; padding: 0 6px; font-size: 14px; color: var(--suau); }
+.classe-nav {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid transparent; text-decoration: none; color: var(--tinta);
+}
+.classe-nav:hover { background: #E4E3DC; color: var(--tinta); }
+.classe-nav.actiu { background: var(--superficie); border-color: var(--vora); }
+.classe-nom { font-weight: 600; font-size: 14px; }
+.estat { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--suau); }
+.estat .punt { width: 8px; height: 8px; border-radius: 50%; background: var(--apagat); flex: none; }
+.estat-en_marxa { color: var(--blau-text); }
+.estat-en_marxa .punt { background: var(--blau); }
+.estat-esperant { color: var(--taronja-text); }
+.estat-esperant .punt { background: var(--taronja); }
+.estat-error { color: var(--roig-text); }
+.estat-error .punt { background: var(--roig); }
+.estat-acabada .punt { background: var(--blau); }
+
+/* ---------- Botons ---------- */
+.boto, .boto-sec {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+  padding: 0 20px; border-radius: 8px; font: 600 15px/1.2 var(--sans); text-decoration: none; cursor: pointer;
+}
+.boto { background: var(--blau); color: #FFFFFF; border: 0; }
+.boto:hover { background: var(--blau-fosc); color: #FFFFFF; }
+.boto:disabled { background: #9AA6C4; cursor: not-allowed; }
+.boto.gran { min-height: 48px; padding: 0 24px; font-size: 16px; }
+.boto-sec { background: var(--superficie); color: var(--tinta); border: 1px solid var(--vora-forta); padding: 0 16px; }
+.boto-sec:hover { background: #EFEEE8; color: var(--tinta); }
+.boto-sec.actiu { border-color: var(--blau); color: var(--blau); }
+.boto-icona {
+  width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--vora); border-radius: 8px; background: var(--superficie); color: #3A404B; cursor: pointer;
+}
+.boto-icona:hover { background: #EFEEE8; }
+
+/* ---------- Text i targetes ---------- */
+h1 { font: 600 38px/1.1 var(--serif); }
+.titol { display: flex; flex-direction: column; gap: 8px; }
+.subtitol { margin: 0; color: var(--suau); }
+.targeta {
+  background: var(--superficie); border: 1px solid var(--vora); border-radius: 12px; padding: 24px;
+  display: flex; flex-direction: column; gap: 16px; min-width: 0;
+}
+.targeta h2 { font: 600 24px/1.2 var(--serif); }
+.targeta.compacta { padding: 20px; gap: 12px; }
+.targeta.compacta h2 { font-size: 22px; }
+.cap-seccio { display: flex; flex-direction: column; gap: 2px; }
+.cap-seccio p { margin: 0; color: var(--suau); font-size: 14px; }
+.detall { font-size: 14px; color: var(--suau); }
+.nota-petita { margin: 0; font-size: 13px; color: var(--suau); }
+.opcional { font: 400 14px var(--sans); color: var(--suau); }
+.avis-text { color: var(--taronja-text); }
+
+/* ---------- Capçalera de la classe ---------- */
+.capcalera { display: flex; flex-direction: column; gap: 18px; }
+.capcalera > div { display: flex; flex-direction: column; gap: 4px; }
+.pestanyes { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--vora); }
+.pestanyes a, .pestanyes span { padding: 10px 14px; color: var(--suau); text-decoration: none; }
+.pestanyes a:hover { color: var(--tinta); }
+.pestanyes a.actiu { margin-bottom: -1px; border-bottom: 2px solid var(--blau); color: var(--tinta); font-weight: 600; }
+.pestanyes span { color: var(--apagat); }
+
+/* ---------- Formularis ---------- */
+.camps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.camp { display: flex; flex-direction: column; gap: 6px; }
+.camp > label { font-weight: 600; font-size: 14px; }
+input[type=text], input[type=date], select, textarea {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--vora-forta); border-radius: 8px;
+  background: #FFFFFF; font: inherit; color: var(--tinta); max-width: 100%;
+}
+textarea { padding: 12px; width: 100%; resize: vertical; }
+.accions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.accions .esquerra { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-width: 0; }
+.dreta { display: flex; justify-content: flex-end; }
+
+/* ---------- Apunts ---------- */
+.graella-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 16px; }
+.foto { display: flex; flex-direction: column; gap: 8px; }
+.foto[draggable=true] { cursor: grab; }
+.foto.sobre .miniatura { outline: 2px dashed var(--blau); outline-offset: 2px; }
+.miniatura {
+  position: relative; aspect-ratio: 3 / 4; border: 1px solid var(--vora); border-radius: 8px; background: #FBFAF6;
+  overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--suau);
+}
+.miniatura img { width: 100%; height: 100%; object-fit: cover; }
+.pag {
+  position: absolute; top: 8px; left: 8px; padding: 1px 8px; border-radius: 999px;
+  background: var(--tinta); color: #FFFFFF; font-size: 12px; font-weight: 600;
+}
+.peu-foto { display: flex; align-items: center; gap: 4px; }
+.nom-fitxer { flex: 1; min-width: 0; font: 12px/1.4 var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.afegeix {
+  aspect-ratio: 3 / 4; border: 2px dashed #B9BFCB; border-radius: 8px; background: #F7F8FB;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px; text-align: center; color: var(--blau); cursor: pointer;
+}
+.afegeix:hover { border-color: var(--blau); }
+.afegeix span { font-size: 13px; color: var(--suau); }
+.afegeix.ample { aspect-ratio: auto; flex-direction: row; justify-content: flex-start; text-align: left; padding: 18px; gap: 14px; }
+.afegeix.ample > span { display: flex; flex-direction: column; }
+.targeta.arrossegant { outline: 2px dashed var(--blau); outline-offset: -6px; }
+
+/* ---------- Font ---------- */
+.opcions { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.opcio { border: 2px solid var(--vora); border-radius: 10px; background: #FFFFFF; }
+.opcio.triada { border-color: var(--blau); background: var(--blau-fons); }
+.opcio-cap { display: flex; gap: 12px; padding: 16px; cursor: pointer; align-items: flex-start; }
+.opcio-cap input { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--blau); flex: none; }
+.opcio-cap > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.opcio-cos { padding: 0 16px 16px 46px; display: flex; flex-direction: column; gap: 16px; }
+.pdfs { list-style: none; margin: 0; padding: 0; border: 1px solid var(--vora); border-radius: 8px; background: #FFFFFF; }
+.pdfs li { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--linia); }
+.pdfs li:first-child { border-top: 0; }
+.pdfs .nom { flex: 1; min-width: 180px; overflow-wrap: anywhere; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.pdfs input { width: 16px; height: 16px; margin: 0; accent-color: var(--blau); flex: none; }
+.temes { border: 0; margin: 0; padding: 0; min-width: 0; }
+.temes legend { padding: 0; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+
+/* ---------- Barra de «Passa a net» ---------- */
+.barra-accio {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 24px; border-radius: 12px; background: var(--tinta); color: #FFFFFF;
+}
+.barra-accio > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.barra-accio span { font-size: 14px; color: #C9CCD3; }
+
+/* ---------- Passos ---------- */
+.passos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.passos li {
+  display: flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; border-radius: 999px;
+  border: 1px solid var(--vora); font-size: 14px; color: var(--suau);
+}
+.passos .cercle {
+  width: 26px; height: 26px; border-radius: 50%; background: #E9E8E2;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; flex: none;
+}
+.passos .fet { background: #FFFFFF; color: var(--tinta); }
+.passos .fet .cercle { background: var(--blau); color: #FFFFFF; }
+.passos .actual, .passos .aturat { background: #FFFFFF; color: var(--tinta); font-weight: 600; padding: 4px 14px 4px 4px; border-width: 2px; }
+.passos .actual { border-color: var(--blau); }
+.passos .actual .cercle { background: #FFFFFF; border: 2px solid var(--blau); color: var(--blau); }
+.passos .aturat { border-color: var(--taronja); }
+.passos .aturat .cercle { background: #FFFFFF; border: 2px solid var(--taronja); color: var(--taronja); }
+.passos .sufix { font-weight: 400; color: var(--suau); }
+
+/* ---------- Avisos ---------- */
+.avis { display: flex; gap: 14px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; border: 1px solid; }
+.avis > svg { flex: none; margin-top: 1px; }
+.avis > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.avis.taronja { background: var(--taronja-clar); border-color: #F0CBA4; color: #6E3306; }
+.avis.roig { background: var(--roig-clar); border-color: #EFC2BD; color: #7A1812; }
+.avis.blau { background: var(--blau-clar); border-color: #C9D5F0; color: #173A8A; }
+.avis.gris { background: var(--lateral); border-color: var(--vora); color: var(--tinta); }
+
+/* ---------- Què fa Claude ---------- */
+.feed { display: flex; flex-direction: column; gap: 12px; }
+.separador {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau);
+  border-top: 1px solid var(--linia); padding-top: 14px; margin-top: 6px;
+}
+.feed > .separador:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.titol-pas { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blau-text); margin-top: 8px; }
+.eines {
+  list-style: none; margin: 0; padding: 10px 12px; background: var(--fons); border-radius: 8px;
+  display: flex; flex-direction: column; gap: 6px; font: 13px/1.45 var(--mono);
+}
+.eines li { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.eines .verb { color: var(--suau); flex: none; min-width: 4.5em; }
+.eines .ruta { overflow-wrap: anywhere; min-width: 0; }
+.eines li.error { color: var(--roig-text); }
+.usuari { align-self: flex-end; max-width: 85%; background: var(--blau-clar); border-radius: 12px; padding: 12px 16px; }
+.usuari .qui { font-size: 12px; color: var(--blau-text); font-weight: 600; }
+.usuari p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fi-torn { margin: 0; font-size: 13px; color: var(--suau); }
+.esperant-claude { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--blau-text); }
+.gira {
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid #C3CFEC; border-top-color: var(--blau);
+  animation: gira 0.9s linear infinite; flex: none;
+}
+@keyframes gira { to { transform: rotate(360deg); } }
+
+/* Markdown dels missatges i de l'informe. */
+.md { overflow-wrap: anywhere; min-width: 0; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p { margin: 0 0 0.6em; }
+.md h1, .md h2, .md h3, .md h4 { font: 600 20px/1.25 var(--serif); margin: 1em 0 0.4em; }
+.md h1 { font-size: 24px; }
+.md ul, .md ol { padding-left: 22px; margin: 0 0 0.6em; }
+.md table { border-collapse: collapse; font-size: 14px; display: block; overflow-x: auto; max-width: 100%; margin: 0 0 0.8em; }
+.md th, .md td { border: 1px solid var(--linia); padding: 6px 10px; text-align: left; vertical-align: top; }
+.md th { background: var(--fons); }
+.md code { font: 13px var(--mono); background: var(--fons); padding: 1px 4px; border-radius: 4px; }
+.md pre { background: var(--fons); padding: 12px; border-radius: 8px; overflow-x: auto; }
+.md pre code { padding: 0; background: none; }
+.md blockquote { margin: 0 0 0.6em; padding-left: 14px; border-left: 3px solid var(--vora); color: var(--suau); }
+
+/* ---------- Sessió, resposta i resultat ---------- */
+dl.dades { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }
+dl.dades dt { color: var(--suau); }
+dl.dades dd { margin: 0; font-family: var(--mono); }
+.resposta { border: 2px solid var(--blau); }
+.titol-caixa { font: 600 22px/1.2 var(--serif); }
+.visor-pdf { width: 100%; height: 80vh; border: 1px solid var(--vora); border-radius: 8px; background: #FFFFFF; }
+.fitxers { list-style: none; margin: 0; padding: 0; font: 13px var(--mono); }
+.fitxers a { display: block; padding: 6px 0; overflow-wrap: anywhere; }
+
+/* ---------- Pàgina nova classe ---------- */
+.com-va { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.com-va li { display: flex; flex-direction: column; gap: 8px; padding: 20px; border: 1px solid var(--vora); border-radius: 12px; background: #FBFAF7; }
+.com-va .num {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--blau-clar); color: var(--blau-text);
+  font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.com-va .detall { font-size: 14px; }
+.seccio-titol { font: 600 24px/1.2 var(--serif); }
+
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px));
+  background: var(--tinta); color: #FFFFFF; padding: 12px 18px; border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2); z-index: 10;
+}
+
+
+/* ---------- Estils nous que proposa la guia (fases 1, 2 i 3) ---------- */
+/* Fase 1 · tema i interruptor */
+.amb-boto { display: flex; gap: 8px; min-width: 0; }
+.amb-boto select, .amb-boto input { flex: 1; min-width: 0; }
+.interruptor { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; }
+.interruptor .pista { width: 38px; height: 22px; border-radius: 999px; background: #C9CCD3; position: relative; flex: none; }
+.interruptor .pista::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF; }
+.interruptor.actiu .pista { background: var(--blau); }
+.interruptor.actiu .pista::after { left: 19px; }
+.interruptor.apagat { color: var(--suau); }
+.fix { min-height: 44px; display: flex; align-items: center; color: var(--suau); }
+.tema-nav { padding: 10px 6px 2px; font-size: 12px; font-weight: 600; color: var(--suau); }
+.tema-nav:first-of-type { padding-top: 2px; }
+/* Fase 2 · materials comprimits */
+.fitxa-classe { gap: 14px; }
+.fitxa-classe .camps { grid-template-columns: 1.1fr 1.5fr 0.9fr 1.5fr; gap: 16px; }
+.fitxa-classe .peu { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.enllac-suau { font-size: 13px; color: var(--suau); text-decoration: underline; cursor: pointer; }
+.materials { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+.graella-fotos.xicoteta { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 10px; }
+.graella-fotos.xicoteta .afegeix { padding: 8px; gap: 4px; }
+.graella-fotos.xicoteta .afegeix strong { font-size: 12px; }
+.graella-fotos.xicoteta .afegeix span { font-size: 11px; }
+.graella-fotos.xicoteta .pag { top: 6px; left: 6px; font-size: 11px; padding: 0 7px; }
+.graella-fotos.xicoteta .nom-fitxer { font-size: 11px; }
+.graella-fotos.xicoteta .boto-icona { width: 28px; height: 28px; border: 0; background: none; }
+.font-fila { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; border-top: 1px solid var(--linia); }
+.font-fila:first-child { border-top: 0; padding-top: 0; }
+.font-fila .cap { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.font-fila .cap input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--blau); flex: none; }
+.font-fila .cap > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.xips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
+.xip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border: 1px solid var(--vora-forta); border-radius: 999px; font-size: 13px; background: #FFFFFF; cursor: pointer; }
+.xip.triat { border-color: var(--blau); background: var(--blau-clar); color: var(--blau-text); }
+.xip .marca { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--vora-forta); background: #FFFFFF; }
+.xip.triat .marca { background: var(--blau); border-color: var(--blau); }
+.barra-accio.compacta { padding: 12px 20px; }
+.barra-accio.compacta .boto.gran { min-height: 44px; font-size: 15px; }
+textarea.curta { min-height: 0; }
+/* Fase 3 · barra lateral plegable */
+.cap-lateral { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.plega { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--vora); background: var(--superficie); color: var(--suau); display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.cap-grup { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.cap-grup h2 { padding: 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.cap-grup h2 a { color: inherit; text-decoration: none; }
+.cap-grup h2 a:hover { color: var(--tinta); }
+.cap-grup .plega { width: 24px; height: 24px; border: 0; background: none; }
+.lateral.plegada { flex: 0 0 60px; padding: 24px 10px; align-items: center; gap: 14px; }
+.lateral.plegada .logo-mini { font: 600 22px/1 var(--serif); color: var(--tinta); text-decoration: none; }
+.inicial { width: 40px; height: 40px; border-radius: 10px; background: var(--superficie); border: 1px solid var(--vora); display: flex; align-items: center; justify-content: center; font: 600 12px var(--sans); color: var(--tinta); text-decoration: none; }
+.inicial.blau { color: var(--blau); border-color: var(--blau); }
+.inicial.actiu { background: var(--tinta); color: #FFFFFF; border-color: var(--tinta); }
+.classe-nav.compacta { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 12px; }
+.classe-nav.compacta .estat { font-size: 12px; }
+/* Fase 3 · pàgina d'assignatura */
+.tema-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.tema-cap h2 { display: flex; align-items: center; gap: 10px; }
+.tema-cap .boto-icona { width: 32px; height: 32px; border: 0; background: none; }
+.fila-doc { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 14px; background: var(--blau-fons); border: 1px solid #C9D5F0; border-radius: 8px; }
+.fila-doc .nom { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 1px; }
+.fila-doc strong { font-size: 15px; }
+.fila-doc.buida { background: var(--fons); border-color: var(--vora); color: var(--suau); }
+.llista-classes { list-style: none; margin: 0; padding: 0; }
+.llista-classes li { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--linia); font-size: 14px; }
+.llista-classes .data { font-family: var(--mono); font-size: 13px; color: var(--suau); min-width: 5.2em; }
+.llista-classes .nom { flex: 1; min-width: 160px; font-weight: 600; }
+.llista-classes a.petit { font-size: 13px; }
+.edita-nom { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.edita-nom input { font: 600 22px/1.2 var(--serif); min-width: 320px; }
+
+/* ---------- Marcs i explicacions ---------- */
+body { background: var(--pg-bg); color: var(--pg-fg); font: 15px/1.55 var(--pg-sans); }
+.pagina { max-width: 1240px; margin: 0 auto; padding-block: 36px 72px; padding-inline: 16px; display: flex; flex-direction: column; gap: 44px; }
+.intro h1 { font: 600 40px/1.1 var(--pg-serif); text-wrap: balance; color: var(--pg-fg); }
+.intro p { max-width: 70ch; margin: 10px 0 0; color: var(--pg-muted); }
+.indexs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.indexs a { font-size: 13px; padding: 5px 11px; border: 1px solid var(--pg-line); border-radius: 999px; color: var(--pg-fg); text-decoration: none; background: var(--pg-surface); }
+.indexs a:hover { border-color: var(--pg-accent); color: var(--pg-accent); }
+.bloc-pantalla { display: flex; flex-direction: column; gap: 12px; }
+.bloc-pantalla > h2, .parts > h2 { font: 600 28px/1.2 var(--pg-serif); color: var(--pg-fg); text-wrap: balance; }
+.bloc-pantalla > p { margin: 0; max-width: 80ch; color: var(--pg-muted); }
+.pantalla { border: 1px solid var(--pg-line); border-radius: 14px; overflow: auto; background: #F7F6F2; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08); }
+.pantalla .app { width: 1180px; min-height: 0; }
+.pantalla .principal { padding: 32px 40px 40px; }
+.pantalla .lateral:not(.plegada) { flex: 0 0 236px; }
+.pantalla.alta .app { min-height: 760px; }
+.parts { display: flex; flex-direction: column; gap: 28px; }
+.part { background: var(--pg-surface); border: 1px solid var(--pg-line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.part > h3 { font: 600 22px/1.25 var(--pg-serif); color: var(--pg-fg); display: flex; gap: 12px; align-items: baseline; }
+.part > h3 .num { font: 500 13px var(--pg-mono); color: var(--pg-accent); background: var(--pg-accent-soft); padding: 2px 8px; border-radius: 6px; }
+.part > h3 .fase { font: 500 12px var(--pg-sans); color: var(--pg-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.quatre { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 20px; }
+.quatre div { min-width: 0; }
+.quatre h4 { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--pg-muted); }
+.quatre p { margin: 0; font-size: 14px; }
+.alts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.alt { margin: 0; border: 1px solid var(--pg-line); border-radius: 12px; overflow: hidden; background: var(--pg-surface); display: flex; flex-direction: column; min-width: 0; }
+.alt .mostra { padding: 18px; background: #F7F6F2; overflow: auto; color: #1B1E24; font: 15px/1.5 var(--sans); flex: 1; }
+.alt figcaption { padding: 12px 16px 14px; font-size: 14px; border-top: 1px solid var(--pg-line); display: flex; flex-direction: column; gap: 4px; }
+.alt figcaption b { font-size: 14px; }
+.alt.proposta { border-color: var(--pg-accent); }
+.alt.proposta figcaption b::after { content: "Proposta"; margin-left: 8px; font: 500 11px var(--pg-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--pg-accent); background: var(--pg-accent-soft); padding: 2px 7px; border-radius: 4px; vertical-align: middle; }
+.pregunta { font-size: 14px; padding: 10px 14px; border-left: 3px solid var(--pg-accent); background: var(--pg-accent-soft); border-radius: 0 8px 8px 0; }
+.pregunta b { color: var(--pg-accent); }
+.mostra .mini-lateral { width: 232px; background: #EFEEE8; border: 1px solid #DEDCD4; border-radius: 10px; padding: 16px 12px; display: flex; flex-direction: column; gap: 14px; }
+.mostra .mini-lateral.plegada { width: 60px; align-items: center; padding: 16px 8px; }
+.mostra .targeta { max-width: 640px; }
+.mostra .ample { max-width: none; }
+.mostra .llista-classes, .mostra .fila-doc { max-width: 640px; }
+.mostra .passos-petits { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Fotos de mentida: paper ratllat. */
+.miniatura.ratlles { background: repeating-linear-gradient(#FBFAF6 0 14px, #E6E4DC 14px 15px); }
+.miniatura.ratlles::before { content: ""; position: absolute; inset: 12% 14% auto 14%; height: 55%; background:
+  repeating-linear-gradient(0deg, transparent 0 9px, rgba(40, 50, 90, 0.35) 9px 11px, transparent 11px 15px); border-radius: 2px; }
+.miniatura.ratlles::after { content: ""; position: absolute; left: 10%; top: 0; bottom: 0; width: 1px; background: #E3B4B4; }
+@media (max-width: 720px) {
+  .intro h1 { font-size: 30px; }
+  .part { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="pagina">
+
+<header class="intro">
+  <h1>Temes, nova classe en una pàgina i pàgina d'assignatura</h1>
+  <p>Mock-up de la guia <code>guies/E-temes.md</code>. Primer les quatre pantalles tal com es veurien, netes. Davall, cada part explicada: què veus, què pots fer, per a què serveix i què cal canviar perquè funcione, amb les alternatives una al costat de l'altra. On hi ha una proposta, va marcada.</p>
+  <nav class="indexs" aria-label="Índex">
+    <a href="#pantalla-1">Pantalla 1 · Nova classe</a>
+    <a href="#pantalla-2">Pantalla 2 · La classe creada, amb els materials</a>
+    <a href="#pantalla-3">Pantalla 3 · Pàgina d'assignatura</a>
+    <a href="#pantalla-4">Pantalla 4 · Barra lateral plegada</a>
+    <a href="#parts">Parts 1 a 16</a>
+  </nav>
+</header>
+
+<!-- ============================ PANTALLA 1 ============================ -->
+<section class="bloc-pantalla" id="pantalla-1">
+  <h2>Pantalla 1 · Nova classe, abans de crear-la</h2>
+  <p>El mateix formulari d'ara amb dues coses més: el tema (amb el «+» per crear-ne un) i l'interruptor per afegir la classe al document del tema. A la barra lateral, les classes van agrupades per tema.</p>
+  <div class="pantalla">
+    <div class="app">
+      <nav class="lateral">
+        <div class="cap-lateral">
+          <a class="logo" href="#"><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de Manuscrits Acadèmics</span></a>
+          <button class="plega" type="button" aria-label="Plega la barra">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+        <a class="boto-sec actiu" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova classe</a>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#">Anàlisi II</a></h2><button class="plega" type="button" aria-label="Plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <p class="buit">Encara no hi ha classes.</p>
+        </div>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#">Estructures Algebraiques</a></h2><button class="plega" type="button" aria-label="Plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="tema-nav">Tema 1 · Grups</div>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <div class="tema-nav">Sense tema</div>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+        </div>
+      </nav>
+      <main class="principal">
+        <div class="contingut estret">
+          <div class="titol">
+            <h1>Nova classe</h1>
+            <p class="subtitol">Tria l'assignatura, el tema i el dia. Després, ací mateix, hi puges les fotos i tries la font.</p>
+          </div>
+          <form class="targeta fitxa-classe">
+            <div class="camps">
+              <div class="camp"><label>Assignatura</label><select><option>Estructures Algebraiques</option></select></div>
+              <div class="camp"><label>Tema</label>
+                <div class="amb-boto"><select><option>Tema 1 · Grups</option></select>
+                  <button class="boto-icona" type="button" aria-label="Nou tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+              <div class="camp"><label>Dia de la classe</label><input type="date" value="2026-10-10"></div>
+              <div class="camp"><label>Títol <span class="opcional">(opcional)</span></label><input type="text" placeholder="p. ex. Cicles i transposicions"></div>
+            </div>
+            <div class="peu">
+              <label class="interruptor actiu"><span class="pista"></span><span><strong>Afegeix al document del tema</strong><br><span class="detall">Els blocs d'esta classe van al PDF del Tema 1, darrere de les classes anteriors.</span></span></label>
+              <button class="boto" type="button">Crea la classe</button>
+            </div>
+          </form>
+          <section class="titol">
+            <h2 class="seccio-titol">Com va</h2>
+            <ol class="com-va">
+              <li><span class="num">1</span><strong>Materials</strong><span class="detall">Puja les fotos dels apunts i tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne.</span></li>
+              <li><span class="num">2</span><strong>Passa a net</strong><span class="detall">Claude llig els apunts, busca cada bloc a la font i s'atura una sola vegada per preguntar-te el que la font no resol.</span></li>
+              <li><span class="num">3</span><strong>Resultat</strong><span class="detall">El PDF del tema amb la teua notació i les correccions marcades. Si hi veus alguna cosa malament, li ho dius i ho corregeix.</span></li>
+            </ol>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PANTALLA 2 ============================ -->
+<section class="bloc-pantalla" id="pantalla-2">
+  <h2>Pantalla 2 · La classe creada: la mateixa pàgina, estesa amb els materials</h2>
+  <p>En crear la classe no canvies de pàgina: el formulari queda dalt com la fitxa de la classe i davall apareixen els materials, comprimits en dues columnes. La barra de «Passa a net» queda enganxada a la part de baix de la finestra.</p>
+  <div class="pantalla">
+    <div class="app">
+      <nav class="lateral">
+        <div class="cap-lateral">
+          <a class="logo" href="#"><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de Manuscrits Acadèmics</span></a>
+          <button class="plega" type="button" aria-label="Plega la barra"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        </div>
+        <a class="boto-sec" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova classe</a>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#">Anàlisi II</a></h2><button class="plega" type="button" aria-label="Plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <p class="buit">Encara no hi ha classes.</p>
+        </div>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#">Estructures Algebraiques</a></h2><button class="plega" type="button" aria-label="Plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="tema-nav">Tema 1 · Grups</div>
+          <a class="classe-nav actiu" href="#"><span class="classe-nom">Classe del 10/10</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <div class="tema-nav">Sense tema</div>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+        </div>
+      </nav>
+      <main class="principal">
+        <div class="contingut">
+          <header class="capcalera">
+            <div><span class="detall">Estructures Algebraiques · Tema 1 · Grups</span><h1>Classe del 10/10/2026</h1></div>
+            <nav class="pestanyes"><a class="actiu" href="#">Materials</a><span>Progrés</span><span>Resultat</span></nav>
+          </header>
+          <form class="targeta fitxa-classe">
+            <div class="camps">
+              <div class="camp"><label>Assignatura</label><div class="fix">Estructures Algebraiques</div></div>
+              <div class="camp"><label>Tema</label>
+                <div class="amb-boto"><select><option>Tema 1 · Grups</option></select>
+                  <button class="boto-icona" type="button" aria-label="Nou tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+              <div class="camp"><label>Dia de la classe</label><div class="fix">10/10/2026</div></div>
+              <div class="camp"><label>Títol <span class="opcional">(opcional)</span></label><input type="text" placeholder="p. ex. Cicles i transposicions"></div>
+            </div>
+            <div class="peu">
+              <label class="interruptor actiu"><span class="pista"></span><span><strong>Afegeix al document del tema</strong><br><span class="detall">Els blocs d'esta classe van al PDF del Tema 1, darrere de les classes anteriors.</span></span></label>
+              <span class="enllac-suau">Esborra la classe</span>
+            </div>
+          </form>
+          <div class="materials">
+            <section class="targeta compacta">
+              <div class="cap-seccio"><h2>Apunts</h2><p>Les fotos de la classe, en ordre. Arrossega-les per canviar-lo.</p></div>
+              <div class="graella-fotos xicoteta">
+                <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 1</span></span><div class="peu-foto"><span class="nom-fitxer">IMG_2041.jpeg</span><button class="boto-icona" type="button" aria-label="Lleva"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+                <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 2</span></span><div class="peu-foto"><span class="nom-fitxer">IMG_2042.jpeg</span><button class="boto-icona" type="button" aria-label="Lleva"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+                <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 3</span></span><div class="peu-foto"><span class="nom-fitxer">IMG_2043.jpeg</span><button class="boto-icona" type="button" aria-label="Lleva"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
+                <label class="afegeix"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><strong>Afegeix fotos</strong><span>o arrossega-les</span></label>
+              </div>
+              <p class="nota-petita">JPG, PNG, WebP o PDF.</p>
+            </section>
+            <div class="col-lateral">
+              <section class="targeta compacta">
+                <div class="cap-seccio"><h2>Fonts</h2><p>D'on es reconstrueix cada bloc. Pots marcar-ne més d'una.</p></div>
+                <div>
+                  <div class="font-fila">
+                    <label class="cap"><input type="checkbox" checked><span><strong>Wuolah</strong><span class="detall">Apunts d'un alumne de l'any passat · 4 PDF · 57 pàgines</span></span></label>
+                    <div class="xips">
+                      <span class="xip triat"><span class="marca"></span>Tema 1 · 23 p.</span>
+                      <span class="xip triat"><span class="marca"></span>Tema 2 · 10 p.</span>
+                      <span class="xip"><span class="marca"></span>Tema 3 · 13 p.</span>
+                      <span class="xip"><span class="marca"></span>Tema 4 · 11 p.</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="nota-petita">Marca els PDF on és la classe; si no, Claude mira l'índex. <a href="#">Puja una font nova</a> a l'assignatura.</p>
+              </section>
+              <section class="targeta compacta">
+                <h2>Per a Claude <span class="opcional">(opcional)</span></h2>
+                <textarea class="curta" rows="2" placeholder="p. ex. El professor va canviar una hipòtesi a propòsit."></textarea>
+              </section>
+            </div>
+          </div>
+          <div class="barra-accio compacta">
+            <div><strong>A punt per passar a net</strong><span>3 fotos · Font: Wuolah (Tema 1, Tema 2) · S'afegirà al document del Tema 1</span></div>
+            <button class="boto gran" type="button"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5l12 7-12 7z" fill="currentColor"/></svg>Passa a net</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PANTALLA 3 ============================ -->
+<section class="bloc-pantalla" id="pantalla-3">
+  <h2>Pantalla 3 · Pàgina d'assignatura, pestanya «Temes»</h2>
+  <p>S'hi arriba clicant el nom de l'assignatura a la barra lateral. Cada tema és una targeta amb el seu document (el PDF del tema) i les classes que en formen part. El nom del tema es canvia amb el llapis. La pestanya «Fonts» és on es pugen i es veuen les fonts de l'assignatura.</p>
+  <div class="pantalla">
+    <div class="app">
+      <nav class="lateral">
+        <div class="cap-lateral">
+          <a class="logo" href="#"><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de Manuscrits Acadèmics</span></a>
+          <button class="plega" type="button" aria-label="Plega la barra"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+        </div>
+        <a class="boto-sec" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova classe</a>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#">Anàlisi II</a></h2><button class="plega" type="button" aria-label="Desplega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
+        </div>
+        <div class="grup">
+          <div class="cap-grup"><h2><a href="#" style="color:#1B1E24">Estructures Algebraiques</a></h2><button class="plega" type="button" aria-label="Plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></div>
+          <div class="tema-nav">Tema 1 · Grups</div>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 10/10</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+          <div class="tema-nav">Sense tema</div>
+          <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+        </div>
+      </nav>
+      <main class="principal">
+        <div class="contingut">
+          <header class="capcalera">
+            <div class="accions">
+              <div><span class="detall">Assignatura</span><h1>Estructures Algebraiques</h1></div>
+              <button class="boto-sec" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nou tema</button>
+            </div>
+            <nav class="pestanyes"><a class="actiu" href="#">Temes</a><a href="#">Fonts</a></nav>
+          </header>
+          <section class="targeta">
+            <div class="tema-cap">
+              <h2>Tema 1 · Grups <button class="boto-icona" type="button" aria-label="Canvia el nom"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M12.5 7.5l4 4"/></svg></button></h2>
+              <span class="detall">3 classes · creat el 10/10/2026</span>
+            </div>
+            <div class="fila-doc">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#1F4FB8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
+              <div class="nom"><strong>Document del tema</strong><span class="detall">tema.pdf · 12 pàgines · actualitzat el 05/10/2026 · 51 blocs</span></div>
+              <a class="boto" href="#">Obre el PDF</a><a class="boto-sec" href="#">Descarrega el .tex</a>
+            </div>
+            <ul class="llista-classes">
+              <li><span class="data">10/10</span><span class="nom">Classe del 10/10</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></li>
+              <li><span class="data">05/10</span><span class="nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span><a class="petit" href="#">PDF propi · 10 p.</a></li>
+              <li><span class="data">30/09</span><span class="nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span><a class="petit" href="#">PDF propi · 12 p.</a></li>
+            </ul>
+          </section>
+          <section class="targeta">
+            <div class="tema-cap"><h2>Sense tema</h2><span class="detall">1 classe</span></div>
+            <ul class="llista-classes">
+              <li><span class="data">30/09</span><span class="nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span><a class="petit" href="#">Posa-la en un tema</a></li>
+            </ul>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PANTALLA 4 ============================ -->
+<section class="bloc-pantalla" id="pantalla-4">
+  <h2>Pantalla 4 · Barra lateral plegada</h2>
+  <p>Amb la fletxa de dalt, la barra es queda en una tira estreta: el logo, el «+» de nova classe i una inicial per assignatura. Clicar una inicial obri la pàgina de l'assignatura. La web recorda si la tenies plegada.</p>
+  <div class="pantalla">
+    <div class="app">
+      <nav class="lateral plegada">
+        <a class="logo-mini" href="#" title="LEMA">L</a>
+        <button class="plega" type="button" aria-label="Desplega la barra"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
+        <a class="inicial blau" href="#" title="Nova classe"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+        <a class="inicial" href="#" title="Anàlisi II">AII</a>
+        <a class="inicial actiu" href="#" title="Estructures Algebraiques">EA</a>
+      </nav>
+      <main class="principal">
+        <div class="contingut">
+          <header class="capcalera">
+            <div class="accions">
+              <div><span class="detall">Assignatura</span><h1>Estructures Algebraiques</h1></div>
+              <button class="boto-sec" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nou tema</button>
+            </div>
+            <nav class="pestanyes"><a href="#">Temes</a><a class="actiu" href="#">Fonts</a></nav>
+          </header>
+          <section class="targeta">
+            <div class="tema-cap"><h2>Wuolah</h2><span class="detall">Apunts d'un alumne de l'any passat · Wuolah, curs 2025-26</span></div>
+            <ul class="pdfs">
+              <li><span class="nom">wuolah-premium-Tema-1-EA.pdf</span><span class="detall">23 p. · text extret</span></li>
+              <li><span class="nom">wuolah-premium-Tema-2-EA.pdf</span><span class="detall">10 p. · text extret</span></li>
+              <li><span class="nom">wuolah-premium-Tema-3-EA.pdf</span><span class="detall">13 p. · text extret</span></li>
+              <li><span class="nom">wuolah-premium-Tema-4-EA.pdf</span><span class="detall">11 p. · text extret</span></li>
+            </ul>
+            <p class="nota-petita">Índex de 211 entrades. Es tria en cada classe, a Materials.</p>
+          </section>
+          <section class="targeta">
+            <div class="cap-seccio"><h2>Puja una font nova</h2><p>PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne. Se n'extrau el text i l'índex en pujar-los.</p></div>
+            <label class="afegeix ample"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4"/><path d="M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span><strong>Tria els PDF de la font</strong><span>o arrossega'ls ací</span></span></label>
+            <div class="camps">
+              <div class="camp"><label>Nom curt</label><input type="text" placeholder="p. ex. Professor"></div>
+              <div class="camp"><label>Què és</label><input type="text" placeholder="p. ex. Apunts del professor, temes 1 a 4"></div>
+              <div class="camp"><label>D'on surt</label><input type="text" placeholder="p. ex. Aula Virtual, setmana 2"></div>
+            </div>
+            <div class="dreta"><button class="boto" type="button">Puja la font</button></div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PARTS ============================ -->
+<section class="parts" id="parts">
+  <h2>Les parts, una per una</h2>
+
+  <!-- 1 -->
+  <article class="part" id="part-1">
+    <h3><span class="num">1</span>Els temes <span class="fase">Fase 1</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Cada classe pertany a un tema de l'assignatura («Tema 1 · Grups»). A la barra lateral, les classes van agrupades pel tema; les que no en tenen van a «Sense tema».</p></div>
+      <div><h4>Què pots fer</h4><p>Crear temes, posar cada classe en un tema i canviar-li el nom al tema (pantalla 3).</p></div>
+      <div><h4>Per a què serveix</h4><p>Perquè el tema sencer siga un sol document que creix classe a classe. Ara cada classe copia el tema a la seua carpeta i hi ha tres còpies del tema 1 (<code>millores.md</code> del 05/10 i del 30/09).</p></div>
+      <div><h4>Què cal</h4><p>Una carpeta per tema dins de l'assignatura (<code>temes/&lt;tema&gt;/</code>) amb el seu <code>tema.json</code>, els blocs de cada classe i el <code>tema.pdf</code>. A <code>classe.json</code>, dos camps nous: <code>tema</code> i <code>fusiona</code>.</p></div>
+    </div>
+  </article>
+
+  <!-- 2 -->
+  <article class="part" id="part-2">
+    <h3><span class="num">2</span>Triar el tema i crear-ne un de nou <span class="fase">Fase 1</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Al formulari de nova classe, davall de l'assignatura, un desplegable amb els temes d'eixa assignatura i l'opció «Sense tema».</p></div>
+      <div><h4>Què pots fer</h4><p>Triar el tema o crear-ne un de nou sense eixir del formulari.</p></div>
+      <div><h4>Per a què serveix</h4><p>Perquè la classe sàpia a quin document s'ha d'afegir, i perquè no calga anar a una altra pàgina per fer un tema.</p></div>
+      <div><h4>Què cal</h4><p>Que el servidor done els temes de cada assignatura i accepte crear-ne un (nom lliure; l'identificador de carpeta ix del nom).</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:420px">
+            <div class="camp"><label>Tema</label>
+              <div class="amb-boto"><select><option>Tema 1 · Grups</option></select><button class="boto-icona" type="button" aria-label="Nou tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+            <p class="nota-petita">En clicar «+», el desplegable es converteix en un camp de text:</p>
+            <div class="camp"><label>Nou tema</label>
+              <div class="amb-boto"><input type="text" value="Tema 2 · Anells"><button class="boto" type="button" style="min-height:44px;padding:0 14px">Crea</button><button class="boto-sec" type="button">Cancel·la</button></div></div>
+          </div>
+        </div>
+        <figcaption><b>A · Desplegable i botó «+»</b>El «+» canvia el desplegable per un camp de text amb «Crea». En crear-lo, torna el desplegable amb el tema nou triat. És el que vas dibuixar.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:420px">
+            <div class="camp"><label>Tema</label><select><option>Tema 1 · Grups</option><option>Sense tema</option><option>Nou tema…</option></select></div>
+            <p class="nota-petita">L'última opció del desplegable és «Nou tema…»; en triar-la apareix el camp de text davall.</p>
+            <div class="camp"><label>Nom del tema nou</label><input type="text" placeholder="p. ex. Tema 2 · Anells"></div>
+          </div>
+        </div>
+        <figcaption><b>B · «Nou tema…» dins del desplegable</b>Sense botó a banda. Té un pas menys visible, però amaga l'opció de crear dins de la llista.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 3 -->
+  <article class="part" id="part-3">
+    <h3><span class="num">3</span>L'interruptor «Afegeix al document del tema» <span class="fase">Fase 1</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Un interruptor davall del formulari, encés per defecte quan hi ha tema triat. Amb «Sense tema» no apareix.</p></div>
+      <div><h4>Què pots fer</h4><p>Encendre'l: els blocs de la classe s'afegeixen al PDF del tema. Apagar-lo: la classe té el seu PDF a banda, com ara, però continua agrupada dins del tema.</p></div>
+      <div><h4>Per a què serveix</h4><p>Per poder passar a net una classe sense tocar el document del tema (una prova, una classe de repàs, un exercici solt).</p></div>
+      <div><h4>Què cal</h4><p>El camp <code>fusiona</code> a <code>classe.json</code>, i que el prompt de Claude diga on ha d'escriure els blocs i quin document ha de compilar segons el valor.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:460px">
+            <label class="interruptor actiu"><span class="pista"></span><span><strong>Afegeix al document del tema</strong><br><span class="detall">Els blocs d'esta classe van al PDF del Tema 1, darrere de les classes anteriors.</span></span></label>
+            <label class="interruptor apagat"><span class="pista"></span><span><strong>Afegeix al document del tema</strong><br><span class="detall">Apagat: la classe tindrà un PDF a banda.</span></span></label>
+          </div>
+        </div>
+        <figcaption><b>A · Interruptor</b>Una sola línia, amb el text que explica què passa en cada posició. És el que demanaves.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:460px">
+            <div class="opcio triada"><label class="opcio-cap"><input type="radio" checked><span><strong>Al document del tema</strong><span class="detall">S'afegeix al PDF del Tema 1.</span></span></label></div>
+            <div class="opcio"><label class="opcio-cap"><input type="radio"><span><strong>Document a banda</strong><span class="detall">Un PDF només d'esta classe.</span></span></label></div>
+          </div>
+        </div>
+        <figcaption><b>B · Dues targetes a triar</b>Més clar quan es llig per primera vegada, però ocupa el doble i el formulari s'allarga.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 4 -->
+  <article class="part" id="part-4">
+    <h3><span class="num">4</span>Quan s'estén la pàgina amb els materials <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Nova classe i Materials són la mateixa pàgina (pantalles 1 i 2). Dalt, la fitxa de la classe; davall, els materials.</p></div>
+      <div><h4>Què pots fer</h4><p>Crear la classe i, sense canviar de pàgina, pujar les fotos, triar la font i escriure la nota per a Claude.</p></div>
+      <div><h4>Per a què serveix</h4><p>Per no saltar entre dues pàgines i vore-ho tot junt.</p></div>
+      <div><h4>Què cal</h4><p>Decidir en quin moment es crea la carpeta de la classe al disc, perquè les fotos no es poden pujar abans que existisca.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:520px">
+            <p class="nota-petita" style="font-size:14px;color:#1B1E24">1. Omplis assignatura, tema i dia.<br>2. Cliques <strong>Crea la classe</strong>.<br>3. La fitxa es queda dalt (assignatura i dia fixats) i davall apareixen els materials.</p>
+            <div class="dreta"><button class="boto" type="button">Crea la classe</button></div>
+          </div>
+        </div>
+        <figcaption><b>A · Un clic a «Crea la classe» i s'estén</b>Un clic i prou. L'adreça de la pàgina passa a ser la de la classe, però la pantalla sembla la mateixa. No queden classes buides si canvies d'idea abans de clicar.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:520px">
+            <p class="nota-petita" style="font-size:14px;color:#1B1E24">1. Omplis assignatura, tema i dia.<br>2. Els materials apareixen davall de seguida.<br>3. La carpeta es crea sola amb la primera foto que puges.</p>
+            <div class="dreta"><span class="boto" style="background:#9AA6C4">Sense botó</span></div>
+          </div>
+        </div>
+        <figcaption><b>B · S'estén sola en triar el tema</b>Sense botó. Però la carpeta de la classe es diu com el dia, i si canvies el dia després de pujar fotos cal moure-la; i es poden crear classes buides sense voler.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 5 -->
+  <article class="part" id="part-5">
+    <h3><span class="num">5</span>La fitxa de la classe, després de crear-la <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>El mateix formulari, dalt de tot. L'assignatura i el dia es queden fixats (són el nom de la carpeta). El tema, el títol i l'interruptor es poden canviar.</p></div>
+      <div><h4>Què pots fer</h4><p>Canviar el tema d'una classe (també de les d'abans, que no en tenen), posar-li títol, encendre o apagar l'interruptor i esborrar la classe (part 9).</p></div>
+      <div><h4>Per a què serveix</h4><p>Per posar en un tema les classes que ja existeixen, i per corregir-se sense tornar a crear la classe.</p></div>
+      <div><h4>Què cal</h4><p>Que el servidor accepte canviar <code>tema</code> i <code>fusiona</code> mentre Claude no estiga treballant. Si una classe acabada canvia de tema, els seus blocs no es mouen sols: cal tornar-la a passar a net.</p></div>
+    </div>
+  </article>
+
+  <!-- 6 -->
+  <article class="part" id="part-6">
+    <h3><span class="num">6</span>Apunts, més compactes <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Les fotos en miniatures de 104 px (ara, 168 px), sis per fila a la columna esquerra, amb el botó d'afegir com una miniatura més.</p></div>
+      <div><h4>Què pots fer</h4><p>El mateix que ara: afegir, llevar i arrossegar per ordenar. Clicar una miniatura l'obri en gran.</p></div>
+      <div><h4>Per a què serveix</h4><p>Perquè una classe de 9 fotos ocupe dues files en lloc de tres o quatre.</p></div>
+      <div><h4>Què cal</h4><p>Només estils: la graella <code>xicoteta</code> i la disposició en dues columnes (<code>.materials</code>).</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="graella-fotos xicoteta" style="max-width:480px">
+            <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 1</span></span></div>
+            <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 2</span></span></div>
+            <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 3</span></span></div>
+            <div class="foto"><span class="miniatura ratlles"><span class="pag">pàg. 4</span></span></div>
+            <label class="afegeix"><strong>Afegeix</strong></label>
+          </div>
+        </div>
+        <figcaption><b>A · Graella de miniatures xicotetes</b>Es veuen totes alhora i es poden arrossegar com ara.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;max-width:480px">
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">1</span></span></div>
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">2</span></span></div>
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">3</span></span></div>
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">4</span></span></div>
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">5</span></span></div>
+            <div class="foto" style="flex:0 0 96px"><span class="miniatura ratlles"><span class="pag">6</span></span></div>
+          </div>
+        </div>
+        <figcaption><b>B · Una sola fila que es desplaça de costat</b>Ocupa menys alçària encara, però amb més de sis fotos n'hi ha d'amagades i arrossegar per ordenar és incòmode.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 7 -->
+  <article class="part" id="part-7">
+    <h3><span class="num">7</span>Fonts, més compactes <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Una línia per font amb la casella, el nom i un resum. Quan la font està marcada, els seus PDF apareixen com a fitxes xicotetes («Tema 1 · 23 p.») que es marquen amb un clic.</p></div>
+      <div><h4>Què pots fer</h4><p>El mateix que ara: marcar fonts i, dins de cada una, els PDF on és la classe.</p></div>
+      <div><h4>Per a què serveix</h4><p>La secció de fonts és la que més espai gasta ara: una targeta gran per font i una llista d'una línia per PDF.</p></div>
+      <div><h4>Què cal</h4><p>Només estils i la plantilla de la llista (<code>.font-fila</code> i <code>.xips</code>). El que es guarda no canvia.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:440px">
+            <div class="font-fila">
+              <label class="cap"><input type="checkbox" checked><span><strong>Wuolah</strong><span class="detall">Apunts d'un alumne de l'any passat · 4 PDF · 57 pàgines</span></span></label>
+              <div class="xips"><span class="xip triat"><span class="marca"></span>Tema 1 · 23 p.</span><span class="xip triat"><span class="marca"></span>Tema 2 · 10 p.</span><span class="xip"><span class="marca"></span>Tema 3 · 13 p.</span><span class="xip"><span class="marca"></span>Tema 4 · 11 p.</span></div>
+            </div>
+            <div class="font-fila">
+              <label class="cap"><input type="checkbox"><span><strong>Professor</strong><span class="detall">Apunts del professor · 2 PDF · 80 pàgines</span></span></label>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>A · Línies i fitxes</b>Dues fonts en l'espai que ara ocupa una. Un PDF sense text extret portaria una marca taronja a la fitxa.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:440px">
+            <div class="opcio triada">
+              <label class="opcio-cap"><input type="checkbox" checked><span><strong>Wuolah</strong><span class="detall">Apunts d'un alumne de l'any passat · 4 PDF · 57 pàgines · índex de 211 entrades</span></span></label>
+              <div class="opcio-cos"><fieldset class="temes"><legend>En quins temes de la font és la classe?</legend>
+                <ul class="pdfs"><li><span class="nom">wuolah-premium-Tema-1-EA.pdf</span><span class="detall">23 p. · text extret</span></li><li><span class="nom">wuolah-premium-Tema-2-EA.pdf</span><span class="detall">10 p. · text extret</span></li></ul></fieldset></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>B · Com ara</b>Targeta gran per font i una línia per PDF amb el nom sencer del fitxer. Es llig tot, però s'allarga molt.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 8 -->
+  <article class="part" id="part-8">
+    <h3><span class="num">8</span>On es puja una font nova <span class="fase">Fase 3</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>A Materials només queda un enllaç: «Puja una font nova a l'assignatura». El formulari de pujar (nom, què és, d'on surt, els PDF) viu a la pestanya «Fonts» de la pàgina d'assignatura (pantalla 4).</p></div>
+      <div><h4>Què pots fer</h4><p>Pujar fonts i vore les que hi ha, amb els seus PDF, des de l'assignatura. A cada classe, només triar-les.</p></div>
+      <div><h4>Per a què serveix</h4><p>Les fonts són de l'assignatura, no de la classe: es pugen una vegada i es trien en cada classe. Traure el formulari de Materials és la retallada més gran de la pàgina.</p></div>
+      <div><h4>Què cal</h4><p>Moure el formulari que ja existeix (<code>cosNova</code>) a la pàgina nova. Fins que no estiga la fase 3, el formulari es queda a Materials, plegat davall d'un enllaç.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:440px">
+            <p class="nota-petita">Marca els PDF on és la classe; si no, Claude mira l'índex. <a href="#">Puja una font nova</a> a l'assignatura.</p>
+          </div>
+        </div>
+        <figcaption><b>A · A la pàgina d'assignatura</b>Materials queda curt. L'enllaç porta a la pestanya «Fonts» i, en tornar, la font nova ja es pot marcar.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:440px">
+            <p class="nota-petita"><a href="#">Puja una font nova…</a></p>
+            <div class="camps" style="grid-template-columns:1fr 1fr"><div class="camp"><label>Nom curt</label><input type="text"></div><div class="camp"><label>Què és</label><input type="text"></div></div>
+            <div class="dreta"><button class="boto" type="button">Puja la font</button></div>
+          </div>
+        </div>
+        <figcaption><b>B · Plegat dins de Materials</b>Tot continua en una pàgina, però en desplegar-lo torna a allargar-se. Serveix mentre no hi haja pàgina d'assignatura.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 9 -->
+  <article class="part" id="part-9">
+    <h3><span class="num">9</span>Esborrar una classe <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Un enllaç discret «Esborra la classe» a la fitxa de la classe. En clicar-lo, es demana confirmació.</p></div>
+      <div><h4>Què pots fer</h4><p>Llevar una classe creada per error (com la del 30/09 que està «sense començar»).</p></div>
+      <div><h4>Per a què serveix</h4><p>Ara no hi ha manera d'esborrar-ne cap des de la web. És la fila F del pla.</p></div>
+      <div><h4>Què cal</h4><p>La carpeta de la classe passa a <code>dades/paperera/</code>, no s'esborra del tot. Si la classe tenia blocs al document del tema, es lleven del tema i es torna a compilar el PDF.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:440px">
+            <div class="peu" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span class="detall">Fitxa de la classe…</span><span class="enllac-suau">Esborra la classe</span></div>
+            <div class="avis roig" style="margin-top:8px"><div><strong>Esborrar la classe del 30/09?</strong><span>Les fotos i el que ha escrit Claude van a la paperera de <code>dades/</code>.</span><div style="display:flex;gap:8px;margin-top:8px"><button class="boto" type="button" style="background:#B4231B">Esborra</button><button class="boto-sec" type="button">Cancel·la</button></div></div></div>
+          </div>
+        </div>
+        <figcaption><b>A · Enllaç a la fitxa, amb confirmació</b>Costa trobar-lo sense voler i es veu què s'esborra.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="mini-lateral">
+            <a class="classe-nav compacta" href="#"><span class="classe-nom">Classe del 30/09</span><span class="boto-icona" style="width:26px;height:26px;border:0;background:none;color:#B4231B"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></span></a>
+          </div>
+        </div>
+        <figcaption><b>B · Una creu a la barra lateral</b>Més ràpid, però és fàcil clicar-la per error i la barra s'ompli de creus.</figcaption>
+      </figure>
+    </div>
+    <p class="pregunta"><b>Pregunta.</b> A la captura hi ha una creu roja al costat de la classe «Sense començar». He entés que vols poder esborrar-la. És això?</p>
+  </article>
+
+  <!-- 10 -->
+  <article class="part" id="part-10">
+    <h3><span class="num">10</span>La barra de «Passa a net» <span class="fase">Fase 2</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>La barra fosca de sempre, més baixa, enganxada a la vora de baix de la finestra mentre la pàgina és més llarga que la pantalla.</p></div>
+      <div><h4>Què pots fer</h4><p>Passar a net sense baixar fins al final. El resum diu què falta (fotos, font) o què s'enviarà, i si s'afegirà al document del tema.</p></div>
+      <div><h4>Per a què serveix</h4><p>És el botó principal de la pàgina i ara queda al final de tot.</p></div>
+      <div><h4>Què cal</h4><p>Estils: <code>position: sticky</code> a la barra.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="barra-accio compacta" style="max-width:640px"><div><strong>A punt per passar a net</strong><span>3 fotos · Font: Wuolah (Tema 1, Tema 2) · S'afegirà al document del Tema 1</span></div><button class="boto gran" type="button">Passa a net</button></div>
+        </div>
+        <figcaption><b>A · Barra enganxada a baix</b>Sempre a la vista. Quan tot cap en pantalla, es veu al final com ara.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:640px"><div class="accions"><div><span class="detall">Estructures Algebraiques · Tema 1</span><h2 style="font-size:22px">Classe del 10/10/2026</h2></div><button class="boto" type="button">Passa a net</button></div></div>
+        </div>
+        <figcaption><b>B · Botó a la capçalera</b>Dalt de tot, al costat del títol. Però queda lluny del resum de què s'enviarà.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 11 -->
+  <article class="part" id="part-11">
+    <h3><span class="num">11</span>La barra lateral, per assignatures i per temes <span class="fase">Fases 1 i 3</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Cada assignatura és un grup amb el nom (que és un enllaç a la seua pàgina) i una fletxeta per plegar-lo. Dins, les classes agrupades per tema, amb «Sense tema» al final.</p></div>
+      <div><h4>Què pots fer</h4><p>Plegar una assignatura que no toques (Anàlisi II mentre no tinga classes), obrir la pàgina de l'assignatura, i anar a una classe.</p></div>
+      <div><h4>Per a què serveix</h4><p>Amb dos o tres temes per assignatura, la llista plana de classes es faria llarga.</p></div>
+      <div><h4>Què cal</h4><p>Agrupar al navegador el que ja torna el servidor (fase 1) i recordar els grups plegats al navegador (fase 3).</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="mini-lateral">
+            <div class="grup">
+              <div class="cap-grup"><h2><a href="#">Estructures Algebraiques</a></h2><span class="plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></div>
+              <div class="tema-nav">Tema 1 · Grups</div>
+              <a class="classe-nav" href="#"><span class="classe-nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+              <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></a>
+              <div class="tema-nav">Sense tema</div>
+              <a class="classe-nav" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span>Sense començar</span></a>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>A · Com ara, amb el tema com a subtítol</b>Cada classe amb el seu estat davall, com ara. Ocupa dues línies per classe.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="mini-lateral">
+            <div class="grup">
+              <div class="cap-grup"><h2><a href="#">Estructures Algebraiques</a></h2><span class="plega"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></div>
+              <div class="tema-nav">Tema 1 · Grups</div>
+              <a class="classe-nav compacta" href="#"><span class="classe-nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span></span></a>
+              <a class="classe-nav compacta" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span></span></a>
+              <div class="tema-nav">Sense tema</div>
+              <a class="classe-nav compacta" href="#"><span class="classe-nom">Classe del 30/09</span><span class="estat estat-nova"><span class="punt"></span></span></a>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>B · Una línia per classe</b>Només el nom i el puntet de color; el text de l'estat ix en passar-hi el ratolí. Cap el doble de classes.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 12 -->
+  <article class="part" id="part-12">
+    <h3><span class="num">12</span>Plegar la barra lateral cap al costat <span class="fase">Fase 3</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Una fletxa al costat del logo. En clicar-la, la barra es queda en una tira de 60 px: logo, «+» i una inicial per assignatura (pantalla 4).</p></div>
+      <div><h4>Què pots fer</h4><p>Guanyar amplària per al PDF o per a la vista costat a costat (fase H). Amb la tira plegada, clicar una inicial obri la pàgina de l'assignatura.</p></div>
+      <div><h4>Per a què serveix</h4><p>Tu ho vas marcar amb la fletxa al logo. La barra ocupa 236 px que al PDF fan falta.</p></div>
+      <div><h4>Què cal</h4><p>Un botó, una classe <code>plegada</code> a la barra i recordar-ho al navegador. Res al servidor.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="mini-lateral plegada">
+            <a class="logo-mini" href="#">L</a>
+            <span class="plega"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            <a class="inicial blau" href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+            <a class="inicial" href="#">AII</a>
+            <a class="inicial actiu" href="#">EA</a>
+          </div>
+        </div>
+        <figcaption><b>A · Tira amb inicials</b>Es pot canviar d'assignatura i crear una classe sense desplegar-la.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div style="position:relative;height:140px;max-width:440px;border:1px dashed #CFCDC4;border-radius:10px;background:#FFFFFF">
+            <span class="plega" style="position:absolute;top:12px;left:12px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+            <span class="detall" style="position:absolute;left:56px;top:16px">La pàgina ocupa tota l'amplària.</span>
+          </div>
+        </div>
+        <figcaption><b>B · Amagada del tot</b>Només queda un botó flotant per tornar-la a traure. Guanya 60 px més, però per anar a una altra assignatura cal desplegar-la.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 13 -->
+  <article class="part" id="part-13">
+    <h3><span class="num">13</span>La pàgina d'assignatura i la pestanya «Temes» <span class="fase">Fase 3</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Pantalla 3. Una targeta per tema: el nom, el document del tema (amb pàgines i data) i la llista de les seues classes amb l'estat. Les classes que tenen un PDF propi (les d'abans, o les que tenen l'interruptor apagat) el mostren a la seua línia. Al final, «Sense tema».</p></div>
+      <div><h4>Què pots fer</h4><p>Obrir o descarregar cada PDF, crear un tema («Nou tema», dalt a la dreta), canviar-li el nom (part 14) i anar a cada classe.</p></div>
+      <div><h4>Per a què serveix</h4><p>És la pestanya que demanaves: dividit per temes, els PDF generats amb el seu títol. També és on es veuen les classes d'abans, que tenen el tema sencer copiat al seu PDF.</p></div>
+      <div><h4>Què cal</h4><p>Una ruta nova (<code>#/assignatura/&lt;id&gt;/temes</code>) i que el servidor diga, per a cada tema, si hi ha PDF, quantes pàgines té i quan es va fer.</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:600px">
+            <div class="tema-cap"><h2 style="font-size:20px">Tema 1 · Grups</h2><span class="detall">3 classes</span></div>
+            <div class="fila-doc"><div class="nom"><strong>Document del tema</strong><span class="detall">tema.pdf · 12 pàgines · 05/10/2026</span></div><a class="boto" href="#">Obre el PDF</a></div>
+            <ul class="llista-classes"><li><span class="data">05/10</span><span class="nom">Classe de teoria</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span></li><li><span class="data">30/09</span><span class="nom">Classe del 30/09</span><span class="estat estat-acabada"><span class="punt"></span>Acabada</span><a class="petit" href="#">PDF propi</a></li></ul>
+          </div>
+        </div>
+        <figcaption><b>A · Una targeta per tema</b>El document del tema destacat, i les classes davall. Un tema sense document encara mostra «Encara no hi ha document» en gris.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:600px">
+            <table class="md" style="border-collapse:collapse;font-size:14px;width:100%"><thead><tr><th style="text-align:left;padding:6px 10px;border:1px solid #ECEBE5;background:#F7F6F2">Tema</th><th style="text-align:left;padding:6px 10px;border:1px solid #ECEBE5;background:#F7F6F2">PDF</th><th style="text-align:left;padding:6px 10px;border:1px solid #ECEBE5;background:#F7F6F2">Classes</th></tr></thead>
+            <tbody><tr><td style="padding:6px 10px;border:1px solid #ECEBE5">Tema 1 · Grups</td><td style="padding:6px 10px;border:1px solid #ECEBE5"><a href="#">12 p.</a></td><td style="padding:6px 10px;border:1px solid #ECEBE5">3</td></tr><tr><td style="padding:6px 10px;border:1px solid #ECEBE5">Sense tema</td><td style="padding:6px 10px;border:1px solid #ECEBE5">—</td><td style="padding:6px 10px;border:1px solid #ECEBE5">1</td></tr></tbody></table>
+          </div>
+        </div>
+        <figcaption><b>B · Una taula</b>Més curta, però no es veuen les classes de cada tema ni els PDF propis sense desplegar.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 14 -->
+  <article class="part" id="part-14">
+    <h3><span class="num">14</span>Canviar el nom d'un tema <span class="fase">Fase 3</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Un llapis al costat del nom del tema. En clicar-lo, el nom es converteix en un camp de text amb «Desa».</p></div>
+      <div><h4>Què pots fer</h4><p>Posar-li el nom que vulgues («Tema 1. Grups, subgrups i homomorfismes»). El nom es veu a la barra lateral, a la fitxa de la classe i com a títol del PDF la pròxima vegada que es compile.</p></div>
+      <div><h4>Per a què serveix</h4><p>Ho demanaves: poder canviar el títol dels PDF generats.</p></div>
+      <div><h4>Què cal</h4><p>Canviar el nom a <code>tema.json</code>. La carpeta no canvia de nom (així no es trenquen les rutes).</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:600px">
+            <div class="edita-nom"><input type="text" value="Tema 1. Grups, subgrups i homomorfismes"><button class="boto" type="button" style="min-height:40px">Desa</button><button class="boto-sec" type="button" style="min-height:40px">Cancel·la</button></div>
+          </div>
+        </div>
+        <figcaption><b>A · Llapis i camp de text</b>Es veu clarament què s'està canviant. Intro desa, Esc cancel·la.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <div class="targeta compacta" style="max-width:600px">
+            <h2 style="font-size:20px;border-bottom:1px dashed #CFCDC4;display:inline-block">Tema 1 · Grups</h2>
+            <p class="nota-petita">El nom s'edita clicant-lo directament.</p>
+          </div>
+        </div>
+        <figcaption><b>B · Clicar el nom</b>Sense llapis. Més amagat: no se sap que es pot editar fins que s'hi clica.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 15 -->
+  <article class="part" id="part-15">
+    <h3><span class="num">15</span>Què fa Claude quan la classe s'afegeix al tema <span class="fase">Fase 1</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>A Resultat, el PDF del tema sencer, i l'informe diu a quines pàgines és la classe nova. Els passos de Progrés són els mateixos.</p></div>
+      <div><h4>Què pots fer</h4><p>Corregir des de Resultat com ara: Claude toca els blocs de la classe dins del tema i recompila el tema.</p></div>
+      <div><h4>Per a què serveix</h4><p>Perquè el tema creixca sense copiar-lo a cada classe.</p></div>
+      <div><h4>Què cal</h4><p>Al prompt: els blocs de la classe van a <code>temes/&lt;tema&gt;/blocs/&lt;classe&gt;/</code>; <code>tema.tex</code> del tema es crea la primera vegada i després només s'hi afegeixen els <code>\input</code> de la classe, en ordre de data; les notetes continuen la numeració del tema; es compila la carpeta del tema. L'esquema, l'informe i <code>millores.md</code> es queden a la carpeta de la classe. Canvia el pas 6 de <code>CLAUDE.md</code> i <code>flux.html</code> (v6).</p></div>
+    </div>
+    <div class="alts">
+      <figure class="alt proposta">
+        <div class="mostra">
+          <pre style="margin:0;font:13px/1.5 var(--mono);background:#FFFFFF;border:1px solid #DEDCD4;border-radius:8px;padding:12px;overflow:auto">dades/assignatures/estructures-algebraiques/
+  temes/tema-1-grups/
+    tema.json              nom, data de creació
+    tema.tex  tema.pdf     el document del tema
+    blocs/2026-09-30-2/B01.tex …
+    blocs/2026-10-05/B01.tex …
+    blocs/2026-10-10/B01.tex …
+  classes/2026-10-10/
+    classe.json            tema: tema-1-grups, fusiona: true
+    apunts/  adjunts/  registre/
+    esquema.yaml  informe.md  millores.md</pre>
+        </div>
+        <figcaption><b>A · Els blocs viuen al tema, en una carpeta per classe</b>El tema és un document complet i es pot exportar sencer (fase I, Overleaf). Els identificadors B01… es repeteixen entre classes, però la carpeta els fa únics, com demanava <code>prova-1/millores.md</code>.</figcaption>
+      </figure>
+      <figure class="alt">
+        <div class="mostra">
+          <pre style="margin:0;font:13px/1.5 var(--mono);background:#FFFFFF;border:1px solid #DEDCD4;border-radius:8px;padding:12px;overflow:auto">temes/tema-1-grups/
+  tema.tex               \input{../../classes/2026-10-05/blocs/B01} …
+  tema.pdf
+classes/2026-10-05/
+  blocs/B01.tex …        els blocs es queden a la classe</pre>
+        </div>
+        <figcaption><b>B · Els blocs es queden a cada classe</b>No es mou res, però el tema depén de totes les carpetes de classe: esborrar-ne una trenca el PDF, i no es pot exportar el tema sol.</figcaption>
+      </figure>
+    </div>
+  </article>
+
+  <!-- 16 -->
+  <article class="part" id="part-16">
+    <h3><span class="num">16</span>Les classes que ja existeixen <span class="fase">Fase 1</span></h3>
+    <div class="quatre">
+      <div><h4>Què veus</h4><p>Les quatre classes d'Estructures Algebraiques apareixen a «Sense tema», amb l'interruptor apagat. Els seus PDF no es toquen.</p></div>
+      <div><h4>Què pots fer</h4><p>Posar-les al Tema 1 des de la fitxa de la classe. Seguiran tenint el seu PDF propi (amb el tema sencer copiat), que es veu a la pàgina d'assignatura.</p></div>
+      <div><h4>Per a què serveix</h4><p>Per no perdre res del que ja està fet i no haver de tornar a passar a net les classes.</p></div>
+      <div><h4>Què cal</h4><p>Res automàtic. Com que la classe del 30/09 (2a part) ja té el tema 1 sencer (B01–B51), es pot copiar una vegada a <code>temes/tema-1-grups/</code> com a document de partida: ho faria jo a mà, en implementar la fase 1, si dius que sí.</p></div>
+    </div>
+    <p class="pregunta"><b>Pregunta.</b> Vols que el document del Tema 1 comence amb el PDF que ja tens (els 51 blocs de la classe del 30/09, 2a part), o prefereixes que el tema comence buit i es vaja fent amb les classes noves?</p>
+  </article>
+
+</section>
+
+</div>

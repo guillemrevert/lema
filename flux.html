@@ -325,7 +325,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       surt: "La carpeta de treball i la fitxa de la font.",
       instr: [
         "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a l'assignatura i el tema de la prova. Res més.",
-        "Fer la fitxa de la font a partir del <code>.txt</code>."
+        "Fer la fitxa de la font a partir del <code>.txt</code>.",
+        "Des de la web, la carpeta de la classe ja existeix, i també la del tema si la classe s'hi afegeix. El prompt de la web diu on és cada cosa."
       ],
       on: "Passos 0 · Materials d'entrada"
     },
@@ -399,15 +400,16 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       id: "pas6", num: 6, nom: "Muntatge i PDF", qui: "claude", fase: "Fase 3",
       resum: "Ajunta els blocs, compila el PDF i entrega l'informe.",
       entra: "Els blocs en LaTeX.",
-      surt: "<code>tema.tex</code>, <code>tema.pdf</code>, els fitxers de text i l'informe.",
+      surt: "<code>tema.tex</code>, <code>tema.pdf</code> (els del tema, si la classe s'hi afegeix), els fitxers de text i l'informe.",
       instr: [
         "Plantilla LaTeX mínima amb un entorn per a cada tipus de bloc.",
         "Marques: dubte, correcció, nota i caixa «no vist a classe».",
         "Notetes numerades al marge (N1, N2…), les mateixes que a l'informe.",
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
-        "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>."
+        "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>.",
+        "Si la classe s'afegeix al document d'un tema (decisió 9): els blocs van a la carpeta del tema, en una carpeta per classe; al <code>tema.tex</code> del tema només s'hi afegeixen els <code>\\input</code> d'esta classe, en ordre de data; les notetes continuen la numeració del tema; es compila el tema, i l'informe diu a quines pàgines és la classe."
       ],
-      on: "Passos 6 · Decisió 2"
+      on: "Passos 6 · Decisions 2 i 9"
     }
   ];
 
@@ -423,6 +425,14 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 6, data: "2026-10-10",
+      titol: "Des de la web, cada classe pot afegir-se al document del seu tema, que creix classe a classe en lloc de copiar-se sencer a cada classe.",
+      passos: {
+        pas0: "Des de la web, la carpeta de la classe ja existeix, i també la del tema si la classe s'hi afegeix.",
+        pas6: "Nova decisió 9: si la classe s'afegeix al document d'un tema, els blocs van a la carpeta del tema (una carpeta per classe), els seus <code>\\input</code> s'afegeixen a <code>tema.tex</code> en ordre de data, les notetes continuen la numeració del tema i es compila el tema."
+      }
+    },
     {
       versio: 5, data: "2026-10-07",
       titol: "Des de la web es poden triar diverses fonts per classe. Si un bloc és a més d'una i no coincideixen, Claude en tria una i deixa una noteta.",

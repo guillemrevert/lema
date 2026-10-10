@@ -29,6 +29,7 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
 | Primera versió | Pujar fitxers i botó «Passa a net», que mostra el progrés pas a pas |
 | Fonts | Per assignatura: es pugen una vegada i es trien en cada classe (03/10/2026). Se'n poden marcar diverses, i diversos temes de cada una (07/10/2026) |
 | Port | 8300, només des d'este ordinador (el 8000 i el 8100 els fa servir CritKeep) |
+| Temes | Cada classe pot pertànyer a un tema i afegir-se al document del tema, que viu a `temes/<tema>/` i creix classe a classe (10/10/2026, fase 1 de [`guies/E-temes.md`](guies/E-temes.md)) |
 
 ## Com funciona
 
@@ -39,12 +40,14 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
   dades/assignatures/<assignatura>/
     notacio.yaml
     fonts/<font>/          font.json, els PDF, el text extret, index.txt i fitxa.yaml
+    temes/<tema>/          tema.json, tema.tex, tema.pdf i blocs/<classe>/ de cada classe que s'hi afegeix
     classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/ i el que escriu Claude
   ```
 - **En pujar una font** s'executa [`extreu-font.py`](extreu-font.py), que en trau el text i l'índex.
 - **«Passa a net»** obri una conversa nova de Claude Code per a cada classe (mesura 1 d'[`optimitzacio.md`](optimitzacio.md)), en mode no interactiu i amb el prompt de [`web/prompt.md`](web/prompt.md). Diu on és cada cosa i demana a Claude dues marques: `PAS n` en començar cada pas i `ESTAT: esperant` o `ESTAT: acabat` en acabar cada torn.
 - **Registre:** el servidor resumeix el que fa Claude a `registre/events.jsonl` (text, eines, passos, tokens) i la web ho llig en directe. La sortida sencera de Claude queda al costat, a `registre/claude-*.jsonl`.
 - **Punt de control:** Claude s'atura al pas 4, escriu l'esquema i les preguntes obligatòries i acaba el torn. La resposta, amb fitxers adjunts si cal, continua la mateixa conversa. Les correccions després del PDF van igual.
+- **Temes:** cada classe pot tindre un tema (desplegable i «+» a Nova classe i a Materials). Amb l'interruptor «Afegeix al document del tema», Claude escriu els blocs a `temes/<tema>/blocs/<classe>/`, n'afegeix els `\input` al `tema.tex` del tema en ordre de data i compila el tema (decisió 9 de `CLAUDE.md`). L'esquema, l'informe i `millores.md` es queden a la carpeta de la classe, i Resultat ensenya el PDF del tema. Les classes d'abans no tenen tema ni l'interruptor encés, i els seus PDF no canvien.
 - **Compilar:** Claude fa servir [`compila.py`](compila.py) i [`plantilla-base.tex`](plantilla-base.tex), que ara és a l'arrel del repositori.
 
 ## Diferències amb el mock-up
@@ -63,8 +66,8 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | B | Punt de control propi (vegeu «Pantalles», baix) | Que Claude escriga les preguntes obligatòries en un fitxer que la web puga llegir |
 | C | PDF i notetes amb un clic (vegeu «Pantalles», baix) | El mateix, per a les notetes. També la E, perquè el PDF és per tema |
 | D | Girar les fotos i reduir-les a 1.500 px en pujar-les | Pillow al `Dockerfile`. També ho demana el `millores.md` de la classe del 05/10 |
-| E | Carpeta per tema: cada classe afegeix blocs al tema | Canvi de dades i de la barra lateral (`millores.md` del 05/10) |
-| F | Esborrar una classe | Res |
+| E | Carpeta per tema: cada classe afegeix blocs al tema. **Implementada** el 10/10/2026 (fase 1 de [`guies/E-temes.md`](guies/E-temes.md)); falta provar-la passant a net una classe de veritat. El Tema 1 d'Estructures Algebraiques comença amb els 51 blocs de la classe del 30/09 (2a part) | Canvi de dades i de la barra lateral (`millores.md` del 05/10) |
+| F | Esborrar una classe. Fase 2 de `guies/E-temes.md` | Res |
 | G | Diverses fonts per classe, amb selecció múltiple (demanat el 06/10). **Feta** | — |
 | H | Apunts i PDF costat a costat: al costat de cada bloc net, la foto d'on surt. Amplia la C | Que Claude escriga a `esquema.yaml` la foto i la zona de cada bloc en un format fix (part de la A) |
 | I | Obrir a Overleaf amb un clic i baixar un `.tex` que compile sol (ara `tema.tex` necessita `blocs/` i la plantilla) | Res |
@@ -73,6 +76,10 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | L | Apunts en PDF d'altres apps de notes (GoodNotes, Notability): partir-lo en pàgines en pujar-lo, amb una miniatura per pàgina. La web ja accepta PDF, però com un sol fitxer | Tanca la decisió oberta 1 de l'especificació |
 | M | Cercar un resultat entre totes les classes, i marcar-ne de favorits | La E (carpeta per tema) |
 | N | Mode fosc | Res |
+| O | Nova classe i Materials en una sola pàgina (tema, «+», interruptor i, davall, els materials comprimits). Demanat el 10/10/2026. Fase 2 de `guies/E-temes.md` | La E |
+| P | Barra lateral plegable (cap al costat i per assignatures) i pàgina d'assignatura: temes amb els PDF generats i el seu títol (es pot canviar), i les fonts. Demanat el 10/10/2026. Fase 3 de `guies/E-temes.md` | La E |
+
+**Mock-up de la E, la O i la P (10/10/2026), estàtic:** https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum (el fitxer és `guies/E-mockup.html`). Quatre pantalles netes (nova classe; la classe creada amb els materials; pàgina d'assignatura; barra lateral plegada) i setze parts explicades amb les alternatives una al costat de l'altra. La guia `guies/E-temes.md` té la taula de decisions i quatre preguntes pendents (si la creu de la captura és esborrar la classe, si el Tema 1 comença amb el document que ja hi ha, si el formulari de pujar fonts se'n va a l'assignatura, i barra lateral amb una o dues línies per classe).
 
 H–N, apuntades el 09/10/2026, venen de [MathWrite Notes](https://apps.apple.com/us/app/mathwrite-notes/id6807434387), una app d'iPad que passa a LaTeX el que s'escriu a mà. No hi ha font: és un transcriptor. Se'n van deixar fora les eines d'escriure a la pantalla (llapis, formes, gràfiques).
 
@@ -97,6 +104,15 @@ H–N, apuntades el 09/10/2026, venen de [MathWrite Notes](https://apps.apple.co
 - Cada font de més costa la lectura del seu `index.txt`, que és barata, i la de les pàgines que calguen.
 
 ## Opcions no triades, per a més endavant
+
+### Temes (guia E, fase 1)
+
+Les lletres són les de les parts del mock-up (`guies/E-mockup.html`).
+
+- **Part 2 B · «Nou tema…» dins del desplegable**, en lloc del botó «+». Un pas menys visible, però amaga l'opció de crear dins de la llista.
+- **Part 3 B · Dues targetes a triar** («Al document del tema» / «Document a banda») en lloc de l'interruptor. Més clar la primera vegada, però ocupa el doble.
+- **Part 11 B · Una línia per classe a la barra lateral**, només el nom i el puntet de l'estat. De moment es queda com ara (dues línies), a l'espera que l'usuari ho trie.
+- **Part 15 B · Els blocs es queden a la carpeta de cada classe** i el `tema.tex` del tema els apunta amb rutes relatives. No es mou res, però el tema depén de totes les classes i no es pot exportar sol.
 
 ### Motor
 

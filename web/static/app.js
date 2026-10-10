@@ -126,6 +126,79 @@ function camp(etiqueta, control, extra) {
   return h("div", { class: "camp" }, h("label", { for: control.id }, etiqueta, extra), control);
 }
 
+function llegeix(clau) {
+  try { return localStorage.getItem(clau); } catch { return null; }  // sense emmagatzematge
+}
+
+function recorda(clau, valor) {
+  try { localStorage.setItem(clau, valor); } catch { /* sense emmagatzematge */ }
+}
+
+// ---------- Temes ----------
+
+const nomTema = (assig, id) => assig.temes.find((t) => t.id === id)?.nom;
+
+// El desplegable de temes de l'assignatura, amb el «+» per crear-ne un sense eixir del formulari.
+// canvia(id) rep el tema triat o el que s'acaba de crear (null: sense tema).
+function selectorTema(assig, triat, { id, disabled, canvia }) {
+  const caixa = h("div", { class: "amb-boto" });
+  const mes = h("button", { type: "button", class: "boto-icona", "aria-label": "Nou tema", title: "Nou tema",
+    disabled, onclick: () => modeNou() }, icona("mes", 18, 2));
+
+  function modeLlista() {
+    caixa.replaceChildren(
+      h("select", { id, disabled, onchange: (e) => { triat = e.target.value || null; canvia(triat); } },
+        assig.temes.map((t) => h("option", { value: t.id, selected: t.id === triat }, t.nom)),
+        h("option", { value: "", selected: !triat }, "Sense tema")),
+      mes);
+  }
+
+  function modeNou() {
+    const nom = h("input", { id, type: "text", placeholder: "p. ex. Tema 2 · Anells", "aria-label": "Nom del tema nou",
+      onkeydown: (e) => {
+        if (e.key === "Enter") { e.preventDefault(); crea(); }
+        if (e.key === "Escape") { e.preventDefault(); modeLlista(); }
+      } });
+    const boto = h("button", { type: "button", class: "boto", onclick: () => crea() }, "Crea");
+    async function crea() {
+      if (!nom.value.trim()) { nom.focus(); return; }
+      boto.disabled = true;
+      try {
+        const tema = await api(`/api/assignatures/${assig.id}/temes`, ambJson("POST", { nom: nom.value }));
+        // La llista torna del servidor, en el mateix ordre que tindrà a la barra lateral.
+        assig.temes = (await api("/api/assignatures")).find((x) => x.id === assig.id).temes;
+        triat = tema.id;
+        modeLlista();
+        canvia(triat);
+      } catch (err) {
+        avisa(err.message);
+        boto.disabled = false;
+      }
+    }
+    caixa.replaceChildren(nom, boto, h("button", { type: "button", class: "boto-sec", onclick: modeLlista }, "Cancel·la"));
+    nom.focus();
+  }
+
+  modeLlista();
+  return caixa;
+}
+
+// «Afegeix al document del tema». Només es mostra quan la classe té tema.
+function interruptorTema(nom, actiu, { id, disabled, canvia }) {
+  const detall = h("span", { class: "detall" });
+  const explica = (si) => {
+    detall.textContent = si
+      ? `Els blocs d'esta classe van al PDF de «${nom}», en ordre de data amb les altres classes del tema.`
+      : "La classe tindrà el seu PDF a banda.";
+  };
+  explica(actiu);
+  return h("label", { class: "interruptor", for: id },
+    h("input", { id, type: "checkbox", role: "switch", checked: actiu, disabled,
+      onchange: (e) => { explica(e.target.checked); canvia(e.target.checked); } }),
+    h("span", { class: "pista", "aria-hidden": "true" }),
+    h("span", { class: "text" }, h("strong", {}, "Afegeix al document del tema"), detall));
+}
+
 // ---------- Navegació ----------
 
 function ruta() {
@@ -163,6 +236,21 @@ pinta();
 // ---------- Lateral ----------
 
 function pintaLateral(r) {
+  const enllac = (as, c) => {
+    const actiu = r.a === as.id && r.c === c.id;
+    return h("a", { href: `#/classe/${as.id}/${c.id}`, class: "classe-nav" + (actiu ? " actiu" : ""),
+      "aria-current": actiu ? "page" : null },
+    h("span", { class: "classe-nom" }, nomClasse(c)),
+    h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)));
+  };
+  // Les classes de cada assignatura, agrupades pel tema. Les que no en tenen, al final.
+  const grups = (as) => {
+    const llista = as.temes.map((t) => ({ nom: t.nom, classes: as.classes.filter((c) => c.tema === t.id) }))
+      .filter((g) => g.classes.length);
+    const sense = as.classes.filter((c) => !as.temes.some((t) => t.id === c.tema));
+    if (sense.length) llista.push({ nom: llista.length ? "Sense tema" : null, classes: sense });
+    return llista;
+  };
   lateral.replaceChildren(...[
     h("a", { href: "#/", class: "logo" },
       h("span", { class: "logo-nom" }, "LEMA"),
@@ -172,13 +260,7 @@ function pintaLateral(r) {
     assignatures.map((as) => h("div", { class: "grup" },
       h("h2", {}, as.nom),
       as.classes.length
-        ? as.classes.map((c) => {
-          const actiu = r.a === as.id && r.c === c.id;
-          return h("a", { href: `#/classe/${as.id}/${c.id}`, class: "classe-nav" + (actiu ? " actiu" : ""),
-            "aria-current": actiu ? "page" : null },
-          h("span", { class: "classe-nom" }, nomClasse(c)),
-          h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)));
-        })
+        ? grups(as).map((g) => [g.nom ? h("h3", { class: "tema-nav" }, g.nom) : null, g.classes.map((c) => enllac(as, c))])
         : h("p", { class: "buit" }, "Encara no hi ha classes."))),
   ].flat());
 }
@@ -188,14 +270,38 @@ function pintaLateral(r) {
 function pintaNova() {
   const avui = new Date();
   const iso = new Date(avui - avui.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  let ultima = null;
-  try { ultima = localStorage.getItem("lema-assignatura"); } catch { /* sense emmagatzematge */ }
+  let as = assignatures.find((x) => x.id === llegeix("lema-assignatura")) || assignatures[0];
+  let tema = null;
+  let fusiona = true;
 
-  const assig = h("select", { id: "assig" },
-    assignatures.map((a) => h("option", { value: a.id, selected: a.id === ultima }, a.nom)));
+  // El tema de l'última classe creada en esta assignatura; la primera vegada, l'últim tema.
+  function temaInicial() {
+    const recordat = llegeix(`lema-tema-${as.id}`);
+    if (recordat === null) tema = as.temes.length ? as.temes[as.temes.length - 1].id : null;
+    else tema = as.temes.some((t) => t.id === recordat) ? recordat : null;
+    fusiona = true;
+  }
+
+  const assig = h("select", { id: "assig",
+    onchange: () => { as = assignatures.find((x) => x.id === assig.value); temaInicial(); pintaTema(); } },
+  assignatures.map((x) => h("option", { value: x.id, selected: x.id === as.id }, x.nom)));
   const data = h("input", { id: "data", type: "date", value: iso, required: true });
   const titol = h("input", { id: "titol", type: "text", placeholder: "p. ex. Cicles i transposicions" });
   const boto = h("button", { type: "submit", class: "boto" }, "Crea la classe");
+  const llocTema = h("div", { class: "camp" });
+  const llocInterruptor = h("div", { class: "lloc-interruptor" });
+
+  function pintaInterruptor() {
+    llocInterruptor.replaceChildren(...(tema ? [interruptorTema(nomTema(as, tema), fusiona,
+      { id: "fusiona", canvia: (si) => { fusiona = si; } })] : []));
+  }
+  function pintaTema() {
+    llocTema.replaceChildren(h("label", { for: "tema" }, "Tema"),
+      selectorTema(as, tema, { id: "tema", canvia: (t) => { if (!tema) fusiona = true; tema = t; pintaInterruptor(); } }));
+    pintaInterruptor();
+  }
+  temaInicial();
+  pintaTema();
 
   const form = h("form", {
     class: "targeta",
@@ -204,8 +310,9 @@ function pintaNova() {
       boto.disabled = true;
       try {
         const c = await api("/api/classes", ambJson("POST",
-          { assignatura: assig.value, data: data.value, titol: titol.value }));
-        try { localStorage.setItem("lema-assignatura", assig.value); } catch { /* res */ }
+          { assignatura: as.id, data: data.value, titol: titol.value, tema, fusiona }));
+        recorda("lema-assignatura", as.id);
+        recorda(`lema-tema-${as.id}`, tema || "");
         anar(`#/classe/${c.assignatura}/${c.id}/materials`);
       } catch (err) {
         avisa(err.message);
@@ -213,21 +320,22 @@ function pintaNova() {
       }
     },
   },
-  h("div", { class: "camps" },
+  h("div", { class: "camps dos" },
     camp("Assignatura", assig),
+    llocTema,
     camp("Dia de la classe", data),
     camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
-  h("div", { class: "dreta" }, boto));
+  h("div", { class: "peu-form" }, llocInterruptor, boto));
 
   const passos = [
     ["Materials", "Puja les fotos dels apunts i tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne."],
     ["Passa a net", "Claude llig els apunts, busca cada bloc a la font i s'atura una sola vegada per preguntar-te el que la font no resol."],
-    ["Resultat", "El PDF amb la teua notació i les correccions marcades. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
+    ["Resultat", "El PDF amb la teua notació i les correccions marcades: el del tema sencer, si la classe s'hi afegeix. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
   ];
   principal.replaceChildren(h("div", { class: "contingut estret" },
     h("div", { class: "titol" },
       h("h1", {}, "Nova classe"),
-      h("p", { class: "subtitol" }, "Tria l'assignatura i el dia. Després hi puges les fotos dels apunts i la font.")),
+      h("p", { class: "subtitol" }, "Tria l'assignatura, el tema i el dia. Després hi puges les fotos dels apunts i la font.")),
     form,
     h("section", { class: "titol", "aria-labelledby": "com-va" },
       h("h2", { id: "com-va", class: "seccio-titol" }, "Com va"),
@@ -245,7 +353,7 @@ async function pintaClasse(a, c, pestanya) {
   }
   const cos = h("div", { class: "contingut" }, capcalera(classe, assig, pestanya));
   if (pestanya === "progres") pintaProgres(cos, classe);
-  else if (pestanya === "resultat") await pintaResultat(cos, classe);
+  else if (pestanya === "resultat") await pintaResultat(cos, classe, assig);
   else pintaMaterials(cos, classe, assig);
   principal.replaceChildren(cos);
 }
@@ -256,7 +364,8 @@ function capcalera(classe, assig, pestanya) {
   const noms = { materials: "Materials", progres: "Progrés", resultat: "Resultat" };
   return h("header", { class: "capcalera" },
     h("div", {},
-      h("span", { class: "detall" }, assig.nom + (classe.titol ? ` · ${dataLlarga(classe.data)}` : "")),
+      h("span", { class: "detall" }, [assig.nom, nomTema(assig, classe.tema),
+        classe.titol ? dataLlarga(classe.data) : null].filter(Boolean).join(" · ")),
       h("h1", {}, classe.titol || `Classe del ${dataLlarga(classe.data)}`)),
     h("nav", { class: "pestanyes", "aria-label": "Seccions de la classe" },
       Object.entries(noms).map(([id, nom]) => (actives[id]
@@ -281,11 +390,31 @@ function pintaMaterials(cos, classe, assig) {
       h("div", {}, "Claude està treballant amb estos materials. Els podràs canviar quan pare.")));
   }
   cos.append(
+    seccioTema(classe, assig, desa, bloquejat),
     seccioApunts(classe, bloquejat),
     seccioFont(classe, assig, desa, bloquejat),
     seccioNota(classe, desa, bloquejat),
     barraPassa(classe, assig),
   );
+}
+
+function seccioTema(classe, assig, desa, bloquejat) {
+  const tema = nomTema(assig, classe.tema) ? classe.tema : null;
+  const canvia = async (canvis) => { await desa(canvis); pinta(); };
+  return h("section", { class: "targeta compacta", "aria-labelledby": "t-tema" },
+    h("div", { class: "cap-seccio" },
+      h("h2", { id: "t-tema" }, "Tema"),
+      h("p", {}, "A quin tema pertany la classe, i si s'afegeix al document del tema.")),
+    h("div", { class: "fila-tema" },
+      h("div", { class: "camp" },
+        h("label", { for: "tema", class: "ocult" }, "Tema"),
+        selectorTema(assig, tema, { id: "tema", disabled: bloquejat,
+          // D'un tema a un altre es manté l'interruptor; de «sense tema» a un tema, s'encén.
+          canvia: (t) => canvia({ tema: t, fusiona: Boolean(t) && (tema ? classe.fusiona : true) }) })),
+      tema ? interruptorTema(nomTema(assig, tema), classe.fusiona,
+        { id: "fusiona", disabled: bloquejat, canvia: (si) => canvia({ fusiona: si }) }) : null),
+    classe.estat === "nova" ? null : h("p", { class: "nota-petita" },
+      "Si canvies el tema o l'interruptor, el que ja ha escrit Claude no es mou: s'aplica la pròxima vegada que passes la classe a net."));
 }
 
 function seccioApunts(classe, bloquejat) {
@@ -512,6 +641,7 @@ function barraPassa(classe, assig) {
     .map((t) => ({ ...t, nom: assig.fonts.find((f) => f.id === t.id)?.nom }))
     .filter((t) => t.nom);
   const n = classe.apunts.length;
+  const temaNom = nomTema(assig, classe.tema);
   let falta = null;
   if (!n) falta = "Falten les fotos dels apunts.";
   else if (!fonts.length) falta = "Falta triar la font.";
@@ -537,8 +667,9 @@ function barraPassa(classe, assig) {
     `${n} ${n === 1 ? "foto" : "fotos"}`,
     (fonts.length > 1 ? "Fonts: " : "Font: ") +
       fonts.map((t) => t.nom + (t.temes.length ? ` (${t.temes.join(", ")})` : "")).join(", "),
+    temaNom ? (classe.fusiona ? `S'afegirà al PDF de «${temaNom}»` : "PDF a banda del tema") : null,
     "Es fa en una conversa nova de Claude Code",
-  ].join(" · ");
+  ].filter(Boolean).join(" · ");
   return h("div", { class: "barra-accio" },
     h("div", {}, h("strong", {}, enMarxa ? "Claude hi està treballant" : falta ? "Encara no" : "A punt per passar a net"),
       h("span", {}, resum)),
@@ -743,27 +874,34 @@ function caixaResposta(classe, { titol, placeholder, boto }) {
 
 // ---------- Resultat ----------
 
-async function pintaResultat(cos, classe) {
+async function pintaResultat(cos, classe, assig) {
   const a = classe.assignatura;
   const c = classe.id;
-  const url = (ruta) => urlFitxer(a, "classes", c, ruta);
-  const tex = classe.fitxers.find((f) => f.endsWith(".tex") && !f.includes("/"));
+  // Les rutes són relatives a l'assignatura: classes/<classe>/… o temes/<tema>/…
+  const url = (ruta) => urlFitxer(a, ruta);
+  const propi = `classes/${c}/`;
+  const curt = (f) => (f.startsWith(propi) ? f.slice(propi.length) : f);
+  const delTema = Boolean(classe.pdf && classe.pdf.startsWith("temes/"));
+  const tex = classe.pdf && classe.fitxers.find((f) => f === classe.pdf.replace(/\.pdf$/, ".tex"));
 
   if (classe.pdf) {
+    const titol = delTema ? `Document del tema «${nomTema(assig, classe.tema) || classe.tema}»` : curt(classe.pdf);
     cos.append(h("section", { class: "targeta", "aria-labelledby": "t-pdf" },
       h("div", { class: "accions" },
         h("div", { class: "cap-seccio" },
-          h("h2", { id: "t-pdf" }, classe.pdf),
-          h("p", {}, "Amb la teua notació. Al marge, d'on ve cada bloc i les marques.")),
+          h("h2", { id: "t-pdf" }, titol),
+          h("p", {}, delTema
+            ? "El tema sencer, amb esta classe dins: l'informe diu a quines pàgines és. Al marge, d'on ve cada bloc i les marques."
+            : "Amb la teua notació. Al marge, d'on ve cada bloc i les marques.")),
         h("div", { class: "esquerra" },
           h("a", { class: "boto", href: url(classe.pdf), target: "_blank" }, "Obre el PDF"),
-          tex ? h("a", { class: "boto-sec", href: url(tex), download: tex }, "Descarrega el .tex") : null)),
-      h("iframe", { class: "visor-pdf", src: `${url(classe.pdf)}?v=${Date.now()}`, title: classe.pdf })));
+          tex ? h("a", { class: "boto-sec", href: url(tex), download: tex.split("/").pop() }, "Descarrega el .tex") : null)),
+      h("iframe", { class: "visor-pdf", src: `${url(classe.pdf)}?v=${Date.now()}`, title: titol })));
   }
 
   let informe = null;
-  if (classe.fitxers.includes("informe.md")) {
-    const r = await fetch(url("informe.md"));
+  if (classe.fitxers.includes(propi + "informe.md")) {
+    const r = await fetch(url(propi + "informe.md"));
     if (r.ok) informe = await r.text();
   }
 
@@ -779,7 +917,7 @@ async function pintaResultat(cos, classe) {
       h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
         h("h2", { id: "t-fitxers" }, "Fitxers"),
         h("ul", { class: "fitxers" }, classe.fitxers.map((f) => h("li", {},
-          h("a", { href: url(f), target: "_blank" }, f))))),
+          h("a", { href: url(f), target: "_blank" }, curt(f)))))),
       h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
         h("h2", { id: "t-sessio" }, "Sessió"),
         h("dl", { class: "dades" }, h("dt", {}, "Tokens"), h("dd", {}, tokens(classe.tokens)))))));

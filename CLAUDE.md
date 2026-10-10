@@ -56,6 +56,7 @@ Tenen prioritat sobre l'especificació si hi ha contradicció.
 | 6 | Assignatures i primera prova | Anàlisi II i Estructures Algebraiques. La primera prova (02/10/2026) es va fer amb una pàgina d'Estructures Algebraiques i els apunts de Wuolah d'un alumne de l'any passat |
 | 7 | Quina versió s'agafa | Segons la comparació amb la font. **Equivalent:** el text de la font. **Diferent però vàlid** (a classe es va fer una altra demostració o es van canviar hipòtesis a propòsit): la dels apunts, amb noteta. **Apunts falsos:** la de la font, amb la correcció marcada. **Dubtós:** pregunta obligatòria. Si el bloc no és a la font, es fa amb els apunts. El que és als apunts i no a la font (un pas extra, un comentari del professor) es manté. Si el bloc és a més d'una font i no coincideixen, s'agafa la que quadra millor amb els apunts, amb noteta |
 | 8 | Notació | Sempre la de l'usuari. Si un símbol només apareix a la font, es manté el de la font |
+| 9 | Document per tema | Des de la web, cada classe pot pertànyer a un tema. Si l'usuari ho marca, els blocs de la classe s'afegeixen al document del tema, en ordre de data de classe, sense tocar els de les altres classes. Cada classe té la seua carpeta de blocs dins del tema (`blocs/<classe>/`, amb B01, B02…), així que no cal renumerar mai. Les notetes continuen la numeració del tema. Si no ho marca, la classe té el seu document a banda |
 
 ### Decisió 5 en detall: dos tipus de preguntes
 
@@ -86,7 +87,7 @@ L'usuari els deixa a `prova-1/`:
 2. `fets/`: un material del professor (apunts, diapositives o capítol del llibre que segueix) o apunts d'un altre alumne.
 3. Un `.txt` amb dues línies sobre eixe material: què és i d'on surt.
 
-Des de la web local ([`web-local.md`](web-local.md)), els materials són a `dades/` i el prompt de la web diu on és cada cosa.
+Des de la web local ([`web-local.md`](web-local.md)), els materials són a `dades/` i el prompt de la web diu on és cada cosa, també si la classe s'afegeix al document d'un tema (decisió 9).
 
 ## Passos
 
@@ -110,7 +111,7 @@ Tenen la mateixa numeració que el flux i que `flux.html`.
    - Classificar els dubtes que la font no resol en obligatoris i notetes.
 4. **Punt de control.** Mostrar a l'usuari, **en una sola tanda**, l'esquema de blocs (amb on s'ha trobat cada bloc a la font) i les preguntes obligatòries. Esperar les respostes i guardar-les al perfil de lletra (símbols, lletres i paraules, abreviatures).
 5. **Escriure cada bloc** amb la versió decidida i la notació del diccionari. Citar la font i la pàgina. Aplicar la regla de "falta demo".
-6. **Muntatge i entrega** (Fase 3). Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF i entregar-lo amb l'informe.
+6. **Muntatge i entrega** (Fase 3). Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF i entregar-lo amb l'informe. Si la classe s'afegeix al document d'un tema (decisió 9), els blocs van a la carpeta del tema, `tema.tex` és el del tema i es compila el tema; l'informe diu a quines pàgines és la classe.
 
 ## Què s'ha d'entregar
 
@@ -139,7 +140,6 @@ La valoració final la fa l'usuari revisant el PDF.
 - Drive, GitHub Actions i qualsevol automatització.
 - Vista web de revisió amb subratllat i xinxetes.
 - Catàleg de fonts.
-- Document incremental entre sessions.
 
 ## Com treballar amb l'usuari
 

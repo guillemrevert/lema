@@ -15,12 +15,11 @@ Treballes des de la web local (`web-local.md`), així que els materials no són 
 
 On va cada cosa:
 
-- Tot el que generes, dins de `{carpeta}`: `esquema.yaml`, `blocs/`, `tema.tex` i `tema.pdf`, `informe.md` i `millores.md`.
+{document}
 - La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix, reutilitza-la.
 - El diccionari de notació, a `{carpeta_assig}/notacio.yaml`. Si ja existeix, consulta'l i amplia'l.
 - El perfil de lletra, a `dades/perfil-lletra.md`. Si ja existeix, consulta'l en la lectura i amplia'l amb les respostes.
 - La plantilla és `plantilla-base.tex`, a l'arrel del repositori: `tema.tex` la carrega amb `\input{{plantilla}}`. No la modifiques; si cal canviar-la, apunta-ho a `millores.md`.
-- Per compilar: `python compila.py {carpeta}`. `tema.tex` ha de ser l'únic `.tex` de l'arrel de la classe.
 - Fora de `dades/` no pots escriure: el repositori està muntat només de lectura.
 
 Normes de la web:
