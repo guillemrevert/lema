@@ -460,3 +460,33 @@ dl.dades dd { margin: 0; font-family: var(--mono); }
 .avisos-panell .avis { padding: 10px 14px; font-size: 14px; }
 .avis .pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 .panell-cos textarea.latex:read-only { background: var(--fons); }
+
+/* ---------- Barra lateral: els quaderns, amb les seues sessions dins ---------- */
+.quadern-enllac {
+  display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent;
+  color: var(--tinta); text-decoration: none; font-weight: 600; font-size: 14px; line-height: 1.35;
+}
+.quadern-enllac svg { flex: none; margin-top: 1px; color: var(--suau); }
+.quadern-enllac:hover { background: #E4E3DC; color: var(--tinta); }
+.quadern-enllac.actiu { background: var(--superficie); border-color: var(--vora); }
+.quadern-enllac.actiu svg { color: var(--blau); }
+.sessions-nav { display: flex; flex-direction: column; gap: 2px; margin: 0 0 4px 17px; padding-left: 8px; border-left: 1px solid var(--vora-forta); }
+.sessions-nav .classe-nav { padding: 7px 10px; }
+.sessions-nav .classe-nom { font-weight: 500; font-size: 13.5px; }
+.nou-quadern { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 13.5px; font-weight: 500; color: var(--blau); text-decoration: none; }
+.nou-quadern:hover { text-decoration: underline; }
+
+/* ---------- Pàgina del quadern ---------- */
+.capcalera > .dades-quadern { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.fila-botons { display: flex; flex-wrap: wrap; gap: 8px; }
+.nom-quadern h1 { overflow-wrap: anywhere; }
+.enllac-titol { color: inherit; text-decoration: none; }
+.enllac-titol:hover { color: var(--blau); text-decoration: underline; }
+.avis.amb-boto { align-items: center; flex-wrap: wrap; }
+.avis.amb-boto > div { flex: 1 1 260px; }
+.cap-sessio {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px;
+  padding-top: 10px; border-top: 1px solid var(--vora); font-size: 14px;
+}
+.fotos > .cap-sessio:first-child, .fotos > p + .cap-sessio { border-top: 0; padding-top: 0; }
+.cap-sessio a { font-size: 13px; }

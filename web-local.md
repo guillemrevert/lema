@@ -40,9 +40,9 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
   dades/assignatures/<assignatura>/
     notacio.yaml
     fonts/<font>/          font.json, els PDF, el text extret, index.txt i fitxa.yaml
-    quaderns/<quadern>/     quadern.json, quadern.tex, quadern.pdf i blocs/<sessió>/ de cada sessió
-                            (blocs/inicial/: el document d'abans de la web)
-    sessions/<AAAA-MM-DD>/  sessio.json, apunts/, adjunts/, registre/, el que escriu Claude i edicions.json
+    quaderns/<quadern>/     quadern.json, quadern.tex, quadern.pdf, blocs/<sessió>/ de cada sessió
+                            (blocs/inicial/: el document d'abans de la web) i edicions.json
+    sessions/<AAAA-MM-DD>/  sessio.json, apunts/, adjunts/, registre/ i el que escriu Claude
   dades/paperera/<assignatura>/<sessió>-<data i hora>/   les sessions esborrades, amb els blocs que tenien al quadern
   dades/copia-<data i hora>/   la còpia que va fer la web abans de passar de temes i classes a quaderns i sessions
   ```
@@ -54,7 +54,8 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
 - **Punt de control:** Claude s'atura al pas 4, escriu l'esquema i les preguntes obligatòries i acaba el torn. La resposta, amb fitxers adjunts si cal, continua la mateixa conversa. Les correccions després del PDF van igual.
 - **Quaderns i sessions** (decisió 9 de `CLAUDE.md`): un quadern és un document que creix sessió a sessió (un tema, unes pràctiques, un article…), i una sessió és cada vegada que s'hi afegeixen apunts. Cada sessió té quadern, obligatori (desplegable i «+» a Nova sessió i a Materials). Claude escriu els blocs a `quaderns/<quadern>/blocs/<sessió>/`, amb etiquetes `\label{<sessió>-Bnn}`, n'afegeix els `\input` al `quadern.tex` en ordre de data i compila el quadern. L'esquema, l'informe i `millores.md` es queden a la carpeta de la sessió, i Resultat ensenya el PDF del quadern. Les sessions sense quadern (d'abans) ixen a «Sense quadern» i no es poden passar a net fins que en tenen un.
 - **Compilar:** Claude fa servir [`compila.py`](compila.py) i [`plantilla-base.tex`](plantilla-base.tex), que ara és a l'arrel del repositori.
-- **Resultat costat a costat** (guia H): a l'esquerra, les fotos o tot el LaTeX de la sessió en un sol text, amb una línia `%%%% Bnn.tex %%%%` on comença cada bloc; a la dreta, el PDF. El LaTeX es pot editar (decisió 2): «Desa i compila» parteix el text per eixes línies, desa només els blocs canviats i compila el document amb `compila.py`. Si falla, es torna a posar el PDF d'abans. Els blocs editats s'apunten a `edicions.json` de la sessió; la web ho diu a Claude al final de cada correcció que li envies, i en «Torna a passar a net» el fitxer se'n va a `registre/` (les edicions es perden, i la web avisa abans).
+- **La pàgina del quadern** (guia Q, fase 2; `#/quadern/<assignatura>/<quadern>`): el document, «PDF sencer» o «Costat a costat», i la llista de sessions. La barra lateral té els quaderns, cada un amb un enllaç al document i les seues sessions dins. La sessió només té «Materials» i «Progrés» (l'informe i els fitxers són a «Progrés»), i quan està acabada un avís porta al quadern.
+- **Costat a costat** (guies H i Q): a l'esquerra, les fotos de totes les sessions del quadern, agrupades per sessió, o tot el LaTeX del quadern en un sol text, amb una línia `%%%% <carpeta>/Bnn.tex %%%%` on comença cada bloc (`inicial/B01.tex`, `2026-10-10/B01.tex`), en l'ordre dels `\input` de `quadern.tex`; a la dreta, el PDF. El LaTeX es pot editar (decisió 2): «Desa i compila» parteix el text per eixes línies, desa només els blocs canviats i compila el quadern amb `compila.py`. Si falla, es torna a posar el PDF d'abans. No es pot editar mentre Claude passa a net una sessió del quadern. Els blocs editats s'apunten a `edicions.json` del quadern; la web ho diu a Claude al final de cada correcció que li envies, i en «Torna a passar a net» d'una sessió els seus blocs editats se'n van al `registre/` de la sessió (les edicions es perden, i la web avisa abans).
 
 ## Diferències amb el mock-up
 
@@ -84,7 +85,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | N | Mode fosc | Res |
 | O | Nova classe i Materials en una sola pàgina (tema, «+», interruptor i, davall, els materials comprimits). Demanat el 10/10/2026. **Feta** el 10/10/2026 (fase 2 de `guies/E-temes.md`) | La E |
 | P | Barra lateral plegable (cap al costat i per assignatures) i pàgina d'assignatura: temes amb els PDF generats i el seu títol (es pot canviar), i les fonts. Demanat el 10/10/2026. **Feta** el 10/10/2026 (fase 3 de `guies/E-temes.md`) | La E |
-| Q | Reorganitzar la web al voltant del document. «Tema» passa a dir-se **quadern** i «classe», **sessió** (10/10/2026): un quadern pot ser un tema, unes pràctiques o un article, i la sessió és cada vegada que s'hi afegeixen apunts. El quadern té la seua pàgina amb el document (PDF sencer i costat a costat), i la sessió es queda per pujar apunts i passar-los a net. Ve de la confusió de tindre tres còpies del Tema 1. Mock-up: [`guies/Q-mockup.html`](guies/Q-mockup.html), publicat a https://claude.ai/artifact/9GubKJNLuRtgVF2frxS72t, amb set decisions al final. Guia [`guies/Q-quaderns.md`](guies/Q-quaderns.md), amb totes les propostes del mock-up, en tres fases. **Fase 1 feta** el 10/10/2026: els noms (a la web, a les dades i a les instruccions de Claude), el quadern obligatori, les etiquetes amb el nom de la sessió i les còpies del 05/10 i del 30/09 a la paperera. Falten la 2 (pàgina del quadern i barra lateral) i la 3 (correccions al quadern) | — |
+| Q | Reorganitzar la web al voltant del document. «Tema» passa a dir-se **quadern** i «classe», **sessió** (10/10/2026): un quadern pot ser un tema, unes pràctiques o un article, i la sessió és cada vegada que s'hi afegeixen apunts. El quadern té la seua pàgina amb el document (PDF sencer i costat a costat), i la sessió es queda per pujar apunts i passar-los a net. Ve de la confusió de tindre tres còpies del Tema 1. Mock-up: [`guies/Q-mockup.html`](guies/Q-mockup.html), publicat a https://claude.ai/artifact/9GubKJNLuRtgVF2frxS72t, amb set decisions al final. Guia [`guies/Q-quaderns.md`](guies/Q-quaderns.md), amb totes les propostes del mock-up, en tres fases. **Fase 1 feta** el 10/10/2026: els noms (a la web, a les dades i a les instruccions de Claude), el quadern obligatori, les etiquetes amb el nom de la sessió i les còpies del 05/10 i del 30/09 a la paperera. **Fase 2 feta** el 10/10/2026: la pàgina del quadern, la barra lateral amb els quaderns i les sessions dins, el «Costat a costat» de tot el quadern i `edicions.json` al quadern. Falta la 3 (correccions al quadern) | — |
 
 **Mock-up de la E, la O i la P (10/10/2026), estàtic:** https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum (el fitxer és `guies/E-mockup.html`). Quatre pantalles netes (nova classe; la classe creada amb els materials; pàgina d'assignatura; barra lateral plegada) i setze parts explicades amb les alternatives una al costat de l'altra. La guia `guies/E-temes.md` té la taula de decisions i quatre preguntes pendents (si la creu de la captura és esborrar la classe, si el Tema 1 comença amb el document que ja hi ha, si el formulari de pujar fonts se'n va a l'assignatura, i barra lateral amb una o dues línies per classe).
 
@@ -141,6 +142,18 @@ Del primer mock-up de la H, que treballava bloc a bloc. Per a quasi totes cal qu
 - **El LaTeX només per llegir**, sense poder editar-lo.
 - **Un editor amb colors** (CodeMirror, carregat d'internet): les ordres de LaTeX en colors, números de línia i parèntesis aparellats. Ara és un quadre de text senzill.
 - **Una còpia dels blocs editats a `dades/paperera/`** en tornar a passar a net una classe. Ara només hi ha l'avís, i `edicions.json` se'n va a `registre/` (diu quins blocs eren, però no el text).
+
+### Quaderns i sessions (guia Q)
+
+Les lletres són les parts del mock-up (`guies/Q-mockup.html`). Es va triar la proposta de cada una.
+
+- **Part 2 · La barra lateral com abans:** sessions agrupades per quadern, amb el nom del quadern només com a títol.
+- **Part 3 · El document a cada sessió**, a «Resultat», en lloc d'una pàgina per quadern.
+- **Part 5 · Correccions a Claude** des de la conversa de l'última sessió del quadern, o amb un desplegable per triar la sessió, en lloc d'una conversa per quadern (fase 3).
+- **Part 7 · Mantenir l'interruptor** «Afegeix al document del tema», amb document a banda per sessió.
+- **Part 8 · Deixar les còpies del 05/10 i del 30/09** a la carpeta de cada sessió, sense ensenyar-les.
+- **Part 1 · Quaderns sense assignatura**, per a pràctiques o articles que no són de cap assignatura.
+- **Part 9 · Només els textos de la web**, sense canviar els noms de les carpetes i dels fitxers.
 
 ### Motor
 

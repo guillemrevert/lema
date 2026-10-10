@@ -251,14 +251,31 @@ async def compila_document(carpeta, pdf):
 
 
 def edicions(carpeta):
-    """Els blocs que l'usuari ha editat a mà des de la web ({fitxer: data}). Les sessions d'abans no en tenen."""
+    """Els blocs del quadern que l'usuari ha editat a mà des de la web ({fitxer: data}), apuntats a
+    edicions.json del quadern. Els quaderns on no s'ha editat res no en tenen."""
     ruta = carpeta / "edicions.json"
     return llig(ruta)["blocs"] if ruta.exists() else {}
 
 
-def nota_edicions(a, s):
-    """El que la web afegeix als missatges per a Claude si l'usuari ha editat blocs a mà (decisió 2)."""
-    blocs = edicions(carpeta_sessio(a, s))
+def desa_edicions(carpeta, blocs):
+    ruta = carpeta / "edicions.json"
+    if blocs:
+        escriu(ruta, {"blocs": dict(sorted(blocs.items(), key=lambda e: ordre_natural(e[0])))})
+    else:
+        ruta.unlink(missing_ok=True)
+
+
+def editats_de_sessio(a, dades):
+    """Els blocs d'esta sessió (blocs/<sessió>/ del seu quadern) que l'usuari ha editat a mà."""
+    if not dades.get("quadern"):
+        return []
+    prefix = f"quaderns/{dades['quadern']}/blocs/{dades['id']}/"
+    return [f for f in edicions(carpeta_assig(a) / "quaderns" / dades["quadern"]) if f.startswith(prefix)]
+
+
+def nota_edicions(a, q):
+    """El que la web afegeix als missatges per a Claude si l'usuari ha editat blocs del quadern a mà (decisió 2)."""
+    blocs = edicions(carpeta_assig(a) / "quaderns" / q) if q else {}
     if not blocs:
         return ""
     rutes = ", ".join(f"`dades/assignatures/{a}/{f}`" for f in blocs)
@@ -419,19 +436,69 @@ def sessio(a: str, s: str):
         if document["blocs"].is_dir():
             fitxers += sorted(f"quaderns/{quadern.name}/blocs/{s}/{b.name}" for b in document["blocs"].iterdir())
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
-            "editats": list(edicions(carpeta)), "events": nombre_events(carpeta)}
+            "editats": editats_de_sessio(a, dades), "events": nombre_events(carpeta)}
 
 
-@app.get("/api/sessions/{a}/{s}/latex")
-def latex(a: str, s: str):
-    """Els blocs de la sessió al document del quadern, en l'ordre del document (B01, B02…), amb el text de cada un."""
-    document = document_de(a, llig_sessio(a, s))
-    if not document or not document["blocs"].is_dir():
-        return {"blocs": []}
+# ---------- Quaderns ----------
+
+# \input{blocs/<carpeta>/Bnn} de quadern.tex: els blocs del document, en ordre.
+INPUT_BLOC = re.compile(r"\\input\{(blocs/[^}]+?)(?:\.tex)?\}")
+
+
+def blocs_del_quadern(carpeta):
+    """Els fitxers dels blocs del quadern en l'ordre del document, que és el dels \\input de quadern.tex."""
+    tex = carpeta / "quadern.tex"
+    if not tex.exists():
+        return []
+    rutes = []
+    for linia in tex.read_text(encoding="utf-8").splitlines():
+        if linia.lstrip().startswith("%"):
+            continue
+        for m in INPUT_BLOC.finditer(linia):
+            if ".." in m.group(1):
+                continue
+            ruta = carpeta / f"{m.group(1)}.tex"
+            if ruta.exists() and ruta not in rutes:
+                rutes.append(ruta)
+    return rutes
+
+
+def sessions_del_quadern(a, q):
+    """Les sessions del quadern, en ordre de data."""
+    sessions = []
+    for fitxa in (carpeta_assig(a) / "sessions").glob("*/sessio.json"):
+        d = llig_sessio(a, fitxa.parent.name)
+        if d["quadern"] == q:
+            sessions.append(d)
+    return sorted(sessions, key=lambda d: (d["data"], ordre_natural(d["id"])))
+
+
+def claude_al_quadern(a, q):
+    """Si Claude està passant a net alguna sessió del quadern."""
+    return any(clau[0] == a and llig_sessio(a, clau[1])["quadern"] == q for clau in list(processos))
+
+
+@app.get("/api/quaderns/{a}/{q}")
+def quadern(a: str, q: str):
+    """El quadern: el nom, el PDF, si té blocs d'abans de la web, les seues sessions i els blocs editats a mà."""
+    carpeta = carpeta_quadern(a, q)
+    sessions = [{k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "apunts")}
+                for d in sessions_del_quadern(a, q)]
+    return {**info_quadern(carpeta), "assignatura": a,
+            "inicial": (carpeta / "blocs" / "inicial").is_dir(),
+            "tex": (carpeta / "quadern.tex").exists(),
+            "sessions": sessions, "en_marxa": claude_al_quadern(a, q),
+            "editats": list(edicions(carpeta))}
+
+
+@app.get("/api/quaderns/{a}/{q}/latex")
+def latex_quadern(a: str, q: str):
+    """Tots els blocs del quadern, en l'ordre del document, amb el text de cada un. El nom porta la
+    carpeta (`inicial/B01.tex`, `2026-10-10/B01.tex`): és el que va a les línies %%%% de la web."""
+    carpeta = carpeta_quadern(a, q)
     base = carpeta_assig(a)
-    blocs = sorted(document["blocs"].glob("*.tex"), key=lambda b: ordre_natural(b.name))
-    return {"blocs": [{"fitxer": b.relative_to(base).as_posix(), "nom": b.name,
-                       "text": b.read_text(encoding="utf-8")} for b in blocs]}
+    return {"blocs": [{"fitxer": b.relative_to(base).as_posix(), "nom": b.relative_to(carpeta / "blocs").as_posix(),
+                       "text": b.read_text(encoding="utf-8")} for b in blocs_del_quadern(carpeta)]}
 
 
 class BlocLatex(BaseModel):
@@ -443,35 +510,31 @@ class CanvisLatex(BaseModel):
     canvis: list[BlocLatex]
 
 
-@app.post("/api/sessions/{a}/{s}/latex")
-async def desa_latex(a: str, s: str, canvis: CanvisLatex):
-    """Desa els blocs que l'usuari ha editat, ho apunta a edicions.json i torna a compilar el document.
+@app.post("/api/quaderns/{a}/{q}/latex")
+async def desa_latex_quadern(a: str, q: str, canvis: CanvisLatex):
+    """Desa els blocs que l'usuari ha editat, ho apunta a edicions.json del quadern i torna a compilar-lo.
 
     Si la compilació falla, els blocs es queden desats (per arreglar-los) i el PDF és el d'abans."""
-    if (a, s) in processos:
-        raise HTTPException(409, "Claude està treballant en esta sessió: el LaTeX el podràs editar quan pare")
-    document = document_de(a, llig_sessio(a, s))
-    if not document:
-        raise HTTPException(400, "Esta sessió encara no té document")
+    if claude_al_quadern(a, q):
+        raise HTTPException(409, "Claude està passant a net una sessió d'este quadern: el LaTeX el podràs editar quan pare")
+    carpeta = carpeta_quadern(a, q)
     if not canvis.canvis:
         raise HTTPException(400, "No hi ha cap canvi")
     base = carpeta_assig(a)
-    blocs = {b.relative_to(base).as_posix() for b in document["blocs"].glob("*.tex")}
+    blocs = {b.relative_to(base).as_posix() for b in blocs_del_quadern(carpeta)}
     for bloc in canvis.canvis:
-        if bloc.fitxer not in blocs:  # només els blocs d'esta sessió: res fora
-            raise HTTPException(400, f"{bloc.fitxer} no és un bloc d'esta sessió")
-    if document["carpeta"] in compilant:
+        if bloc.fitxer not in blocs:  # només els blocs del document del quadern: res fora
+            raise HTTPException(400, f"{bloc.fitxer} no és un bloc d'este quadern")
+    if carpeta in compilant:
         raise HTTPException(409, "Ja s'està compilant: espera que acabe")
-    compilant.add(document["carpeta"])
+    compilant.add(carpeta)
     try:
         for bloc in canvis.canvis:
             (base / bloc.fitxer).write_text(bloc.text, encoding="utf-8", newline="")
-        carpeta = carpeta_sessio(a, s)
-        editats = edicions(carpeta) | {bloc.fitxer: ara() for bloc in canvis.canvis}
-        escriu(carpeta / "edicions.json", {"blocs": dict(sorted(editats.items(), key=lambda e: ordre_natural(e[0])))})
-        ok, sortida = await compila_document(document["carpeta"], base / document["pdf"])
+        desa_edicions(carpeta, edicions(carpeta) | {bloc.fitxer: ara() for bloc in canvis.canvis})
+        ok, sortida = await compila_document(carpeta, carpeta / "quadern.pdf")
     finally:
-        compilant.discard(document["carpeta"])
+        compilant.discard(carpeta)
     # «OK, 10 pàgines» i, davall, els avisos de compila.py (referències, text fora del marge).
     linies = sortida.splitlines()
     m = re.match(r"OK, (\d+) pàgin", linies[0]) if ok and linies else None
@@ -531,6 +594,8 @@ async def esborra_sessio(a: str, s: str):
     for blocs in sorted((carpeta_assig(a) / "quaderns").glob(f"*/blocs/{s}")):
         quadern = blocs.parent.parent
         shutil.move(blocs, desti / f"blocs-del-{quadern.name}")
+        prefix = f"quaderns/{quadern.name}/blocs/{s}/"
+        desa_edicions(quadern, {f: d for f, d in edicions(quadern).items() if not f.startswith(prefix)})
         avis = await treu_del_quadern(quadern, s)
         if avis:
             avisos.append(avis)
@@ -751,10 +816,15 @@ async def passa_a_net(a: str, s: str):
                                      for f in dades["fonts"]):
         raise HTTPException(400, "Falta triar la font")
     carpeta = carpeta_sessio(a, s)
-    if (carpeta / "edicions.json").exists():
-        # Claude tornarà a escriure tots els blocs: les edicions a mà es perden (la web ho ha avisat).
+    propis = editats_de_sessio(a, dades)
+    if propis:
+        # Claude tornarà a escriure els blocs d'esta sessió: les seues edicions a mà es perden (la web ho
+        # ha avisat). Se'n van del quadern al registre de la sessió, perquè en quede constància.
+        quadern = carpeta_assig(a) / "quaderns" / dades["quadern"]
+        totes = edicions(quadern)
         (carpeta / "registre").mkdir(exist_ok=True)
-        (carpeta / "edicions.json").replace(carpeta / "registre" / f"edicions-{datetime.now():%Y%m%d-%H%M%S}.json")
+        escriu(carpeta / "registre" / f"edicions-{datetime.now():%Y%m%d-%H%M%S}.json", {"blocs": {f: totes[f] for f in propis}})
+        desa_edicions(quadern, {f: d for f, d in totes.items() if f not in propis})
     afegeix_event(carpeta, t="inici")
     processos[(a, s)] = None  # reservat fins que arranca el procés
     desa_sessio(a, s, estat="en_marxa", pas=None, conversa=None)
@@ -783,7 +853,7 @@ async def respon(a: str, s: str, text: str = Form(""),
     if adjunts:
         rutes = ", ".join(f"`dades/assignatures/{a}/sessions/{s}/adjunts/{n}`" for n in adjunts)
         missatge += f"\n\nFitxers adjunts: {rutes}"
-    missatge += nota_edicions(a, s)
+    missatge += nota_edicions(a, dades["quadern"])
     afegeix_event(carpeta, t="usuari", text=text.strip(), adjunts=adjunts)
     processos[(a, s)] = None
     desa_sessio(a, s, estat="en_marxa")

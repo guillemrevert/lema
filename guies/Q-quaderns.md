@@ -1,6 +1,6 @@
 # Guia Q · Quaderns i sessions
 
-**Estat:** en tres fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit. La fase 1 es va aprovar i fer el 10/10/2026. Les fases 2 i 3 són una proposta.
+**Estat:** en tres fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit. Les fases 1 i 2 es van aprovar i fer el 10/10/2026. La fase 3 és una proposta.
 
 **Mock-up:** [`guies/Q-mockup.html`](Q-mockup.html), publicat a https://claude.ai/artifact/9GubKJNLuRtgVF2frxS72t. Ensenya tres pantalles netes i, davall, nou parts explicades. Quan ací es diu «part 5», és la part 5 del mock-up. Les imatges són a `guies/img/`, fora de git.
 
@@ -175,7 +175,37 @@ A `localhost:8300`:
 
 ## Fase 2 · La pàgina del quadern i la barra lateral
 
-**Estat:** proposta. Es fa quan la fase 1 estiga provada.
+**Estat:** feta el 10/10/2026. Provada a `localhost:8300`:
+
+- **Barra lateral:** el Tema 1 amb una icona de llibre, enllaç al document i les seues tres sessions dins. «Nou quadern» a cada assignatura obri la pàgina de l'assignatura amb el formulari ja obert. La sessió buida del 30/09, a «Sense quadern».
+- **La pàgina del Tema 1:**
+  - 12 pàgines, «Obre el PDF», «Descarrega el .tex» i «Nova sessió en este quadern», que porta a «Nova sessió» amb el Tema 1 ja triat;
+  - la llista amb «Abans de la web», 30/09, 05/10 i 10/10.
+- **Costat a costat:**
+  - 11 fotos en dos grups (30/09 i 05/10), amb la nota que els blocs d'abans de la web no tenen fotos;
+  - el LaTeX amb 51 línies, de `%%%% inicial/B01.tex %%%%` a `inicial/B51.tex`.
+- **Editar i compilar**, amb una còpia del quadern (`quaderns/prova-q`, ara a la paperera), perquè no es tocara el Tema 1:
+  - canviar el B41 i compilar (12 pàgines, «Teorema 1.34» al PDF de la còpia i no al del Tema 1);
+  - l'error de LaTeX amb `./blocs/inicial/B41.tex`, línia 3;
+  - l'arreglat;
+  - la línia `%%%% inicial/B40.tex %%%%` esborrada, que no desa res;
+  - «Descarta».
+- **`edicions.json`** queda a la carpeta del quadern. Cada sessió només veu els seus blocs editats, en l'avís de «Torna a passar a net». La nota per a Claude porta tots els del quadern. El Tema 1 de veritat no en té cap.
+- **La sessió del 05/10:**
+  - només «Materials» i «Progrés»; en obrir-la, «Materials», amb l'avís «Esta sessió ja és al quadern» i el botó;
+  - «Progrés» té l'informe i els fitxers;
+  - les adreces velles de «Resultat» (també `…/resultat/costat`) porten al quadern.
+
+**Canvis respecte al que deia la guia:**
+
+- Una sessió acabada s'obri per «Materials», amb l'avís dalt.
+- L'informe i la llista de fitxers, que eren a «Resultat», passen a «Progrés».
+- L'ordre del LaTeX del quadern el diuen els `\input` de `quadern.tex`, com deia la guia, i els blocs que no hi són no ixen.
+
+No s'ha pogut provar sense fer treballar Claude:
+
+- que el LaTeX quede bloquejat mentre Claude passa a net una sessió del quadern;
+- que, en tornar a passar a net una sessió, els seus blocs editats se'n vagen al registre.
 
 ### Què notaràs
 

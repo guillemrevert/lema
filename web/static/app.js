@@ -1,7 +1,7 @@
 "use strict";
 
-// Rutes: #/ (nova sessió), #/assignatura/<assignatura>/<quaderns|fonts>
-// i #/sessio/<assignatura>/<sessió>/<materials|progres|resultat>, amb #/…/resultat/costat per a la vista dividida.
+// Rutes: #/ (nova sessió), #/assignatura/<assignatura>/<quaderns|fonts> (…/quaderns/nou: amb el formulari obert),
+// #/quadern/<assignatura>/<quadern> (…/costat: la vista dividida) i #/sessio/<assignatura>/<sessió>/<materials|progres>.
 
 const PASSOS = ["Preparació", "Lectura general", "Divisió en blocs", "Per a cada bloc",
   "Punt de control", "Escriure", "Muntatge i PDF"];
@@ -25,6 +25,7 @@ const ICONES = {
   dreta: '<path d="M9 6l6 6-6 6"/>',
   avall: '<path d="M6 9l6 6 6-6"/>',
   llapis: '<path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13 7l4 4"/>',
+  llibre: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
 };
 
 const lateral = document.getElementById("lateral");
@@ -244,7 +245,8 @@ async function pinta() {
     const r = ruta();
     pintaLateral(r);
     if (r.vista === "sessio" && r.a && r.c) await pintaSessio(r.a, r.c, r.pestanya, r.sub);
-    else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c);
+    else if (r.vista === "quadern" && r.a && r.c) await pintaQuadern(r.a, r.c, r.pestanya === "costat");
+    else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c, r.pestanya === "nou");
     else pintaNova();
   } catch (e) {
     principal.replaceChildren(h("div", { class: "avis roig" }, icona("avis", 22), h("div", {}, e.message)));
@@ -318,13 +320,20 @@ function pintaLateral(r) {
     h("span", { class: "classe-nom" }, nomSessio(c)),
     h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)));
   };
-  // Les sessions de cada assignatura, agrupades pel quadern. Les que no en tenen, al final.
-  const grups = (as) => {
-    const llista = as.quaderns.map((t) => ({ nom: t.nom, sessions: as.sessions.filter((c) => c.quadern === t.id) }))
-      .filter((g) => g.sessions.length);
-    const sense = as.sessions.filter((c) => !as.quaderns.some((t) => t.id === c.quadern));
-    if (sense.length) llista.push({ nom: llista.length ? "Sense quadern" : null, sessions: sense });
-    return llista;
+  // Cada quadern és un enllaç al seu document, amb les seues sessions dins (de la més nova a la més vella).
+  const quadern = (as, q) => {
+    const actiu = r.vista === "quadern" && r.a === as.id && r.c === q.id;
+    const sessions = as.sessions.filter((c) => c.quadern === q.id);
+    return [
+      h("a", { href: `#/quadern/${as.id}/${q.id}`, class: "quadern-enllac" + (actiu ? " actiu" : ""),
+        "aria-current": actiu ? "page" : null }, icona("llibre", 16), h("span", {}, q.nom)),
+      sessions.length ? h("div", { class: "sessions-nav" }, sessions.map((c) => enllac(as, c))) : null,
+    ];
+  };
+  // Les sessions d'abans que no tenen quadern, al final, perquè les poses en un o les esborres.
+  const sense = (as) => {
+    const llista = as.sessions.filter((c) => !as.quaderns.some((q) => q.id === c.quadern));
+    return llista.length ? [h("h3", { class: "quadern-nav" }, "Sense quadern"), llista.map((c) => enllac(as, c))] : null;
   };
   lateral.replaceChildren(...[
     h("div", { class: "cap-lateral" },
@@ -345,9 +354,11 @@ function pintaLateral(r) {
           h("button", { type: "button", class: "plega-grup", "data-grup": as.id, "aria-expanded": plegat ? "false" : "true",
             "aria-label": `${plegat ? "Desplega" : "Plega"} ${as.nom}`, title: plegat ? "Desplega" : "Plega",
             onclick: () => plegaGrup(as.id) }, icona(plegat ? "dreta" : "avall", 14, 2))),
-        plegat ? null : as.sessions.length
-          ? grups(as).map((g) => [g.nom ? h("h3", { class: "quadern-nav" }, g.nom) : null, g.sessions.map((c) => enllac(as, c))])
-          : h("p", { class: "buit" }, "Encara no hi ha sessions."));
+        plegat ? null : [
+          as.quaderns.length ? as.quaderns.map((q) => quadern(as, q)) : h("p", { class: "buit" }, "Encara no hi ha quaderns."),
+          h("a", { href: `#/assignatura/${as.id}/quaderns/nou`, class: "nou-quadern" }, icona("mes", 14, 2.2), "Nou quadern"),
+          sense(as),
+        ]);
     }),
   ].flat());
 }
@@ -433,7 +444,7 @@ function fitxaNova() {
 
 // ---------- Assignatura ----------
 
-function pintaAssignatura(a, pestanya) {
+function pintaAssignatura(a, pestanya, obreNou) {
   const as = assignatures.find((x) => x.id === a);
   if (!as) throw new Error("No existeix esta assignatura.");
   pestanya = pestanya === "fonts" ? "fonts" : "quaderns";
@@ -452,6 +463,11 @@ function pintaAssignatura(a, pestanya) {
   if (pestanya === "quaderns") pintaQuaderns(cos, as);
   else pintaFonts(cos, as);
   principal.replaceChildren(cos);
+  // «Nou quadern» de la barra lateral: el formulari ja obert.
+  if (nou && obreNou) {
+    nou.hidden = false;
+    nou.querySelector("input").focus();
+  }
 }
 
 function formNouQuadern(as) {
@@ -505,16 +521,17 @@ function pintaQuaderns(cos, as) {
   }
 }
 
-function targetaQuadern(as, t) {
-  const sessions = as.sessions.filter((c) => c.quadern === t.id);
+// El nom d'un quadern amb el llapis per canviar-lo: es converteix en un camp de text, Intro desa i Esc cancel·la.
+// titol(nom) fa el títol (un h1 o un h2, amb enllaç o sense); extra va al costat (p. ex. quantes sessions té).
+function nomEditable(as, t, titol, extra) {
   const cap = h("div", { class: "quadern-cap" });
-  const pintaCap = () => cap.replaceChildren(
-    h("div", { class: "nom-quadern" }, h("h2", {}, t.nom),
+  const pintaCap = () => cap.replaceChildren(...[
+    h("div", { class: "nom-quadern" }, titol(t.nom),
       h("button", { type: "button", class: "boto-icona petit", title: "Canvia el nom",
         "aria-label": `Canvia el nom de «${t.nom}»`, onclick: edita }, icona("llapis", 16))),
-    h("span", { class: "detall" }, `${sessions.length} ${sessions.length === 1 ? "sessió" : "sessions"}`));
+    extra,
+  ].filter(Boolean));
 
-  // El nom es converteix en un camp de text. Intro desa i Esc cancel·la.
   function edita() {
     const nom = h("input", { type: "text", value: t.nom, "aria-label": "Nom del quadern",
       onkeydown: (e) => {
@@ -539,6 +556,14 @@ function targetaQuadern(as, t) {
     nom.select();
   }
   pintaCap();
+  return cap;
+}
+
+function targetaQuadern(as, t) {
+  const sessions = as.sessions.filter((c) => c.quadern === t.id);
+  const pagina = `#/quadern/${as.id}/${t.id}`;
+  const cap = nomEditable(as, t, (nom) => h("h2", {}, h("a", { href: pagina, class: "enllac-titol" }, nom)),
+    h("span", { class: "detall" }, `${sessions.length} ${sessions.length === 1 ? "sessió" : "sessions"}`));
 
   const url = (fitxer) => urlFitxer(as.id, "quaderns", t.id, fitxer);
   const doc = t.pdf
@@ -546,8 +571,8 @@ function targetaQuadern(as, t) {
       h("div", { class: "nom" }, h("strong", {}, "Document del quadern"),
         h("span", { class: "detall" }, [t.pdf.pagines ? `${t.pdf.pagines} pàgines` : null,
           `actualitzat el ${new Date(t.pdf.data).toLocaleDateString("ca-ES")}`].filter(Boolean).join(" · "))),
-      h("a", { class: "boto", href: `${url("quadern.pdf")}?v=${encodeURIComponent(t.pdf.data)}`, target: "_blank" }, "Obre el PDF"),
-      h("a", { class: "boto-sec", href: url("quadern.tex"), download: "quadern.tex" }, "Descarrega el .tex"))
+      h("a", { class: "boto", href: pagina }, "Obre el quadern"),
+      h("a", { class: "boto-sec", href: `${url("quadern.pdf")}?v=${encodeURIComponent(t.pdf.data)}`, target: "_blank" }, "Obre el PDF"))
     : h("div", { class: "fila-doc buida" }, icona("doc", 26),
       h("div", { class: "nom" }, h("strong", {}, "Encara no hi ha document"),
         h("span", { class: "detall" }, "Es fa la primera vegada que passes a net una sessió d'este quadern.")));
@@ -636,21 +661,23 @@ function formFontNova(a, pujada) {
 async function pintaSessio(a, c, pestanya, sub) {
   const sessio = await api(`/api/sessions/${a}/${c}`);
   const assig = assignatures.find((x) => x.id === a);
-  if (!pestanya) {
-    pestanya = { nova: "materials", acabada: "resultat" }[sessio.estat] || "progres";
+  // «Resultat» ja no és de la sessió: el document es mira al quadern (guia Q, fase 2).
+  if (pestanya === "resultat") {
+    history.replaceState(null, "", sessio.quadern
+      ? `#/quadern/${a}/${sessio.quadern}${sub === "costat" ? "/costat" : ""}` : `#/sessio/${a}/${c}/materials`);
+    return pinta();
   }
-  const costat = pestanya === "resultat" && sub === "costat" && Boolean(sessio.pdf);
-  const cos = h("div", { class: "contingut" + (costat ? " ample" : "") }, capcalera(sessio, assig, pestanya));
-  if (pestanya === "progres") pintaProgres(cos, sessio);
-  else if (pestanya === "resultat") await pintaResultat(cos, sessio, assig, costat);
+  if (!pestanya) pestanya = ["nova", "acabada"].includes(sessio.estat) ? "materials" : "progres";
+  const cos = h("div", { class: "contingut" }, capcalera(sessio, assig, pestanya));
+  if (pestanya === "progres") await pintaProgres(cos, sessio);
   else pintaMaterials(cos, sessio, assig);
   principal.replaceChildren(cos);
 }
 
 function capcalera(sessio, assig, pestanya) {
   const base = `#/sessio/${sessio.assignatura}/${sessio.id}`;
-  const actives = { materials: true, progres: sessio.estat !== "nova", resultat: Boolean(sessio.pdf) };
-  const noms = { materials: "Materials", progres: "Progrés", resultat: "Resultat" };
+  const actives = { materials: true, progres: sessio.estat !== "nova" };
+  const noms = { materials: "Materials", progres: "Progrés" };
   return h("header", { class: "capcalera" },
     h("div", {},
       h("span", { class: "detall" }, [assig.nom, nomQuadern(assig, sessio.quadern),
@@ -661,6 +688,15 @@ function capcalera(sessio, assig, pestanya) {
         ? h("a", { href: `${base}/${id}`, class: id === pestanya ? "actiu" : null,
           "aria-current": id === pestanya ? "page" : null }, nom)
         : h("span", { "aria-disabled": "true" }, nom)))));
+}
+
+// Quan la sessió ja és al document del quadern, un avís per anar-hi: la sessió ja no té «Resultat».
+function avisAlQuadern(sessio, assig) {
+  if (sessio.estat !== "acabada" || !sessio.pdf || !sessio.quadern) return null;
+  return h("div", { class: "avis blau amb-boto" }, icona("check", 22, 2.4),
+    h("div", {}, h("strong", {}, "Esta sessió ja és al quadern."),
+      h("span", {}, `Els seus blocs són al document «${nomQuadern(assig, sessio.quadern)}».`)),
+    h("a", { class: "boto", href: `#/quadern/${sessio.assignatura}/${sessio.quadern}` }, "Mira-la al quadern"));
 }
 
 // ---------- Materials ----------
@@ -678,6 +714,8 @@ function pintaMaterials(cos, sessio, assig) {
     cos.append(h("div", { class: "avis blau" }, icona("avis", 22),
       h("div", {}, "Claude està treballant amb estos materials. Els podràs canviar quan pare.")));
   }
+  const alQuadern = avisAlQuadern(sessio, assig);
+  if (alQuadern) cos.append(alQuadern);
   cos.append(
     fitxaSessio(sessio, assig, desa, bloquejat),
     h("div", { class: "materials" },
@@ -980,7 +1018,6 @@ function pintaPassos(llista, pas, estat) {
 }
 
 function avisEstat(sessio) {
-  const base = `#/sessio/${sessio.assignatura}/${sessio.id}`;
   const avisos = {
     esperant: ["taronja", "Claude s'ha aturat i t'espera", "Llig el seu últim missatge i respon-li baix perquè continue."],
     aturada: ["gris", "Aturada", "Pots escriure-li baix perquè continue on ho havia deixat."],
@@ -988,8 +1025,10 @@ function avisEstat(sessio) {
   };
   if (sessio.estat === "acabada") {
     return h("div", { class: "avis blau" }, icona("check", 22, 2.4),
-      h("div", {}, h("strong", {}, "Acabada"),
-        h("span", {}, "El PDF és a ", h("a", { href: `${base}/resultat` }, "Resultat"), ".")));
+      h("div", {}, h("strong", {}, "Acabada"), sessio.quadern
+        ? h("span", {}, "Els blocs ja són al ", h("a", { href: `#/quadern/${sessio.assignatura}/${sessio.quadern}` },
+          "document del quadern"), ".")
+        : null));
   }
   const avis = avisos[sessio.estat];
   if (!avis) return null;
@@ -997,9 +1036,16 @@ function avisEstat(sessio) {
     h("div", {}, h("strong", {}, avis[1]), h("span", {}, avis[2])));
 }
 
-function pintaProgres(cos, sessio) {
+async function pintaProgres(cos, sessio) {
   const a = sessio.assignatura;
   const c = sessio.id;
+  // L'informe i els fitxers de la sessió, que abans eren a «Resultat».
+  const propi = `sessions/${c}/`;
+  let informe = null;
+  if (sessio.fitxers.includes(`${propi}informe.md`)) {
+    const r = await fetch(urlFitxer(a, `${propi}informe.md`));
+    if (r.ok) informe = await r.text();
+  }
   const enMarxa = sessio.estat === "en_marxa";
   const passos = h("ol", { class: "passos", "aria-label": "Passos" });
   pintaPassos(passos, sessio.pas, sessio.estat);
@@ -1016,6 +1062,8 @@ function pintaProgres(cos, sessio) {
       h("div", { class: "col-principal" },
         h("section", { class: "targeta", "aria-labelledby": "t-feed" },
           h("h2", { id: "t-feed" }, "Què fa Claude"), feed, treballant),
+        informe ? h("section", { class: "targeta", "aria-labelledby": "t-informe" },
+          h("h2", { id: "t-informe" }, "Informe"), markdown(informe)) : null,
         enMarxa || !sessio.conversa ? null : caixaResposta(sessio, sessio.estat === "esperant"
           ? { titol: "La teua resposta", boto: "Envia i continua",
             placeholder: "P1: …\nP2: …" }
@@ -1031,7 +1079,11 @@ function pintaProgres(cos, sessio) {
             onclick: async (e) => {
               e.currentTarget.disabled = true;
               try { await api(`/api/sessions/${a}/${c}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
-            } }, icona("stop", 14), "Atura") : null))),
+            } }, icona("stop", 14), "Atura") : null),
+        sessio.fitxers.length ? h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
+          h("h2", { id: "t-fitxers" }, "Fitxers"),
+          h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
+            h("a", { href: urlFitxer(a, f), target: "_blank" }, f.startsWith(propi) ? f.slice(propi.length) : f))))) : null)),
   );
 
   // Registre: primer el que ja hi havia (sessio.events línies) i després el que arriba en directe.
@@ -1155,74 +1207,85 @@ function caixaResposta(sessio, { titol, placeholder, boto }) {
   return form;
 }
 
-// ---------- Resultat ----------
+// ---------- Quadern ----------
+// El document del quadern es mira i es revisa ací (guia Q, fase 2): «PDF sencer» o «Costat a costat», amb
+// les fotos de totes les sessions i tot el LaTeX del quadern. Les sessions només hi afegeixen apunts.
 
-async function pintaResultat(cos, sessio, assig, costat) {
-  const a = sessio.assignatura;
-  const c = sessio.id;
-  // Les rutes són relatives a l'assignatura: sessions/<sessió>/… o quaderns/<quadern>/…
-  const url = (ruta) => urlFitxer(a, ruta);
-  const propi = `sessions/${c}/`;
-  const curt = (f) => (f.startsWith(propi) ? f.slice(propi.length) : f);
-  const delQuadern = Boolean(sessio.pdf && sessio.pdf.startsWith("quaderns/"));
-  const tex = sessio.pdf && sessio.fitxers.find((f) => f === sessio.pdf.replace(/\.pdf$/, ".tex"));
-  const resposta = () => (sessio.conversa ? caixaResposta(sessio, {
-    titol: "Hi ha alguna cosa malament?", boto: "Envia a Claude",
-    placeholder: "p. ex. Definició 1.2: és r, no n. Teorema 1.4: posa-hi la demostració de la font.",
-  }) : null);
+async function pintaQuadern(a, q, costat) {
+  const quadern = await api(`/api/quaderns/${a}/${q}`);
+  const as = assignatures.find((x) => x.id === a);
+  costat = costat && Boolean(quadern.pdf);
+  const base = `#/quadern/${a}/${q}`;
+  const url = (f) => urlFitxer(a, "quaderns", q, f);
+  const n = quadern.sessions.length;
+  // «Nova sessió» amb este quadern ja triat: el formulari agafa l'últim quadern recordat.
+  const novaSessio = () => {
+    recorda("lema-assignatura", a);
+    recorda(`lema-quadern-${a}`, q);
+    anar("#/");
+  };
 
-  if (sessio.pdf) {
-    const base = `#/sessio/${a}/${c}/resultat`;
+  const cos = h("div", { class: "contingut" + (costat ? " ample" : "") },
+    h("header", { class: "capcalera" },
+      h("div", {}, h("span", { class: "detall" }, `${as.nom} · Quadern`),
+        nomEditable(as, quadern, (nom) => h("h1", {}, nom))),
+      h("div", { class: "dades-quadern" },
+        h("span", { class: "detall" }, [
+          quadern.pdf?.pagines ? `${quadern.pdf.pagines} pàgines` : null,
+          quadern.pdf ? `actualitzat el ${new Date(quadern.pdf.data).toLocaleDateString("ca-ES")}` : "encara sense document",
+          `${n} ${n === 1 ? "sessió" : "sessions"}`,
+        ].filter(Boolean).join(" · ")),
+        h("div", { class: "fila-botons" },
+          quadern.pdf ? h("a", { class: "boto-sec", href: `${url("quadern.pdf")}?v=${encodeURIComponent(quadern.pdf.data)}`,
+            target: "_blank" }, "Obre el PDF") : null,
+          quadern.tex ? h("a", { class: "boto-sec", href: url("quadern.tex"), download: "quadern.tex" }, "Descarrega el .tex") : null,
+          h("button", { type: "button", class: "boto", onclick: novaSessio }, icona("mes", 16, 2.2), "Nova sessió en este quadern")))));
+
+  if (!quadern.pdf) {
+    cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
+      h("strong", {}, "Encara no hi ha document"),
+      h("span", {}, "Es fa la primera vegada que passes a net una sessió d'este quadern."))));
+  } else {
     const opcio = (href, nom, actiu) => h("a", { href, class: actiu ? "on" : null, "aria-current": actiu ? "page" : null }, nom);
     cos.append(h("div", { class: "fila-vista" },
-      h("nav", { class: "seg", "aria-label": "Com es veu el resultat" },
-        opcio(base, "PDF sencer", !costat), opcio(`${base}/costat`, "Costat a costat", costat)),
-      costat ? h("a", { class: "enllac-petit", href: url(sessio.pdf), target: "_blank" }, "Obre el PDF en una pestanya") : null));
-  }
-  if (costat) {
-    pintaCostat(cos, sessio);
-    const caixa = resposta();
-    if (caixa) cos.append(caixa);
-    return;
-  }
-
-  if (sessio.pdf) {
-    const titol = delQuadern ? `Document del quadern «${nomQuadern(assig, sessio.quadern) || sessio.quadern}»` : curt(sessio.pdf);
-    cos.append(h("section", { class: "targeta", "aria-labelledby": "t-pdf" },
-      h("div", { class: "accions" },
-        h("div", { class: "cap-seccio" },
-          h("h2", { id: "t-pdf" }, titol),
-          h("p", {}, delQuadern
-            ? "El quadern sencer, amb esta sessió dins: l'informe diu a quines pàgines és. Al marge, d'on ve cada bloc i les marques."
-            : "Amb la teua notació. Al marge, d'on ve cada bloc i les marques.")),
-        h("div", { class: "esquerra" },
-          h("a", { class: "boto", href: url(sessio.pdf), target: "_blank" }, "Obre el PDF"),
-          tex ? h("a", { class: "boto-sec", href: url(tex), download: tex.split("/").pop() }, "Descarrega el .tex") : null)),
-      h("iframe", { class: "visor-pdf", src: `${url(sessio.pdf)}?v=${Date.now()}`, title: titol })));
+      h("nav", { class: "seg", "aria-label": "Com es veu el document" },
+        opcio(base, "PDF sencer", !costat), opcio(`${base}/costat`, "Costat a costat", costat))));
+    if (costat) {
+      pintaCostat(cos, {
+        a,
+        pdf: `quaderns/${q}/quadern.pdf`,
+        enMarxa: quadern.en_marxa,
+        urlLatex: `/api/quaderns/${a}/${q}/latex`,
+        nota: quadern.inicial ? "Els blocs d'abans de la web no tenen fotos ací." : null,
+        grups: quadern.sessions.filter((s) => s.apunts.length).map((s) => ({
+          titol: s.titol ? `${s.titol} · ${dataCurta(s.data)}` : nomSessio(s),
+          enllac: `#/sessio/${a}/${s.id}`,
+          apunts: s.apunts.map((nom) => ({ nom, src: urlFitxer(a, "sessions", s.id, "apunts", nom) })),
+        })),
+      });
+    } else {
+      cos.append(h("iframe", { class: "visor-pdf", src: `${url("quadern.pdf")}?v=${Date.now()}`,
+        title: `Document de «${quadern.nom}»` }));
+    }
   }
 
-  let informe = null;
-  if (sessio.fitxers.includes(propi + "informe.md")) {
-    const r = await fetch(url(propi + "informe.md"));
-    if (r.ok) informe = await r.text();
-  }
-
-  cos.append(h("div", { class: "columnes" },
-    h("div", { class: "col-principal" },
-      informe ? h("section", { class: "targeta", "aria-labelledby": "t-informe" },
-        h("h2", { id: "t-informe" }, "Informe"), markdown(informe)) : null,
-      resposta()),
-    h("aside", { class: "col-lateral" },
-      h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
-        h("h2", { id: "t-fitxers" }, "Fitxers"),
-        h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
-          h("a", { href: url(f), target: "_blank" }, curt(f)))))),
-      h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
-        h("h2", { id: "t-sessio" }, "Sessió"),
-        h("dl", { class: "dades" }, h("dt", {}, "Tokens"), h("dd", {}, tokens(sessio.tokens)))))));
+  // Les sessions, en ordre de data. Els blocs d'abans de la web (blocs/inicial/) van primer.
+  const files = [
+    quadern.inicial ? h("li", {}, h("span", { class: "data" }, "—"), h("span", { class: "nom" }, "Abans de la web"),
+      h("span", { class: "detall" }, "El document que ja hi havia: va primer")) : null,
+    quadern.sessions.map((s) => liniaSessio(as, s, s.estat === "nova"
+      ? h("a", { class: "petit", href: `#/sessio/${a}/${s.id}/materials` }, "Puja els apunts") : null)),
+  ].flat().filter(Boolean);
+  cos.append(h("section", { class: "targeta", "aria-labelledby": "t-sessions" },
+    h("div", { class: "quadern-cap" }, h("h2", { id: "t-sessions" }, "Sessions"),
+      h("button", { type: "button", class: "boto-sec", onclick: novaSessio }, icona("mes", 16, 2.2), "Nova sessió")),
+    files.length ? h("ul", { class: "llista-classes" }, files)
+      : h("p", { class: "nota-petita" }, "Encara no hi ha cap sessió en este quadern."),
+    h("p", { class: "nota-petita" }, "Per demanar una correcció a Claude, de moment, entra a la sessió i escriu-li des de «Progrés».")));
+  principal.replaceChildren(cos);
 }
 
-// ---------- Resultat costat a costat ----------
+// ---------- Costat a costat ----------
 
 // Cada bloc és un fitxer, però el LaTeX es veu en un sol text: esta línia diu on comença cada un.
 const marcaBloc = (nom) => `%%%% ${nom} %%%%`;
@@ -1256,12 +1319,10 @@ function parteix(text, blocs) {
   return { textos: trossos.map((t) => t.linies.map((l) => `${l}\n`).join("")) };
 }
 
-// Esquerra: les fotos dels apunts o el LaTeX de la sessió, que es pot editar i compilar (decisió 2).
-// Dreta: el PDF. Cada costat té la seua barra.
-function pintaCostat(cos, sessio) {
-  const a = sessio.assignatura;
-  const c = sessio.id;
-  const enMarxa = sessio.estat === "en_marxa";
+// Esquerra: les fotos de les sessions, agrupades per sessió, o tot el LaTeX del quadern, que es pot editar
+// i compilar (decisió 2). Dreta: el PDF. Cada costat té la seua barra.
+// pdf és la ruta del PDF dins de l'assignatura; grups, [{ titol, enllac, apunts: [{ nom, src }] }].
+function pintaCostat(cos, { a, pdf: rutaPdf, enMarxa, urlLatex, nota, grups }) {
   const esquerra = h("div", { class: "panell-cos" });
   const detall = h("span", { class: "nota-petita" });
   const avisos = h("div", { class: "avisos-panell", "aria-live": "polite" });
@@ -1272,18 +1333,24 @@ function pintaCostat(cos, sessio) {
 
   const pdf = h("iframe", { class: "visor-costat", title: "PDF definitiu" });
   // Sense la columna de miniatures del visor i amb la pàgina a l'amplada del panell.
-  const recarregaPdf = () => { pdf.src = `${urlFitxer(a, sessio.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`; };
+  const recarregaPdf = () => { pdf.src = `${urlFitxer(a, rutaPdf)}?v=${Date.now()}#navpanes=0&view=FitH`; };
   recarregaPdf();
 
-  const fotos = h("div", { class: "fotos" }, sessio.apunts.map((nom, i) => {
-    const src = urlFitxer(a, "sessions", c, "apunts", nom);
-    return h("figure", {},
-      nom.toLowerCase().endsWith(".pdf")
-        ? h("iframe", { class: "foto-pdf", src, title: `Apunts ${i + 1}: ${nom}` })
-        : h("a", { href: src, target: "_blank", title: "Obre la foto en una pestanya nova" },
-          h("img", { src, alt: `Foto ${i + 1} dels apunts`, loading: "lazy" })),
-      h("figcaption", {}, `Foto ${i + 1}`));
-  }));
+  const nFotos = grups.reduce((s, g) => s + g.apunts.length, 0);
+  const fotos = h("div", { class: "fotos" },
+    nota ? h("p", { class: "nota-petita" }, nota) : null,
+    grups.length ? null : h("p", { class: "nota-petita" }, "Encara no hi ha fotos."),
+    grups.map((g) => [
+      h("div", { class: "cap-sessio" },
+        h("strong", {}, `${g.titol} · ${g.apunts.length} ${g.apunts.length === 1 ? "foto" : "fotos"}`),
+        h("a", { href: g.enllac }, "Obre la sessió")),
+      g.apunts.map((f, i) => h("figure", {},
+        f.nom.toLowerCase().endsWith(".pdf")
+          ? h("iframe", { class: "foto-pdf", src: f.src, title: `${g.titol}, apunts ${i + 1}: ${f.nom}` })
+          : h("a", { href: f.src, target: "_blank", title: "Obre la foto en una pestanya nova" },
+            h("img", { src: f.src, alt: `${g.titol}, foto ${i + 1}`, loading: "lazy" })),
+        h("figcaption", {}, `Foto ${i + 1}`))),
+    ]));
 
   const botons = {
     apunts: h("button", { type: "button", onclick: () => mostra("apunts") }, "Apunts"),
@@ -1336,7 +1403,7 @@ function pintaCostat(cos, sessio) {
     avisos.replaceChildren();
     actualitza();
     try {
-      const res = await api(`/api/sessions/${a}/${c}/latex`, ambJson("POST", { canvis }));
+      const res = await api(urlLatex, ambJson("POST", { canvis }));
       // Els fitxers ja tenen el text nou, haja compilat o no.
       for (const x of canvis) blocs.find((b) => b.fitxer === x.fitxer).text = x.text;
       if (res.ok) {
@@ -1365,8 +1432,7 @@ function pintaCostat(cos, sessio) {
     accions.hidden = true;
     avisos.hidden = que !== "latex";
     if (que === "apunts") {
-      const n = sessio.apunts.length;
-      detall.textContent = `${n} ${n === 1 ? "foto" : "fotos"}`;
+      detall.textContent = `${grups.length} ${grups.length === 1 ? "sessió" : "sessions"} · ${nFotos} ${nFotos === 1 ? "foto" : "fotos"}`;
       detall.classList.remove("sense-desar");
       esquerra.replaceChildren(fotos);
       return;
@@ -1375,7 +1441,7 @@ function pintaCostat(cos, sessio) {
       detall.textContent = "";
       esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, "Carregant el LaTeX…"));
       try {
-        ({ blocs } = await api(`/api/sessions/${a}/${c}/latex`));
+        ({ blocs } = await api(urlLatex));
       } catch (e) {
         if (actual === "latex") esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, e.message));
         return;
@@ -1383,15 +1449,14 @@ function pintaCostat(cos, sessio) {
       blocs = blocs.map((b) => ({ ...b, text: ambSalt(b.text) }));
       if (blocs.length) {
         latex = h("textarea", { class: "latex", spellcheck: "false", readonly: enMarxa,
-          "aria-label": "El LaTeX de la sessió", oninput: actualitza });
+          "aria-label": "El LaTeX del quadern", oninput: actualitza });
         latex.value = ajunta(blocs);
         if (enMarxa) {
-          avis("blau", "Claude està treballant en esta sessió.", "El LaTeX es pot llegir, però el podràs editar quan pare.");
+          avis("blau", "Claude està passant a net una sessió d'este quadern.",
+            "El LaTeX es pot llegir, però el podràs editar quan acabe.");
         }
       } else {
-        latex = h("p", { class: "nota-petita buit-panell" }, sessio.estat === "nova"
-          ? "Esta sessió encara no té blocs."
-          : "Esta sessió no té blocs propis al quadern: els seus són entre els d'abans de la web (inicial).");
+        latex = h("p", { class: "nota-petita buit-panell" }, "Este quadern encara no té blocs.");
       }
     }
     if (actual !== "latex") return;  // mentre carregava, has tornat a les fotos
