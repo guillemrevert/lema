@@ -1,18 +1,20 @@
 """Web local de LEMA.
 
 Crea sessions, hi guarda els fitxers i llança Claude Code («Passa a net») en una
-conversa nova per a cada sessió. El que fa Claude es resumeix, línia a línia, a
-registre/events.jsonl de la sessió, i la web ho llig en directe.
+conversa nova per a cada sessió. Les correccions del document d'un quadern van en una
+conversa pròpia del quadern. El que fa Claude es resumeix, línia a línia, a
+registre/events.jsonl de la sessió o del quadern, i la web ho llig en directe.
 
 Dades (fora de git):
   dades/perfil-lletra.md
   dades/assignatures/<assignatura>/
     notacio.yaml
     fonts/<font>/           font.json, els PDF, el text extret i index.txt
-    quaderns/<quadern>/     quadern.json, quadern.tex, quadern.pdf i blocs/<sessió>/ de cada sessió
-                            (blocs/inicial/: el document d'abans de la web)
-    sessions/<AAAA-MM-DD>/  sessio.json, apunts/, adjunts/, registre/, el que escriu Claude i,
-                            si l'usuari edita el LaTeX des de la web, edicions.json
+    quaderns/<quadern>/     quadern.json (amb la conversa de les correccions), quadern.tex, quadern.pdf,
+                            blocs/<sessió>/ de cada sessió (blocs/inicial/: el document d'abans de la web),
+                            edicions.json si l'usuari edita el LaTeX des de la web, i adjunts/ i registre/
+                            de les correccions
+    sessions/<AAAA-MM-DD>/  sessio.json, apunts/, adjunts/, registre/ i el que escriu Claude
 
 Fins al 10/10/2026, els quaderns es deien temes (temes/, tema.json) i les sessions,
 classes (classes/, classe.json): migra_dades() ho canvia una vegada, en arrancar.
@@ -49,8 +51,8 @@ MARCA_PAS = re.compile(r"^\W*PAS\s+(\d)\b", re.M)
 MARCA_ESTAT = re.compile(r"^\W*ESTAT:\s*(esperant|acabat)", re.M | re.I)
 
 app = FastAPI()
-processos = {}  # (assignatura, sessió) -> procés de Claude en marxa
-aturats = set()  # sessions que l'usuari ha aturat
+processos = {}  # (assignatura, sessió), o clau_quadern() per a les correccions -> procés de Claude en marxa
+aturats = set()  # claus de processos que l'usuari ha aturat
 tasques = set()  # perquè asyncio no perda les tasques en segon pla
 
 
@@ -95,6 +97,14 @@ def llig(ruta):
 
 def escriu(ruta, dades):
     ruta.write_text(json.dumps(dades, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def actualitza(ruta, **canvis):
+    """Canvia unes claus d'una fitxa (sessio.json o quadern.json) i la torna."""
+    dades = llig(ruta)
+    dades.update(canvis)
+    escriu(ruta, dades)
+    return dades
 
 
 def carpeta_assig(a):
@@ -435,8 +445,10 @@ def sessio(a: str, s: str):
         fitxers += [f"quaderns/{quadern.name}/{n}" for n in ("quadern.tex", "quadern.pdf") if (quadern / n).exists()]
         if document["blocs"].is_dir():
             fitxers += sorted(f"quaderns/{quadern.name}/blocs/{s}/{b.name}" for b in document["blocs"].iterdir())
+    # Si un altre Claude treballa en el quadern, esta sessió no es pot passar a net fins que acabe.
+    ocupat = claude_al_quadern(a, dades["quadern"]) if dades["quadern"] and (a, s) not in processos else None
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
-            "editats": editats_de_sessio(a, dades), "events": nombre_events(carpeta)}
+            "editats": editats_de_sessio(a, dades), "events": nombre_events(carpeta), "ocupat": ocupat}
 
 
 # ---------- Quaderns ----------
@@ -473,22 +485,43 @@ def sessions_del_quadern(a, q):
     return sorted(sessions, key=lambda d: (d["data"], ordre_natural(d["id"])))
 
 
+def clau_quadern(a, q):
+    """La clau de processos de les correccions del quadern. Les sessions es diuen per la data, sense «/»,
+    així que no es pot confondre amb la d'una sessió."""
+    return (a, f"quaderns/{q}")
+
+
 def claude_al_quadern(a, q):
-    """Si Claude està passant a net alguna sessió del quadern."""
-    return any(clau[0] == a and llig_sessio(a, clau[1])["quadern"] == q for clau in list(processos))
+    """Què fa Claude en el quadern, per als avisos, o None si no hi treballa. Només n'hi pot haver un per
+    quadern (guia Q, fase 3): o corregeix el quadern, o passa a net una de les seues sessions."""
+    if clau_quadern(a, q) in processos:
+        return "Claude està corregint el quadern"
+    for clau in list(processos):
+        if clau[0] == a and "/" not in clau[1]:
+            d = llig_sessio(a, clau[1])
+            if d["quadern"] == q:
+                return f"Claude està passant a net la sessió del {data_llarga(d['data'])}"
+    return None
 
 
 @app.get("/api/quaderns/{a}/{q}")
 def quadern(a: str, q: str):
-    """El quadern: el nom, el PDF, si té blocs d'abans de la web, les seues sessions i els blocs editats a mà."""
+    """El quadern: el nom, el PDF, si té blocs d'abans de la web, les seues sessions, els blocs editats a mà
+    i com van les correccions."""
     carpeta = carpeta_quadern(a, q)
     sessions = [{k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "apunts")}
                 for d in sessions_del_quadern(a, q)]
+    fitxa = llig(carpeta / "quadern.json")
+    estat = fitxa.get("estat", "nova")
+    if estat == "en_marxa" and clau_quadern(a, q) not in processos:
+        estat = "aturada"  # el servidor s'ha reiniciat a mitges
     return {**info_quadern(carpeta), "assignatura": a,
             "inicial": (carpeta / "blocs" / "inicial").is_dir(),
             "tex": (carpeta / "quadern.tex").exists(),
             "sessions": sessions, "en_marxa": claude_al_quadern(a, q),
-            "editats": list(edicions(carpeta))}
+            "editats": list(edicions(carpeta)),
+            "correccio": {"estat": estat, "conversa": bool(fitxa.get("conversa")),
+                          "tokens": fitxa.get("tokens", 0), "events": nombre_events(carpeta)}}
 
 
 @app.get("/api/quaderns/{a}/{q}/latex")
@@ -515,8 +548,9 @@ async def desa_latex_quadern(a: str, q: str, canvis: CanvisLatex):
     """Desa els blocs que l'usuari ha editat, ho apunta a edicions.json del quadern i torna a compilar-lo.
 
     Si la compilació falla, els blocs es queden desats (per arreglar-los) i el PDF és el d'abans."""
-    if claude_al_quadern(a, q):
-        raise HTTPException(409, "Claude està passant a net una sessió d'este quadern: el LaTeX el podràs editar quan pare")
+    qui = claude_al_quadern(a, q)
+    if qui:
+        raise HTTPException(409, f"{qui}: el LaTeX el podràs editar quan acabe")
     carpeta = carpeta_quadern(a, q)
     if not canvis.canvis:
         raise HTTPException(400, "No hi ha cap canvi")
@@ -586,6 +620,10 @@ async def esborra_sessio(a: str, s: str):
     """La sessió va a dades/paperera/; si tenia blocs al document d'un quadern, també, i el quadern es refà."""
     if (a, s) in processos:
         raise HTTPException(409, "Claude està treballant en esta sessió: atura'l abans d'esborrar-la")
+    q = llig_sessio(a, s)["quadern"]
+    qui = claude_al_quadern(a, q) if q else None
+    if qui:  # esborrar-la canvia el document del quadern
+        raise HTTPException(409, f"{qui}: podràs esborrar la sessió quan acabe")
     carpeta = carpeta_sessio(a, s)
     desti = DADES / "paperera" / a / f"{s}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     desti.parent.mkdir(parents=True, exist_ok=True)
@@ -705,6 +743,27 @@ def prompt_sessio(a, dades):
     return omple((ARREL / "web" / "prompt.md").read_text(encoding="utf-8"), valors)
 
 
+def prompt_quadern(a, q, missatge):
+    """El primer missatge de la conversa de correccions del quadern: prompt-quadern.md i la primera correcció."""
+    quadern = carpeta_assig(a) / "quaderns" / q
+    carpetes = []
+    for carpeta in sorted((p for p in (quadern / "blocs").glob("*") if p.is_dir()), key=lambda p: (p.name != "inicial", p.name)):
+        if carpeta.name == "inicial":
+            carpetes.append("`inicial` (el document que ja hi havia abans de la web, que va primer)")
+            continue
+        fitxa_sessio = carpeta_assig(a) / "sessions" / carpeta.name / "sessio.json"
+        data = llig(fitxa_sessio)["data"] if fitxa_sessio.exists() else None
+        carpetes.append(f"`{carpeta.name}`" + (f" (sessió del {data_llarga(data)})" if data else ""))
+    return omple((ARREL / "web" / "prompt-quadern.md").read_text(encoding="utf-8"), {
+        "assignatura": ASSIGNATURES[a],
+        "carpeta_assig": f"dades/assignatures/{a}",
+        "carpeta_quadern": f"dades/assignatures/{a}/quaderns/{q}",
+        "quadern_nom": llig(quadern / "quadern.json")["nom"],
+        "carpetes": "Ara hi ha " + ", ".join(carpetes) + "." if carpetes else "Encara no n'hi ha cap.",
+        "missatge": missatge,
+    })
+
+
 def detall_eina(nom, entrada):
     """Una línia que diu sobre què treballa l'eina, amb les rutes relatives al repositori."""
     if "file_path" in entrada:
@@ -727,9 +786,11 @@ def suma_tokens(us):
                                         "cache_read_input_tokens", "output_tokens"))
 
 
-async def executa(a, s, missatge, conversa=None):
-    """Una crida a Claude Code: llig el que fa i ho resumeix a events.jsonl."""
-    carpeta = carpeta_sessio(a, s)
+async def executa(clau, carpeta, missatge, conversa=None):
+    """Una crida a Claude Code, per a una sessió o per a les correccions d'un quadern (guia Q, fase 3): llig
+    el que fa i ho resumeix a registre/events.jsonl de la carpeta. L'estat, el pas, la conversa i els tokens
+    van a la fitxa de la carpeta (sessio.json o quadern.json)."""
+    fitxa = carpeta / ("quadern.json" if (carpeta / "quadern.json").exists() else "sessio.json")
     registre = carpeta / "registre"
     registre.mkdir(exist_ok=True)
     nom = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -740,7 +801,7 @@ async def executa(a, s, missatge, conversa=None):
             proc = await asyncio.create_subprocess_exec(
                 *ordre_claude(missatge, conversa), cwd=ARREL,
                 stdout=asyncio.subprocess.PIPE, stderr=err, limit=64 * 2**20)
-            processos[(a, s)] = proc
+            processos[clau] = proc
             async for linia in proc.stdout:
                 cru.write(linia.decode("utf-8", "replace"))
                 try:
@@ -759,7 +820,7 @@ async def executa(a, s, missatge, conversa=None):
                     for bloc in msg.get("content", []):
                         if bloc.get("type") == "text" and bloc["text"].strip():
                             for n in MARCA_PAS.findall(bloc["text"]):
-                                desa_sessio(a, s, pas=int(n))
+                                actualitza(fitxa, pas=int(n))
                                 afegeix_event(carpeta, t="pas", n=int(n))
                             for e in MARCA_ESTAT.findall(bloc["text"]):
                                 estat = "acabada" if e.lower() == "acabat" else "esperant"
@@ -777,7 +838,7 @@ async def executa(a, s, missatge, conversa=None):
                 elif tipus == "result":
                     final = m
             await proc.wait()
-        if (a, s) in aturats:
+        if clau in aturats:
             estat = "aturada"
         elif final is None or final.get("is_error") or proc.returncode:
             estat = "error"
@@ -789,12 +850,12 @@ async def executa(a, s, missatge, conversa=None):
     except Exception as e:  # p. ex. no troba claude
         estat = "error"
         afegeix_event(carpeta, t="error", text=f"{type(e).__name__}: {e}")
-    total = llig(carpeta / "sessio.json").get("tokens", 0) + tokens
+    total = llig(fitxa).get("tokens", 0) + tokens
     afegeix_event(carpeta, t="fi", estat=estat, tokens=tokens,
                   durada=(final or {}).get("duration_ms"))
-    desa_sessio(a, s, estat=estat, conversa=conversa, tokens=total)
-    processos.pop((a, s), None)
-    aturats.discard((a, s))
+    actualitza(fitxa, estat=estat, conversa=conversa, tokens=total)
+    processos.pop(clau, None)
+    aturats.discard(clau)
 
 
 def en_segon_pla(corrutina):
@@ -815,6 +876,9 @@ async def passa_a_net(a: str, s: str):
     if not dades["fonts"] or not all((carpeta_assig(a) / "fonts" / f["id"] / "font.json").exists()
                                      for f in dades["fonts"]):
         raise HTTPException(400, "Falta triar la font")
+    qui = claude_al_quadern(a, dades["quadern"])
+    if qui:
+        raise HTTPException(409, f"{qui}: espera que acabe")
     carpeta = carpeta_sessio(a, s)
     propis = editats_de_sessio(a, dades)
     if propis:
@@ -828,19 +892,13 @@ async def passa_a_net(a: str, s: str):
     afegeix_event(carpeta, t="inici")
     processos[(a, s)] = None  # reservat fins que arranca el procés
     desa_sessio(a, s, estat="en_marxa", pas=None, conversa=None)
-    en_segon_pla(executa(a, s, prompt_sessio(a, dades)))
+    en_segon_pla(executa((a, s), carpeta, prompt_sessio(a, dades)))
     return {"ok": True}
 
 
-@app.post("/api/sessions/{a}/{s}/respon")
-async def respon(a: str, s: str, text: str = Form(""),
-                 fitxers: list[UploadFile] | None = File(None)):
-    dades = llig_sessio(a, s)
-    if (a, s) in processos:
-        raise HTTPException(409, "Claude encara està treballant")
-    if not dades["conversa"]:
-        raise HTTPException(400, "Encara no hi ha cap conversa: passa-la a net primer")
-    carpeta = carpeta_sessio(a, s)
+async def missatge_usuari(a, carpeta, text, fitxers, q):
+    """El missatge per a Claude: el text, els fitxers adjunts (es guarden a adjunts/ de la carpeta) i els
+    blocs del quadern editats a mà. Ho apunta al registre."""
     adjunts = []
     for f in fitxers or []:
         (carpeta / "adjunts").mkdir(exist_ok=True)
@@ -851,29 +909,48 @@ async def respon(a: str, s: str, text: str = Form(""),
         raise HTTPException(400, "El missatge és buit")
     missatge = text.strip()
     if adjunts:
-        rutes = ", ".join(f"`dades/assignatures/{a}/sessions/{s}/adjunts/{n}`" for n in adjunts)
+        rutes = ", ".join(f"`{(carpeta / 'adjunts' / n).relative_to(ARREL).as_posix()}`" for n in adjunts)
         missatge += f"\n\nFitxers adjunts: {rutes}"
-    missatge += nota_edicions(a, dades["quadern"])
     afegeix_event(carpeta, t="usuari", text=text.strip(), adjunts=adjunts)
+    return missatge + nota_edicions(a, q)
+
+
+@app.post("/api/sessions/{a}/{s}/respon")
+async def respon(a: str, s: str, text: str = Form(""),
+                 fitxers: list[UploadFile] | None = File(None)):
+    dades = llig_sessio(a, s)
+    if (a, s) in processos:
+        raise HTTPException(409, "Claude encara està treballant")
+    if not dades["conversa"]:
+        raise HTTPException(400, "Encara no hi ha cap conversa: passa-la a net primer")
+    qui = claude_al_quadern(a, dades["quadern"]) if dades["quadern"] else None
+    if qui:
+        raise HTTPException(409, f"{qui}: espera que acabe")
+    carpeta = carpeta_sessio(a, s)
+    missatge = await missatge_usuari(a, carpeta, text, fitxers, dades["quadern"])
     processos[(a, s)] = None
     desa_sessio(a, s, estat="en_marxa")
-    en_segon_pla(executa(a, s, missatge, dades["conversa"]))
+    en_segon_pla(executa((a, s), carpeta, missatge, dades["conversa"]))
+    return {"ok": True}
+
+
+def atura_claude(clau):
+    proc = processos.get(clau)
+    if proc is None:
+        raise HTTPException(409, "No està en marxa")
+    aturats.add(clau)
+    proc.terminate()
     return {"ok": True}
 
 
 @app.post("/api/sessions/{a}/{s}/atura")
 def atura(a: str, s: str):
-    proc = processos.get((a, s))
-    if proc is None:
-        raise HTTPException(409, "No està en marxa")
-    aturats.add((a, s))
-    proc.terminate()
-    return {"ok": True}
+    return atura_claude((a, s))
 
 
-@app.get("/api/sessions/{a}/{s}/events")
-async def events(a: str, s: str, des_de: int = 0):
-    ruta = carpeta_sessio(a, s) / "registre" / "events.jsonl"
+def flux_events(carpeta, clau, des_de):
+    """El registre de Claude de la carpeta, des de la línia des_de, i en directe mentre treballa."""
+    ruta = carpeta / "registre" / "events.jsonl"
 
     def linies():
         # Només les línies acabades: la darrera pot estar escrivint-se.
@@ -882,7 +959,7 @@ async def events(a: str, s: str, des_de: int = 0):
     async def flux():
         vistes = des_de
         while True:
-            en_marxa = (a, s) in processos
+            en_marxa = clau in processos
             noves = linies()
             for linia in noves[vistes:]:
                 yield f"data: {linia}\n\n"
@@ -893,6 +970,46 @@ async def events(a: str, s: str, des_de: int = 0):
             await asyncio.sleep(0.5)
 
     return StreamingResponse(flux(), media_type="text/event-stream")
+
+
+@app.get("/api/sessions/{a}/{s}/events")
+async def events(a: str, s: str, des_de: int = 0):
+    return flux_events(carpeta_sessio(a, s), (a, s), des_de)
+
+
+# ---------- Correccions del quadern (guia Q, fase 3) ----------
+
+@app.post("/api/quaderns/{a}/{q}/corregeix")
+async def corregeix_quadern(a: str, q: str, text: str = Form(""),
+                            fitxers: list[UploadFile] | None = File(None)):
+    """Una correcció del document del quadern, en la conversa de correccions del quadern: la primera
+    l'obri amb prompt-quadern.md i les següents la continuen."""
+    carpeta = carpeta_quadern(a, q)
+    qui = claude_al_quadern(a, q)
+    if qui:
+        raise HTTPException(409, f"{qui}: espera que acabe")
+    if carpeta in compilant:
+        raise HTTPException(409, "S'està compilant el LaTeX que has editat: espera que acabe")
+    if not (carpeta / "quadern.tex").exists():
+        raise HTTPException(400, "El quadern encara no té document: passa a net una sessió primer")
+    conversa = llig(carpeta / "quadern.json").get("conversa")
+    missatge = await missatge_usuari(a, carpeta, text, fitxers, q)
+    if not conversa:
+        missatge = prompt_quadern(a, q, missatge)
+    processos[clau_quadern(a, q)] = None  # reservat fins que arranca el procés
+    actualitza(carpeta / "quadern.json", estat="en_marxa")
+    en_segon_pla(executa(clau_quadern(a, q), carpeta, missatge, conversa))
+    return {"ok": True}
+
+
+@app.post("/api/quaderns/{a}/{q}/atura")
+def atura_quadern(a: str, q: str):
+    return atura_claude(clau_quadern(a, q))
+
+
+@app.get("/api/quaderns/{a}/{q}/events")
+async def events_quadern(a: str, q: str, des_de: int = 0):
+    return flux_events(carpeta_quadern(a, q), clau_quadern(a, q), des_de)
 
 
 @app.get("/api/versio")

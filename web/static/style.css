@@ -351,6 +351,9 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
   animation: gira 0.9s linear infinite; flex: none;
 }
 @keyframes gira { to { transform: rotate(360deg); } }
+/* Les correccions del quadern: el registre amb la seua barra, perquè la pàgina no s'allargue sense fi. */
+.feed.caixa { max-height: 60vh; overflow-y: auto; padding-right: 6px; }
+.fila-treballant { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 
 /* Markdown dels missatges i de l'informe. */
 .md { overflow-wrap: anywhere; min-width: 0; }

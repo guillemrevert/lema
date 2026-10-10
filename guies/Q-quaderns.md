@@ -1,6 +1,6 @@
 # Guia Q · Quaderns i sessions
 
-**Estat:** en tres fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit. Les fases 1 i 2 es van aprovar i fer el 10/10/2026. La fase 3 és una proposta.
+**Estat:** feta el 10/10/2026, en tres fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/Q-mockup.html`](Q-mockup.html), publicat a https://claude.ai/artifact/9GubKJNLuRtgVF2frxS72t. Ensenya tres pantalles netes i, davall, nou parts explicades. Quan ací es diu «part 5», és la part 5 del mock-up. Les imatges són a `guies/img/`, fora de git.
 
@@ -285,7 +285,36 @@ A `localhost:8300`:
 
 ## Fase 3 · Correccions al quadern
 
-**Estat:** proposta. Es fa quan la fase 2 estiga provada.
+**Estat:** feta el 10/10/2026. Provada a `localhost:8300` amb una còpia del Tema 1 (`quaderns/prova-q`, ara a la paperera):
+
+- **Primera correcció:** «A la definició de Tipus (bloc inicial/B38), canvia el títol «Tipus» per «Tipus d'una permutació». Res més.»
+  - Es veia Claude treballant a la pàgina del quadern, amb el temps, els tokens i «Atura».
+  - Va tardar 45 s i va gastar 82.847 tokens, més del que deia la guia (uns 20.000 de base més el que llig). La majoria són tokens de la memòria cau.
+  - En acabar, la pàgina es va tornar a pintar sola amb el PDF nou. Només havia canviat el B38 de la còpia; el Tema 1 no es va tocar.
+  - `quadern.json` guarda la conversa, l'estat i els tokens.
+- **Segona correcció:** «Desfés el canvi que has fet abans». Va continuar la mateixa conversa (el mateix identificador als dos registres) i Claude sabia quin canvi havia de desfer. 46 s i 61.757 tokens.
+- **El bloqueig, mentre Claude corregia:**
+  - «Desa i compila» estava desactivat i el LaTeX només es podia llegir, amb l'avís «Claude està corregint el quadern». Desar per l'API també ho rebutjava.
+  - Una segona correcció alhora, rebutjada.
+  - Es va crear una sessió de prova en el quadern de prova i s'hi va pujar una foto. «Passa a net» deia «Espera · Claude està corregint el quadern: la podràs passar a net quan acabe», amb el botó desactivat. Esborrar-la també es rebutjava.
+- **«Atura»:** una tercera correcció es va aturar als pocs segons. Ix «Aturada», el torn diu «Aturat · 32.132 tokens» i torna el quadre per escriure-li. El quadern es va quedar com estava.
+- **Neteja:** la sessió de prova i `prova-q` són a la paperera.
+
+**Canvis respecte al que deia la guia:**
+
+- `executa` rep la clau del procés i la carpeta (de la sessió o del quadern). La fitxa on apunta l'estat és `sessio.json` o `quadern.json`, la que hi haja a la carpeta.
+- També es bloqueja:
+  - esborrar una sessió mentre un Claude treballa en el seu quadern, perquè esborrar-la canvia el document;
+  - demanar una correcció mentre es compila el LaTeX que has editat.
+- «Passa a net» d'una sessió ja diu «Espera» abans de clicar, i no només quan cliques.
+- Si tens canvis al LaTeX sense desar, la web no envia la correcció i et demana que els deses o els descartes, perquè Claude treballarà sobre eixos fitxers.
+- Les correccions van davall de «Sessions», com al mock-up. Les anteriors es veuen en un quadre amb la seua barra de desplaçament, i en enviar-ne una la pàgina hi baixa.
+- Si un torn no acaba amb `ESTAT: …`, queda com «Esperant-te», igual que a les sessions.
+
+No s'ha provat:
+
+- una correcció amb fitxers adjunts;
+- demanar una correcció mentre es passa a net una sessió del quadern (passa pel mateix bloqueig, però caldria passar a net una sessió de veritat).
 
 ### Què notaràs
 

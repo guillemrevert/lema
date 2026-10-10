@@ -965,6 +965,9 @@ function barraPassa(sessio, assig) {
   if (!quadernNom) falta = "Falta triar el quadern.";
   else if (!n) falta = "Falten les fotos dels apunts.";
   else if (!fonts.length) falta = "Falta triar la font.";
+  // Un altre Claude treballa en el quadern (el corregeix o passa a net una altra sessió): només un alhora.
+  const espera = !falta && sessio.ocupat;
+  if (espera) falta = `${sessio.ocupat}: la podràs passar a net quan acabe.`;
   const enMarxa = sessio.estat === "en_marxa";
   const repetir = sessio.estat !== "nova";
   // Els blocs editats a mà des de «Costat a costat»: Claude els tornarà a escriure (decisió 2).
@@ -1003,7 +1006,8 @@ function barraPassa(sessio, assig) {
     "Es fa en una conversa nova de Claude Code",
   ].filter(Boolean).join(" · ");
   return h("div", { class: "barra-accio compacta" },
-    h("div", {}, h("strong", {}, enMarxa ? "Claude hi està treballant" : falta ? "Encara no" : "A punt per passar a net"),
+    h("div", {}, h("strong", {}, enMarxa ? "Claude hi està treballant" : espera ? "Espera"
+      : falta ? "Encara no" : "A punt per passar a net"),
       h("span", {}, resum)),
     boto);
 }
@@ -1061,10 +1065,11 @@ async function pintaProgres(cos, sessio) {
   const passos = h("ol", { class: "passos", "aria-label": "Passos" });
   pintaPassos(passos, sessio.pas, sessio.estat);
 
-  const feed = h("div", { class: "feed", "aria-live": "polite" });
   const treballant = enMarxa ? h("div", { class: "esperant-claude" }, h("span", { class: "gira" }), "Claude hi està treballant…") : null;
   const tempsEl = h("dd", {}, "—");
   const tokensEl = h("dd", {}, tokens(sessio.tokens));
+  const feed = registreClaude({ url: `/api/sessions/${a}/${c}/events`, vistos: sessio.events, enMarxa,
+    tokensAbans: sessio.tokens, tempsEl, tokensEl, passos });
 
   cos.append(
     passos,
@@ -1075,10 +1080,13 @@ async function pintaProgres(cos, sessio) {
           h("h2", { id: "t-feed" }, "Què fa Claude"), feed, treballant),
         informe ? h("section", { class: "targeta", "aria-labelledby": "t-informe" },
           h("h2", { id: "t-informe" }, "Informe"), markdown(informe)) : null,
-        enMarxa || !sessio.conversa ? null : caixaResposta(sessio, sessio.estat === "esperant"
-          ? { titol: "La teua resposta", boto: "Envia i continua",
-            placeholder: "P1: …\nP2: …" }
-          : { titol: "Escriu-li a Claude", boto: "Envia", placeholder: "p. ex. Continua." })),
+        enMarxa || !sessio.conversa ? null : caixaResposta({
+          ...(sessio.estat === "esperant"
+            ? { titol: "La teua resposta", boto: "Envia i continua", placeholder: "P1: …\nP2: …" }
+            : { titol: "Escriu-li a Claude", boto: "Envia", placeholder: "p. ex. Continua." }),
+          url: `/api/sessions/${a}/${c}/respon`,
+          enviat: () => anar(`#/sessio/${a}/${c}/progres`),
+        })),
       h("aside", { class: "col-lateral" },
         h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
           h("h2", { id: "t-sessio" }, "Sessió"),
@@ -1096,22 +1104,31 @@ async function pintaProgres(cos, sessio) {
           h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
             h("a", { href: urlFitxer(a, f), target: "_blank" }, f.startsWith(propi) ? f.slice(propi.length) : f))))) : null)),
   );
+}
 
-  // Registre: primer el que ja hi havia (sessio.events línies) i després el que arriba en directe.
+// El que fa Claude en una sessió o en les correccions d'un quadern: primer les vistos línies que ja hi havia
+// al registre i després el que arriba en directe. Quan acaba un torn en directe, es torna a pintar la pàgina.
+// tempsEl i tokensEl (si n'hi ha) van dient el temps del torn i els tokens; passos, el pas on és Claude.
+// Amb caixa, el registre té la seua barra de desplaçament i es queda baix de tot.
+function registreClaude({ url, vistos, enMarxa, tokensAbans, tempsEl, tokensEl, passos, caixa }) {
+  const feed = h("div", { class: "feed" + (caixa ? " caixa" : ""), "aria-live": "polite" });
   let rebuts = 0;
   let eines = null;     // la llista d'eines on van les línies seguides
   let iniciTorn = null;
   let tokensTorn = 0;
 
-  const afegeix = (node) => {
-    const baix = innerHeight + scrollY >= document.body.scrollHeight - 120;
-    feed.append(node);
-    if (baix && rebuts > sessio.events) scrollTo(0, document.body.scrollHeight);
+  // Afegeix el node al registre (o a dins, la llista d'eines) i, si estaves baix de tot, hi baixa.
+  const afegeix = (node, dins = feed) => {
+    const baix = caixa ? feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 60
+      : innerHeight + scrollY >= document.body.scrollHeight - 120;
+    dins.append(node);
+    if (caixa && (baix || rebuts <= vistos)) feed.scrollTop = feed.scrollHeight;
+    else if (!caixa && baix && rebuts > vistos) scrollTo(0, document.body.scrollHeight);
   };
   const liniaEina = (verb, detall, error) => {
     if (!eines) { eines = h("ul", { class: "eines" }); afegeix(eines); }
-    eines.append(h("li", { class: error ? "error" : null },
-      h("span", { class: "verb" }, verb), h("span", { class: "ruta" }, detall || "")));
+    afegeix(h("li", { class: error ? "error" : null },
+      h("span", { class: "verb" }, verb), h("span", { class: "ruta" }, detall || "")), eines);
   };
 
   function event(ev, viu) {
@@ -1132,7 +1149,7 @@ async function pintaProgres(cos, sessio) {
         break;
       case "pas":
         afegeix(h("h3", { class: "titol-pas" }, `Pas ${ev.n} · ${PASSOS[ev.n] || ""}`));
-        if (viu) pintaPassos(passos, ev.n, "en_marxa");
+        if (viu && passos) pintaPassos(passos, ev.n, "en_marxa");
         break;
       case "text": {
         const text = netejaText(ev.text);
@@ -1149,7 +1166,7 @@ async function pintaProgres(cos, sessio) {
         break;
       case "tokens":
         tokensTorn = ev.n;
-        if (enMarxa) tokensEl.textContent = tokens(sessio.tokens + tokensTorn);
+        if (enMarxa && tokensEl) tokensEl.textContent = tokens(tokensAbans + tokensTorn);
         break;
       case "error":
         afegeix(h("div", { class: "avis roig" }, icona("avis", 20), markdown(ev.text)));
@@ -1160,7 +1177,7 @@ async function pintaProgres(cos, sessio) {
           ev.durada ? durada(ev.durada) : null,
           ev.tokens ? `${tokens(ev.tokens)} tokens` : null,
         ].filter(Boolean).join(" · ")));
-        if (ev.durada) tempsEl.textContent = durada(ev.durada);
+        if (ev.durada && tempsEl) tempsEl.textContent = durada(ev.durada);
         if (viu) pinta();
         break;
       default:
@@ -1168,24 +1185,25 @@ async function pintaProgres(cos, sessio) {
     }
   }
 
-  flux = new EventSource(`/api/sessions/${a}/${c}/events`);
+  flux = new EventSource(url);
   flux.onmessage = (e) => {
     rebuts += 1;
-    event(JSON.parse(e.data), rebuts > sessio.events);
+    event(JSON.parse(e.data), rebuts > vistos);
   };
   flux.addEventListener("tancat", tancaFlux);
   flux.onerror = tancaFlux;
 
-  if (enMarxa) {
+  if (enMarxa && tempsEl) {
     rellotge = setInterval(() => {
       if (iniciTorn) tempsEl.textContent = durada(Date.now() - new Date(iniciTorn));
     }, 1000);
   }
+  return feed;
 }
 
-function caixaResposta(sessio, { titol, placeholder, boto }) {
-  const a = sessio.assignatura;
-  const c = sessio.id;
+// El quadre per escriure-li a Claude, amb fitxers adjunts. Envia el text i els fitxers a url i després crida
+// enviat(). Si abans() torna fals, no s'envia.
+function caixaResposta({ titol, placeholder, boto, url, abans, enviat }) {
   const text = h("textarea", { id: "resposta", rows: 5, placeholder,
     onkeydown: (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) form.requestSubmit(); } });
   const triats = h("span", { class: "detall" });
@@ -1196,13 +1214,14 @@ function caixaResposta(sessio, { titol, placeholder, boto }) {
     class: "targeta resposta",
     onsubmit: async (e) => {
       e.preventDefault();
+      if (abans && !abans()) return;
       const f = new FormData();
       f.append("text", text.value);
       for (const x of fitxers.files) f.append("fitxers", x);
       envia.disabled = true;
       try {
-        await api(`/api/sessions/${a}/${c}/respon`, { method: "POST", body: f });
-        anar(`#/sessio/${a}/${c}/progres`);
+        await api(url, { method: "POST", body: f });
+        await enviat();
       } catch (err) {
         avisa(err.message);
         envia.disabled = false;
@@ -1291,9 +1310,62 @@ async function pintaQuadern(a, q, costat) {
     h("div", { class: "quadern-cap" }, h("h2", { id: "t-sessions" }, "Sessions"),
       h("button", { type: "button", class: "boto-sec", onclick: novaSessio }, icona("mes", 16, 2.2), "Nova sessió")),
     files.length ? h("ul", { class: "llista-classes" }, files)
-      : h("p", { class: "nota-petita" }, "Encara no hi ha cap sessió en este quadern."),
-    h("p", { class: "nota-petita" }, "Per demanar una correcció a Claude, de moment, entra a la sessió i escriu-li des de «Progrés».")));
+      : h("p", { class: "nota-petita" }, "Encara no hi ha cap sessió en este quadern.")));
+  if (quadern.tex) cos.append(...correccions(a, q, quadern));
   principal.replaceChildren(cos);
+}
+
+// Les correccions del document (guia Q, fase 3): una conversa de Claude per quadern. Mentre Claude
+// treballa, el que fa, el temps, els tokens i «Atura»; si no, el quadre per escriure-li.
+function correccions(a, q, quadern) {
+  const c = quadern.correccio;
+  const enMarxa = c.estat === "en_marxa";
+  const tempsEl = h("span", {}, "");
+  const tokensEl = h("span", {}, tokens(c.tokens));
+  const feed = c.events ? registreClaude({ url: `/api/quaderns/${a}/${q}/events`, vistos: c.events, enMarxa,
+    tokensAbans: c.tokens, tempsEl, tokensEl, caixa: true }) : null;
+  const atura = h("button", { type: "button", class: "boto-sec",
+    onclick: async () => {
+      atura.disabled = true;
+      try { await api(`/api/quaderns/${a}/${q}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
+    } }, icona("stop", 14), "Atura");
+
+  const parts = [];
+  if (feed) {
+    parts.push(h("section", { class: "targeta", id: "correccions", "aria-labelledby": "t-correccions" },
+      h("div", { class: "quadern-cap" }, h("h2", { id: "t-correccions" }, "Correccions"),
+        h("span", { class: "detall" }, "Conversa del quadern · ", tokensEl, " tokens")),
+      c.estat === "acabada" ? null : avisEstat({ estat: c.estat }),
+      feed,
+      enMarxa ? h("div", { class: "fila-treballant" },
+        h("div", { class: "esperant-claude" }, h("span", { class: "gira" }), "Claude està corregint el quadern… ", tempsEl),
+        atura) : null));
+  }
+  if (enMarxa) return parts;
+  // Un altre Claude treballa en el quadern (passa a net una sessió): les correccions, quan acabe.
+  if (quadern.en_marxa) {
+    parts.push(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
+      h("strong", {}, `${quadern.en_marxa}.`), h("span", {}, "Li podràs demanar correccions quan acabe."))));
+    return parts;
+  }
+  parts.push(caixaResposta({
+    ...(c.estat === "esperant"
+      ? { titol: "La teua resposta", boto: "Envia a Claude", placeholder: "Respon-li ací." }
+      : { titol: "Hi ha alguna cosa malament al quadern?", boto: "Envia a Claude",
+        placeholder: "p. ex. Definició 1.31: és l_t, no l_1. Teorema 1.4: posa-hi la demostració de la font." }),
+    url: `/api/quaderns/${a}/${q}/corregeix`,
+    // Claude treballarà sobre els fitxers dels blocs: els canvis al LaTeX sense desar es perdrien.
+    abans: () => {
+      if (!sortida || !sortida()) return true;
+      avisa("Tens canvis al LaTeX sense desar: desa'ls o descarta'ls abans d'escriure-li a Claude.");
+      return false;
+    },
+    enviat: async () => {
+      await pinta();
+      document.getElementById("correccions")?.scrollIntoView({ block: "start" });
+    },
+  }));
+  return parts;
 }
 
 // ---------- Costat a costat ----------
@@ -1332,7 +1404,8 @@ function parteix(text, blocs) {
 
 // Esquerra: les fotos de les sessions, agrupades per sessió, o tot el LaTeX del quadern, que es pot editar
 // i compilar (decisió 2). Dreta: el PDF. Cada costat té la seua barra.
-// pdf és la ruta del PDF dins de l'assignatura; grups, [{ titol, enllac, apunts: [{ nom, src }] }].
+// pdf és la ruta del PDF dins de l'assignatura; grups, [{ titol, enllac, apunts: [{ nom, src }] }]; enMarxa, què
+// fa Claude en el quadern (null si no hi treballa: llavors el LaTeX es pot editar).
 function pintaCostat(cos, { a, pdf: rutaPdf, enMarxa, urlLatex, nota, grups }) {
   const esquerra = h("div", { class: "panell-cos" });
   const detall = h("span", { class: "nota-petita" });
@@ -1389,7 +1462,7 @@ function pintaCostat(cos, { a, pdf: rutaPdf, enMarxa, urlLatex, nota, grups }) {
     const noms = canviats();
     const pendent = noms === null || noms.length > 0;
     descarta.disabled = !pendent || compilant;
-    desa.disabled = !pendent || compilant || enMarxa;
+    desa.disabled = !pendent || compilant || Boolean(enMarxa);
     detall.textContent = noms === null ? "Sense desar: s'ha tocat una línia %%%%"
       : noms.length ? `Sense desar: ${noms.join(", ")}` : `${blocs.length} blocs`;
     detall.classList.toggle("sense-desar", pendent);
@@ -1459,13 +1532,10 @@ function pintaCostat(cos, { a, pdf: rutaPdf, enMarxa, urlLatex, nota, grups }) {
       }
       blocs = blocs.map((b) => ({ ...b, text: ambSalt(b.text) }));
       if (blocs.length) {
-        latex = h("textarea", { class: "latex", spellcheck: "false", readonly: enMarxa,
+        latex = h("textarea", { class: "latex", spellcheck: "false", readonly: Boolean(enMarxa),
           "aria-label": "El LaTeX del quadern", oninput: actualitza });
         latex.value = ajunta(blocs);
-        if (enMarxa) {
-          avis("blau", "Claude està passant a net una sessió d'este quadern.",
-            "El LaTeX es pot llegir, però el podràs editar quan acabe.");
-        }
+        if (enMarxa) avis("blau", `${enMarxa}.`, "El LaTeX es pot llegir, però el podràs editar quan acabe.");
       } else {
         latex = h("p", { class: "nota-petita buit-panell" }, "Este quadern encara no té blocs.");
       }
