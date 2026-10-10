@@ -186,6 +186,14 @@ def info_tema(carpeta):
     return info
 
 
+def pdf_propi(carpeta):
+    """El PDF que Claude ha deixat a la carpeta de la classe (sense tema, o amb l'interruptor apagat)."""
+    pdf = carpeta / "tema.pdf"
+    if not pdf.exists():
+        return None
+    return {"ruta": f"classes/{carpeta.name}/tema.pdf", "pagines": pagines_pdf(pdf, pdf.stat().st_mtime_ns)}
+
+
 def al_tema(a, dades):
     """La carpeta del tema si la classe hi té blocs i el tema ja té PDF; si no, None."""
     if not dades.get("tema"):
@@ -218,7 +226,8 @@ def assignatures():
         classes = []
         for fitxa in sorted((base / "classes").glob("*/classe.json"), reverse=True):
             d = llig_classe(a, fitxa.parent.name)
-            classes.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "tema", "fusiona")})
+            classes.append({**{k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "tema", "fusiona")},
+                            "pdf_propi": pdf_propi(fitxa.parent)})
         fonts = [info_font(f.parent) for f in sorted((base / "fonts").glob("*/font.json"))]
         temes = sorted((info_tema(f.parent) for f in (base / "temes").glob("*/tema.json")),
                        key=lambda t: ordre_natural(t["nom"]))
@@ -241,6 +250,19 @@ def crea_tema(a: str, nou: NouTema):
         raise HTTPException(409, f"Ja hi ha un tema que es diu «{nom}»")
     carpeta.mkdir(parents=True)
     escriu(carpeta / "tema.json", {"nom": nom, "creat": ara()})
+    return info_tema(carpeta)
+
+
+@app.put("/api/assignatures/{a}/temes/{t}")
+def reanomena_tema(a: str, t: str, canvi: NouTema):
+    """Només canvia el nom: la carpeta es queda igual perquè no es trenque cap ruta."""
+    carpeta = carpeta_tema(a, t)
+    nom = canvi.nom.strip()
+    if not nom:
+        raise HTTPException(400, "El tema necessita un nom")
+    dades = llig(carpeta / "tema.json")
+    dades["nom"] = nom
+    escriu(carpeta / "tema.json", dades)
     return info_tema(carpeta)
 
 

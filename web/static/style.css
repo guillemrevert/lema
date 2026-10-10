@@ -72,6 +72,34 @@ h1, h2, h3 { margin: 0; }
 .estat-error .punt { background: var(--roig); }
 .estat-acabada .punt { background: var(--blau); }
 
+/* ---------- Lateral plegable ---------- */
+.cap-lateral { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.plega {
+  width: 32px; height: 32px; flex: none; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--vora); border-radius: 8px; background: var(--superficie); color: var(--suau); cursor: pointer;
+}
+.plega:hover { background: #E4E3DC; color: var(--tinta); }
+.cap-grup { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.cap-grup h2 a { color: inherit; text-decoration: none; }
+.cap-grup h2 a:hover, .cap-grup h2 a.actiu { color: var(--tinta); }
+.cap-grup h2 a.actiu { text-decoration: underline; text-underline-offset: 3px; }
+.plega-grup {
+  width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 6px; background: none; color: var(--suau); cursor: pointer;
+}
+.plega-grup:hover { background: #E4E3DC; color: var(--tinta); }
+.lateral.plegada { flex: 0 0 64px; padding: 24px 10px; align-items: center; gap: 14px; }
+.logo-mini { font: 600 24px/1 var(--serif); color: var(--tinta); text-decoration: none; padding: 4px 0; }
+.logo-mini:hover { color: var(--tinta); }
+.inicial {
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px;
+  border: 1px solid var(--vora); background: var(--superficie); color: var(--tinta); font: 600 12px var(--sans);
+  text-decoration: none;
+}
+.inicial:hover { border-color: var(--vora-forta); color: var(--tinta); }
+.inicial.blau { color: var(--blau); border-color: var(--blau); }
+.inicial.actiu { background: var(--tinta); border-color: var(--tinta); color: #FFFFFF; }
+
 /* ---------- Botons ---------- */
 .boto, .boto-sec {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
@@ -217,7 +245,7 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .enllac-suau:hover { color: var(--roig-text); }
 .enllac {
   align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0;
-  padding: 4px 0; font: 600 14px var(--sans); color: var(--blau); cursor: pointer;
+  padding: 4px 0; font: 600 14px var(--sans); color: var(--blau); text-decoration: none; cursor: pointer;
 }
 .enllac:hover { color: var(--blau-fosc); text-decoration: underline; }
 .avis .botons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -252,8 +280,7 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .xip.triat { border-color: var(--blau); background: var(--blau-clar); color: var(--blau-text); }
 .xip:has(input:focus-visible) { outline: 2px solid var(--blau); outline-offset: 2px; }
 .xip .sense-text { font-size: 11px; color: var(--taronja-text); }
-.font-nova { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--linia); }
-.font-nova .camps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.font-nova { display: flex; flex-direction: column; gap: 16px; }
 #nota { min-height: 0; }
 
 /* ---------- Barra de «Passa a net» ---------- */
@@ -350,6 +377,32 @@ dl.dades dd { margin: 0; font-family: var(--mono); }
 .visor-pdf { width: 100%; height: 80vh; border: 1px solid var(--vora); border-radius: 8px; background: #FFFFFF; }
 .fitxers { list-style: none; margin: 0; padding: 0; font: 13px var(--mono); }
 .fitxers a { display: block; padding: 6px 0; overflow-wrap: anywhere; }
+
+/* ---------- Pàgina d'assignatura ---------- */
+.capcalera > .cap-assig { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.cap-assig > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tema-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.nom-tema { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.nom-tema h2 { overflow-wrap: anywhere; }
+.boto-icona.petit { width: 34px; height: 34px; border: 0; background: none; color: var(--suau); }
+.boto-icona.petit:hover { background: #EFEEE8; color: var(--tinta); }
+.edita-nom { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.edita-nom input { flex: 1 1 260px; min-width: 0; font: 600 20px/1.2 var(--serif); }
+.fila-doc {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; padding: 14px 16px;
+  border: 1px solid #C9D5F0; border-radius: 10px; background: var(--blau-fons);
+}
+.fila-doc > svg { flex: none; color: var(--blau); }
+.fila-doc .nom { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fila-doc.buida { background: var(--fons); border-color: var(--vora); }
+.fila-doc.buida > svg { color: var(--apagat); }
+.llista-classes { list-style: none; margin: 0; padding: 0; }
+.llista-classes li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 10px 0; border-top: 1px solid var(--linia); font-size: 14px; }
+.llista-classes li:first-child { border-top: 0; }
+.llista-classes .data { min-width: 3.4em; font: 13px var(--mono); color: var(--suau); font-variant-numeric: tabular-nums; }
+.llista-classes .nom { flex: 1 1 180px; min-width: 0; font-weight: 600; color: var(--tinta); text-decoration: none; }
+.llista-classes .nom:hover { color: var(--blau); text-decoration: underline; }
+.llista-classes .petit { font-size: 13px; }
 
 /* ---------- Pàgina nova classe ---------- */
 .com-va { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }

@@ -1,6 +1,7 @@
 "use strict";
 
-// Rutes: #/ (nova classe) i #/classe/<assignatura>/<classe>/<materials|progres|resultat>.
+// Rutes: #/ (nova classe), #/assignatura/<assignatura>/<temes|fonts>
+// i #/classe/<assignatura>/<classe>/<materials|progres|resultat>.
 
 const PASSOS = ["Preparació", "Lectura general", "Divisió en blocs", "Per a cada bloc",
   "Punt de control", "Escriure", "Muntatge i PDF"];
@@ -20,6 +21,10 @@ const ICONES = {
   avis: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5v.01"/>',
   play: '<path d="M7 5l12 7-12 7z" fill="currentColor" stroke="none"/>',
   stop: '<rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" stroke="none"/>',
+  esquerra: '<path d="M15 6l-6 6 6 6"/>',
+  dreta: '<path d="M9 6l6 6-6 6"/>',
+  avall: '<path d="M6 9l6 6 6-6"/>',
+  llapis: '<path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13 7l4 4"/>',
 };
 
 const lateral = document.getElementById("lateral");
@@ -240,6 +245,7 @@ async function pinta() {
     const r = ruta();
     pintaLateral(r);
     if (r.vista === "classe" && r.a && r.c) await pintaClasse(r.a, r.c, r.pestanya);
+    else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c);
     else pintaNova();
   } catch (e) {
     principal.replaceChildren(h("div", { class: "avis roig" }, icona("avis", 22), h("div", {}, e.message)));
@@ -251,7 +257,45 @@ pinta();
 
 // ---------- Lateral ----------
 
+// Inicials d'una assignatura per a la barra plegada: «Anàlisi II» → «AII».
+const inicials = (nom) => nom.split(/\s+/).map((p) => (/^[IVX]+$/.test(p) ? p : p[0])).join("").toUpperCase();
+
+function grupsPlegats() {
+  try { return new Set(JSON.parse(llegeix("lema-grups-plegats") || "[]")); } catch { return new Set(); }
+}
+
+function plegaLateral(si) {
+  recorda("lema-lateral-plegada", si ? "1" : "0");
+  pintaLateral(ruta());
+  lateral.querySelector(".plega")?.focus();
+}
+
+function plegaGrup(id) {
+  const plegats = grupsPlegats();
+  if (plegats.has(id)) plegats.delete(id);
+  else plegats.add(id);
+  recorda("lema-grups-plegats", JSON.stringify([...plegats]));
+  pintaLateral(ruta());
+  lateral.querySelector(`[data-grup="${id}"]`)?.focus();
+}
+
 function pintaLateral(r) {
+  const plegada = llegeix("lema-lateral-plegada") === "1";
+  lateral.classList.toggle("plegada", plegada);
+  // Plegada: el logo, el «+» de nova classe i una inicial per assignatura.
+  if (plegada) {
+    lateral.replaceChildren(
+      h("a", { href: "#/", class: "logo-mini", title: "LEMA", "aria-label": "LEMA" }, "L"),
+      h("button", { type: "button", class: "plega", title: "Desplega la barra", "aria-label": "Desplega la barra lateral",
+        "aria-expanded": "false", onclick: () => plegaLateral(false) }, icona("dreta", 16, 2)),
+      h("a", { href: "#/", class: "inicial blau" + (r.vista ? "" : " actiu"), title: "Nova classe", "aria-label": "Nova classe" },
+        icona("mes", 18, 2.2)),
+      ...assignatures.map((as) => h("a", { href: `#/assignatura/${as.id}/temes`,
+        class: "inicial" + (r.a === as.id ? " actiu" : ""), title: as.nom, "aria-label": as.nom }, inicials(as.nom))));
+    return;
+  }
+
+  const plegats = grupsPlegats();
   const enllac = (as, c) => {
     const actiu = r.a === as.id && r.c === c.id;
     return h("a", { href: `#/classe/${as.id}/${c.id}`, class: "classe-nav" + (actiu ? " actiu" : ""),
@@ -268,16 +312,28 @@ function pintaLateral(r) {
     return llista;
   };
   lateral.replaceChildren(...[
-    h("a", { href: "#/", class: "logo" },
-      h("span", { class: "logo-nom" }, "LEMA"),
-      h("span", { class: "logo-sub" }, "Lector i Editor de Manuscrits Acadèmics")),
-    h("a", { href: "#/", class: "boto-sec" + (r.vista === "classe" ? "" : " actiu") },
+    h("div", { class: "cap-lateral" },
+      h("a", { href: "#/", class: "logo" },
+        h("span", { class: "logo-nom" }, "LEMA"),
+        h("span", { class: "logo-sub" }, "Lector i Editor de Manuscrits Acadèmics")),
+      h("button", { type: "button", class: "plega", title: "Plega la barra", "aria-label": "Plega la barra lateral",
+        "aria-expanded": "true", onclick: () => plegaLateral(true) }, icona("esquerra", 16, 2))),
+    h("a", { href: "#/", class: "boto-sec" + (r.vista ? "" : " actiu") },
       icona("mes", 16, 2.2), "Nova classe"),
-    assignatures.map((as) => h("div", { class: "grup" },
-      h("h2", {}, as.nom),
-      as.classes.length
-        ? grups(as).map((g) => [g.nom ? h("h3", { class: "tema-nav" }, g.nom) : null, g.classes.map((c) => enllac(as, c))])
-        : h("p", { class: "buit" }, "Encara no hi ha classes."))),
+    assignatures.map((as) => {
+      const plegat = plegats.has(as.id);
+      const actiu = r.vista === "assignatura" && r.a === as.id;
+      return h("div", { class: "grup" },
+        h("div", { class: "cap-grup" },
+          h("h2", {}, h("a", { href: `#/assignatura/${as.id}/temes`, class: actiu ? "actiu" : null,
+            "aria-current": actiu ? "page" : null }, as.nom)),
+          h("button", { type: "button", class: "plega-grup", "data-grup": as.id, "aria-expanded": plegat ? "false" : "true",
+            "aria-label": `${plegat ? "Desplega" : "Plega"} ${as.nom}`, title: plegat ? "Desplega" : "Plega",
+            onclick: () => plegaGrup(as.id) }, icona(plegat ? "dreta" : "avall", 14, 2))),
+        plegat ? null : as.classes.length
+          ? grups(as).map((g) => [g.nom ? h("h3", { class: "tema-nav" }, g.nom) : null, g.classes.map((c) => enllac(as, c))])
+          : h("p", { class: "buit" }, "Encara no hi ha classes."));
+    }),
   ].flat());
 }
 
@@ -361,6 +417,208 @@ function fitxaNova() {
     camp("Dia de la classe", data),
     camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
   h("div", { class: "peu-form" }, llocInterruptor, boto));
+}
+
+// ---------- Assignatura ----------
+
+function pintaAssignatura(a, pestanya) {
+  const as = assignatures.find((x) => x.id === a);
+  if (!as) throw new Error("No existeix esta assignatura.");
+  pestanya = pestanya === "fonts" ? "fonts" : "temes";
+  const nou = pestanya === "temes" ? formNouTema(as) : null;
+  const noms = { temes: "Temes", fonts: "Fonts" };
+  const cos = h("div", { class: "contingut" },
+    h("header", { class: "capcalera" },
+      h("div", { class: "cap-assig" },
+        h("div", {}, h("span", { class: "detall" }, "Assignatura"), h("h1", {}, as.nom)),
+        nou ? h("button", { type: "button", class: "boto-sec",
+          onclick: () => { nou.hidden = false; nou.querySelector("input").focus(); } }, icona("mes", 16, 2.2), "Nou tema") : null),
+      h("nav", { class: "pestanyes", "aria-label": "Seccions de l'assignatura" },
+        Object.entries(noms).map(([id, nom]) => h("a", { href: `#/assignatura/${a}/${id}`,
+          class: id === pestanya ? "actiu" : null, "aria-current": id === pestanya ? "page" : null }, nom)))),
+    nou);
+  if (pestanya === "temes") pintaTemes(cos, as);
+  else pintaFonts(cos, as);
+  principal.replaceChildren(cos);
+}
+
+function formNouTema(as) {
+  const nom = h("input", { id: "nou-tema", type: "text", placeholder: "p. ex. Tema 2. Anells",
+    onkeydown: (e) => { if (e.key === "Escape") { e.preventDefault(); form.hidden = true; } } });
+  const boto = h("button", { type: "submit", class: "boto" }, "Crea");
+  const form = h("form", {
+    class: "targeta compacta", hidden: true,
+    onsubmit: async (e) => {
+      e.preventDefault();
+      if (!nom.value.trim()) { nom.focus(); return; }
+      boto.disabled = true;
+      try {
+        await api(`/api/assignatures/${as.id}/temes`, ambJson("POST", { nom: nom.value }));
+        pinta();
+      } catch (err) {
+        avisa(err.message);
+        boto.disabled = false;
+      }
+    },
+  },
+  h("label", { for: "nou-tema", class: "titol-caixa" }, "Nou tema"),
+  h("div", { class: "amb-boto" }, nom, boto,
+    h("button", { type: "button", class: "boto-sec", onclick: () => { form.hidden = true; } }, "Cancel·la")));
+  return form;
+}
+
+// Una línia per classe: dia, nom, estat i, si en té, el seu PDF propi.
+function liniaClasse(as, c, extra) {
+  return h("li", {},
+    h("span", { class: "data" }, dataCurta(c.data)),
+    h("a", { class: "nom", href: `#/classe/${as.id}/${c.id}` }, nomClasse(c)),
+    h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)),
+    c.pdf_propi ? h("a", { class: "petit", href: urlFitxer(as.id, c.pdf_propi.ruta), target: "_blank" },
+      "PDF propi" + (c.pdf_propi.pagines ? ` · ${c.pdf_propi.pagines} p.` : "")) : null,
+    extra);
+}
+
+function pintaTemes(cos, as) {
+  const sense = as.classes.filter((c) => !as.temes.some((t) => t.id === c.tema));
+  if (!as.temes.length) {
+    cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
+      h("strong", {}, "Encara no hi ha cap tema"),
+      h("span", {}, "Crea'n un amb «Nou tema». Després, a cada classe, tria el seu tema i si s'afegeix al document del tema."))));
+  }
+  for (const t of as.temes) cos.append(targetaTema(as, t));
+  if (sense.length) {
+    cos.append(h("section", { class: "targeta", "aria-labelledby": "t-sense" },
+      h("div", { class: "tema-cap" }, h("h2", { id: "t-sense" }, "Sense tema"),
+        h("span", { class: "detall" }, `${sense.length} ${sense.length === 1 ? "classe" : "classes"}`)),
+      h("ul", { class: "llista-classes" }, sense.map((c) => liniaClasse(as, c,
+        as.temes.length ? h("a", { class: "petit", href: `#/classe/${as.id}/${c.id}/materials` }, "Posa-la en un tema") : null)))));
+  }
+}
+
+function targetaTema(as, t) {
+  const classes = as.classes.filter((c) => c.tema === t.id);
+  const cap = h("div", { class: "tema-cap" });
+  const pintaCap = () => cap.replaceChildren(
+    h("div", { class: "nom-tema" }, h("h2", {}, t.nom),
+      h("button", { type: "button", class: "boto-icona petit", title: "Canvia el nom",
+        "aria-label": `Canvia el nom de «${t.nom}»`, onclick: edita }, icona("llapis", 16))),
+    h("span", { class: "detall" }, `${classes.length} ${classes.length === 1 ? "classe" : "classes"}`));
+
+  // El nom es converteix en un camp de text. Intro desa i Esc cancel·la.
+  function edita() {
+    const nom = h("input", { type: "text", value: t.nom, "aria-label": "Nom del tema",
+      onkeydown: (e) => {
+        if (e.key === "Enter") { e.preventDefault(); desa(); }
+        if (e.key === "Escape") { e.preventDefault(); pintaCap(); }
+      } });
+    const boto = h("button", { type: "button", class: "boto", onclick: () => desa() }, "Desa");
+    async function desa() {
+      if (!nom.value.trim()) { nom.focus(); return; }
+      boto.disabled = true;
+      try {
+        await api(`/api/assignatures/${as.id}/temes/${t.id}`, ambJson("PUT", { nom: nom.value }));
+        pinta();
+      } catch (err) {
+        avisa(err.message);
+        boto.disabled = false;
+      }
+    }
+    cap.replaceChildren(h("div", { class: "edita-nom" }, nom, boto,
+      h("button", { type: "button", class: "boto-sec", onclick: pintaCap }, "Cancel·la")));
+    nom.focus();
+    nom.select();
+  }
+  pintaCap();
+
+  const url = (fitxer) => urlFitxer(as.id, "temes", t.id, fitxer);
+  const doc = t.pdf
+    ? h("div", { class: "fila-doc" }, icona("doc", 26),
+      h("div", { class: "nom" }, h("strong", {}, "Document del tema"),
+        h("span", { class: "detall" }, [t.pdf.pagines ? `${t.pdf.pagines} pàgines` : null,
+          `actualitzat el ${new Date(t.pdf.data).toLocaleDateString("ca-ES")}`].filter(Boolean).join(" · "))),
+      h("a", { class: "boto", href: `${url("tema.pdf")}?v=${encodeURIComponent(t.pdf.data)}`, target: "_blank" }, "Obre el PDF"),
+      h("a", { class: "boto-sec", href: url("tema.tex"), download: "tema.tex" }, "Descarrega el .tex"))
+    : h("div", { class: "fila-doc buida" }, icona("doc", 26),
+      h("div", { class: "nom" }, h("strong", {}, "Encara no hi ha document"),
+        h("span", { class: "detall" }, "Es fa la primera vegada que passes a net una classe d'este tema amb l'interruptor encés.")));
+  return h("section", { class: "targeta", "aria-label": t.nom }, cap, doc,
+    classes.length
+      ? h("ul", { class: "llista-classes" }, classes.map((c) => liniaClasse(as, c)))
+      : h("p", { class: "nota-petita" }, "Encara no hi ha cap classe en este tema."));
+}
+
+function pintaFonts(cos, as) {
+  if (!as.fonts.length) {
+    cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
+      h("strong", {}, "Encara no hi ha cap font"),
+      h("span", {}, "Puja'n una ací baix. Després la triaràs a Materials de cada classe."))));
+  }
+  for (const f of as.fonts) {
+    const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
+    cos.append(h("section", { class: "targeta", "aria-label": f.nom },
+      h("div", { class: "tema-cap" }, h("h2", {}, f.nom),
+        h("span", { class: "detall" }, [f.que_es, f.origen].filter(Boolean).join(" · "))),
+      h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
+        h("a", { class: "nom", href: urlFitxer(as.id, "fonts", f.id, p.nom), target: "_blank" }, p.nom),
+        p.amb_text
+          ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
+          : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge")))),
+      h("p", { class: "nota-petita" },
+        `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades. Es tria a Materials de cada classe.`)));
+  }
+  cos.append(h("section", { class: "targeta", "aria-labelledby": "t-font-nova" },
+    h("div", { class: "cap-seccio" },
+      h("h2", { id: "t-font-nova" }, "Puja una font nova"),
+      h("p", {}, "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.")),
+    formFontNova(as.id, (font) => {
+      avisa(`S'ha pujat «${font.nom}». Ja la pots triar a Materials de cada classe.`);
+      pinta();
+    })));
+}
+
+// Formulari per pujar una font a l'assignatura. pujada(font) es crida quan ja s'ha extret el text.
+function formFontNova(a, pujada) {
+  const nom = h("input", { id: "fn-nom", type: "text", required: true, placeholder: "p. ex. Professor" });
+  const que = h("input", { id: "fn-que", type: "text", required: true, placeholder: "p. ex. Apunts del professor, temes 1 a 4" });
+  const don = h("input", { id: "fn-don", type: "text", placeholder: "p. ex. Aula Virtual, setmana 2" });
+  const triats = h("span", {}, "o arrossega'ls ací. Se n'extrau el text i l'índex en pujar-los.");
+  const pdfs = h("input", { id: "fn-pdfs", type: "file", class: "ocult", multiple: true, accept: "application/pdf",
+    onchange: () => { triats.textContent = [...pdfs.files].map((f) => f.name).join(", "); } });
+  const boto = h("button", { type: "submit", class: "boto" }, "Puja la font");
+  const zona = h("label", { for: "fn-pdfs", class: "afegeix ample",
+    ondragover: (e) => e.preventDefault(),
+    ondrop: (e) => {
+      e.preventDefault();
+      pdfs.files = e.dataTransfer.files;
+      pdfs.dispatchEvent(new Event("change"));
+    } },
+  icona("puja", 24), h("span", {}, h("strong", {}, "Tria els PDF de la font"), triats));
+  return h("form", {
+    class: "font-nova",
+    onsubmit: async (e) => {
+      e.preventDefault();
+      if (!pdfs.files.length) { avisa("Tria almenys un PDF"); return; }
+      const f = new FormData();
+      f.append("nom", nom.value);
+      f.append("que_es", que.value);
+      f.append("origen", don.value);
+      for (const x of pdfs.files) f.append("fitxers", x);
+      boto.disabled = true;
+      boto.textContent = "Pujant i extraient el text…";
+      try {
+        pujada(await api(`/api/assignatures/${a}/fonts`, { method: "POST", body: f }));
+      } catch (err) {
+        avisa(err.message);
+        boto.disabled = false;
+        boto.textContent = "Puja la font";
+      }
+    },
+  },
+  zona, pdfs,
+  h("div", { class: "camps" }, camp("Nom curt", nom), camp("Què és", que), camp("D'on surt", don)),
+  h("div", { class: "accions" },
+    h("span", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en totes les classes."),
+    boto));
 }
 
 // ---------- Classe ----------
@@ -571,7 +829,6 @@ function seccioFont(classe, assig, desa, bloquejat) {
   const seccio = h("section", { class: "targeta compacta", "aria-labelledby": "t-font" });
   // Les fonts triades, amb els temes (PDF) de cada una. Les que ja no existeixen no compten.
   const triades = classe.fonts.filter((t) => assig.fonts.some((f) => f.id === t.id));
-  let nova = !assig.fonts.length;  // el formulari d'una font nova, obert
 
   async function canvia(fonts) {
     await desa({ fonts });
@@ -605,55 +862,6 @@ function seccioFont(classe, assig, desa, bloquejat) {
         })) : null);
   }
 
-  function cosNova() {
-    const nom = h("input", { id: "fn-nom", type: "text", required: true, placeholder: "p. ex. Professor" });
-    const que = h("input", { id: "fn-que", type: "text", required: true, placeholder: "p. ex. Apunts del professor, temes 1 a 4" });
-    const don = h("input", { id: "fn-don", type: "text", placeholder: "p. ex. Aula Virtual, setmana 2" });
-    const triats = h("span", {}, "o arrossega'ls ací. Se n'extrau el text i l'índex en pujar-los.");
-    const pdfs = h("input", { id: "fn-pdfs", type: "file", class: "ocult", multiple: true, accept: "application/pdf",
-      onchange: () => { triats.textContent = [...pdfs.files].map((f) => f.name).join(", "); } });
-    const boto = h("button", { type: "submit", class: "boto" }, "Puja la font");
-    const zona = h("label", { for: "fn-pdfs", class: "afegeix ample",
-      ondragover: (e) => e.preventDefault(),
-      ondrop: (e) => {
-        e.preventDefault();
-        pdfs.files = e.dataTransfer.files;
-        pdfs.dispatchEvent(new Event("change"));
-      } },
-    icona("puja", 24), h("span", {}, h("strong", {}, "Tria els PDF de la font"), triats));
-    return h("form", {
-      class: "font-nova",
-      onsubmit: async (e) => {
-        e.preventDefault();
-        if (!pdfs.files.length) { avisa("Tria almenys un PDF"); return; }
-        const f = new FormData();
-        f.append("nom", nom.value);
-        f.append("que_es", que.value);
-        f.append("origen", don.value);
-        for (const x of pdfs.files) f.append("fitxers", x);
-        boto.disabled = true;
-        boto.textContent = "Pujant i extraient el text…";
-        try {
-          const font = await api(`/api/assignatures/${classe.assignatura}/fonts`, { method: "POST", body: f });
-          await canvia([...triades, { id: font.id, temes: [] }]);
-        } catch (err) {
-          avisa(err.message);
-          boto.disabled = false;
-          boto.textContent = "Puja la font";
-        }
-      },
-    },
-    h("strong", {}, "Font nova"),
-    zona, pdfs,
-    h("div", { class: "camps" }, camp("Nom curt", nom), camp("Què és", que), camp("D'on surt", don)),
-    h("p", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en les classes següents."),
-    h("div", { class: "accions" },
-      assig.fonts.length
-        ? h("button", { type: "button", class: "boto-sec", onclick: () => { nova = false; pintaSeccio(); } }, "Cancel·la")
-        : h("span"),
-      boto));
-  }
-
   function pintaSeccio() {
     seccio.replaceChildren(
       h("div", { class: "cap-seccio" },
@@ -662,9 +870,10 @@ function seccioFont(classe, assig, desa, bloquejat) {
       assig.fonts.length ? h("div", { class: "llista-fonts" }, assig.fonts.map(filaFont)) : null,
       assig.fonts.length ? h("p", { class: "nota-petita" },
         "Marca els PDF on és la classe. Si no en marques cap, Claude mira l'índex.") : null,
-      bloquejat ? null : nova ? cosNova()
-        : h("button", { type: "button", class: "enllac", onclick: () => { nova = true; pintaSeccio(); } },
-          icona("mes", 14, 2.2), "Puja una font nova"));
+      assig.fonts.length ? null : h("p", { class: "detall" },
+        "Esta assignatura encara no té cap font. Puja-la a la pàgina de l'assignatura: la podràs triar en totes les classes."),
+      h("a", { class: "enllac", href: `#/assignatura/${classe.assignatura}/fonts` },
+        icona("mes", 14, 2.2), "Puja una font nova a l'assignatura"));
   }
 
   pintaSeccio();

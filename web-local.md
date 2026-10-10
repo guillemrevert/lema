@@ -78,7 +78,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | M | Cercar un resultat entre totes les classes, i marcar-ne de favorits | La E (carpeta per tema) |
 | N | Mode fosc | Res |
 | O | Nova classe i Materials en una sola pàgina (tema, «+», interruptor i, davall, els materials comprimits). Demanat el 10/10/2026. **Feta** el 10/10/2026 (fase 2 de `guies/E-temes.md`) | La E |
-| P | Barra lateral plegable (cap al costat i per assignatures) i pàgina d'assignatura: temes amb els PDF generats i el seu títol (es pot canviar), i les fonts. Demanat el 10/10/2026. Fase 3 de `guies/E-temes.md` | La E |
+| P | Barra lateral plegable (cap al costat i per assignatures) i pàgina d'assignatura: temes amb els PDF generats i el seu títol (es pot canviar), i les fonts. Demanat el 10/10/2026. **Feta** el 10/10/2026 (fase 3 de `guies/E-temes.md`) | La E |
 
 **Mock-up de la E, la O i la P (10/10/2026), estàtic:** https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum (el fitxer és `guies/E-mockup.html`). Quatre pantalles netes (nova classe; la classe creada amb els materials; pàgina d'assignatura; barra lateral plegada) i setze parts explicades amb les alternatives una al costat de l'altra. La guia `guies/E-temes.md` té la taula de decisions i quatre preguntes pendents (si la creu de la captura és esborrar la classe, si el Tema 1 comença amb el document que ja hi ha, si el formulari de pujar fonts se'n va a l'assignatura, i barra lateral amb una o dues línies per classe).
 
@@ -106,7 +106,7 @@ H–N, apuntades el 09/10/2026, venen de [MathWrite Notes](https://apps.apple.co
 
 ## Opcions no triades, per a més endavant
 
-### Temes i pàgina de la classe (guia E, fases 1 i 2)
+### Temes, pàgina de la classe i pàgina d'assignatura (guia E)
 
 Les lletres són les de les parts del mock-up (`guies/E-mockup.html`).
 
@@ -117,7 +117,11 @@ Les lletres són les de les parts del mock-up (`guies/E-mockup.html`).
 - **Part 6 B · Les fotos en una sola fila** que es desplaça de costat. Ocupa menys alçària, però amb més de sis fotos n'hi ha d'amagades i ordenar-les és incòmode.
 - **Part 7 B · Les fonts com abans**, en targetes grans amb una línia per PDF.
 - **Part 9 B · Una creu a la barra lateral** per esborrar una classe. Més ràpid, però fàcil de clicar sense voler.
+- **Part 8 B · El formulari de pujar fonts, plegat dins de Materials.** Tot en una pàgina, però l'allarga. Ara es puja a la pestanya «Fonts» de l'assignatura.
 - **Part 10 B · El botó «Passa a net» a la capçalera**, al costat del títol, en lloc de la barra enganxada a baix.
+- **Part 12 B · La barra lateral amagada del tot**, amb un botó flotant per tornar-la a traure. Guanya 64 px més, però per canviar d'assignatura cal desplegar-la.
+- **Part 13 B · Els temes en una taula** a la pàgina d'assignatura. Més curta, però no es veuen les classes de cada tema.
+- **Part 14 B · Canviar el nom d'un tema clicant-lo directament**, sense llapis. No se sap que es pot editar fins que s'hi clica.
 - **Part 15 B · Els blocs es queden a la carpeta de cada classe** i el `tema.tex` del tema els apunta amb rutes relatives. No es mou res, però el tema depén de totes les classes i no es pot exportar sol.
 
 ### Motor

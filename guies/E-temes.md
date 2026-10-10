@@ -1,6 +1,6 @@
 # Guia E · Temes, nova classe en una pàgina i pàgina d'assignatura
 
-**Estat:** fase 1 aprovada i implementada el 10/10/2026; falta la prova amb Claude (passos 2 a 6 de «Com es prova»). Fase 2 feta el 10/10/2026. Fase 3: proposta. Cada fase té el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
+**Estat:** fase 1 aprovada i implementada el 10/10/2026; falta la prova amb Claude (passos 2 a 6 de «Com es prova»). Fases 2 i 3 fetes el 10/10/2026. Cada fase té el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/E-mockup.html`](E-mockup.html), publicat a https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum. Ensenya quatre pantalles netes i, davall, setze parts explicades amb les alternatives una al costat de l'altra. Quan ací es diu «part 7», és la part 7 del mock-up.
 
@@ -251,6 +251,14 @@ No canvia cap format. La paperera és una carpeta nova dins de `dades/` (fora de
 ---
 
 ## Fase 3 · P · Barra lateral plegable i pàgina d'assignatura
+
+**Estat:** feta el 10/10/2026, amb les propostes de les parts 8, 12, 13 i 14. La barra lateral continua amb dues línies per classe (part 11 A), perquè la pregunta 4 no té resposta. Provada a `localhost:8300`: plegar la barra i que se'n recorde en recarregar; plegar Anàlisi II; la pàgina d'Estructures Algebraiques amb el Tema 1 (12 pàgines, les tres classes i el PDF propi de les dues d'abans) i «Sense tema»; «Nou tema» i canviar-li el nom (la carpeta no canvia); la pestanya «Fonts» i pujar-hi una font; i l'enllaç de Materials cap a la pestanya «Fonts». Les dades de prova s'han esborrat.
+
+**Desviacions:**
+
+- Com que la font es puja des de l'assignatura, ja no queda marcada sola en la classe d'on vens: cal marcar-la a Materials. L'avís de després de pujar-la ho diu.
+- «Posa-la en un tema», a les classes sense tema, porta a Materials de la classe, on hi ha el desplegable de tema.
+- La línia del document del tema diu les pàgines i la data, no el nombre de blocs.
 
 ### Què notaràs
 
