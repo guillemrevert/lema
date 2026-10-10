@@ -1,7 +1,7 @@
 "use strict";
 
-// Rutes: #/ (nova classe), #/assignatura/<assignatura>/<temes|fonts>
-// i #/classe/<assignatura>/<classe>/<materials|progres|resultat>, amb #/…/resultat/costat per a la vista dividida.
+// Rutes: #/ (nova sessió), #/assignatura/<assignatura>/<quaderns|fonts>
+// i #/sessio/<assignatura>/<sessió>/<materials|progres|resultat>, amb #/…/resultat/costat per a la vista dividida.
 
 const PASSOS = ["Preparació", "Lectura general", "Divisió en blocs", "Per a cada bloc",
   "Punt de control", "Escriure", "Muntatge i PDF"];
@@ -92,7 +92,7 @@ function urlFitxer(a, ...parts) {
 
 const dataLlarga = (iso) => iso.split("-").reverse().join("/");
 const dataCurta = (iso) => iso.split("-").reverse().slice(0, 2).join("/");
-const nomClasse = (c) => c.titol || `Classe del ${dataCurta(c.data)}`;
+const nomSessio = (c) => c.titol || `Sessió del ${dataCurta(c.data)}`;
 const hora = (ts) => new Date(ts).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" });
 const tokens = (n) => (n || 0).toLocaleString("ca-ES");
 
@@ -157,27 +157,29 @@ function nomsCurts(noms) {
   return paraules.map((p) => p.slice(davant, p.length - darrere).join(" ") || p.join(" "));
 }
 
-// ---------- Temes ----------
+// ---------- Quaderns ----------
 
-const nomTema = (assig, id) => assig.temes.find((t) => t.id === id)?.nom;
+const nomQuadern = (assig, id) => assig.quaderns.find((t) => t.id === id)?.nom;
 
-// El desplegable de temes de l'assignatura, amb el «+» per crear-ne un sense eixir del formulari.
-// canvia(id) rep el tema triat o el que s'acaba de crear (null: sense tema).
-function selectorTema(assig, triat, { id, disabled, canvia }) {
+// El desplegable de quaderns de l'assignatura, amb el «+» per crear-ne un sense eixir del formulari.
+// canvia(id) rep el quadern triat o el que s'acaba de crear. Cada sessió en té un (decisió 9): si encara
+// no en té cap (les d'abans), el desplegable demana que en tries un.
+function selectorQuadern(assig, triat, { id, disabled, canvia }) {
   const caixa = h("div", { class: "amb-boto" });
-  const mes = h("button", { type: "button", class: "boto-icona", "aria-label": "Nou tema", title: "Nou tema",
+  const mes = h("button", { type: "button", class: "boto-icona", "aria-label": "Nou quadern", title: "Nou quadern",
     disabled, onclick: () => modeNou() }, icona("mes", 18, 2));
 
   function modeLlista() {
     caixa.replaceChildren(
-      h("select", { id, disabled, onchange: (e) => { triat = e.target.value || null; canvia(triat); } },
-        assig.temes.map((t) => h("option", { value: t.id, selected: t.id === triat }, t.nom)),
-        h("option", { value: "", selected: !triat }, "Sense tema")),
+      h("select", { id, disabled, onchange: (e) => { triat = e.target.value; canvia(triat); } },
+        triat ? null : h("option", { value: "", selected: true, disabled: true },
+          assig.quaderns.length ? "Tria el quadern" : "Encara no hi ha cap quadern: crea'n un amb el «+»"),
+        assig.quaderns.map((t) => h("option", { value: t.id, selected: t.id === triat }, t.nom))),
       mes);
   }
 
   function modeNou() {
-    const nom = h("input", { id, type: "text", placeholder: "p. ex. Tema 2 · Anells", "aria-label": "Nom del tema nou",
+    const nom = h("input", { id, type: "text", placeholder: "p. ex. Tema 2. Anells · Pràctiques de laboratori", "aria-label": "Nom del quadern nou",
       onkeydown: (e) => {
         if (e.key === "Enter") { e.preventDefault(); crea(); }
         if (e.key === "Escape") { e.preventDefault(); modeLlista(); }
@@ -187,10 +189,10 @@ function selectorTema(assig, triat, { id, disabled, canvia }) {
       if (!nom.value.trim()) { nom.focus(); return; }
       boto.disabled = true;
       try {
-        const tema = await api(`/api/assignatures/${assig.id}/temes`, ambJson("POST", { nom: nom.value }));
+        const quadern = await api(`/api/assignatures/${assig.id}/quaderns`, ambJson("POST", { nom: nom.value }));
         // La llista torna del servidor, en el mateix ordre que tindrà a la barra lateral.
-        assig.temes = (await api("/api/assignatures")).find((x) => x.id === assig.id).temes;
-        triat = tema.id;
+        assig.quaderns = (await api("/api/assignatures")).find((x) => x.id === assig.id).quaderns;
+        triat = quadern.id;
         modeLlista();
         canvia(triat);
       } catch (err) {
@@ -204,22 +206,6 @@ function selectorTema(assig, triat, { id, disabled, canvia }) {
 
   modeLlista();
   return caixa;
-}
-
-// «Afegeix al document del tema». Només es mostra quan la classe té tema.
-function interruptorTema(nom, actiu, { id, disabled, canvia }) {
-  const detall = h("span", { class: "detall" });
-  const explica = (si) => {
-    detall.textContent = si
-      ? `Els blocs d'esta classe van al PDF de «${nom}», en ordre de data amb les altres classes del tema.`
-      : "La classe tindrà el seu PDF a banda.";
-  };
-  explica(actiu);
-  return h("label", { class: "interruptor", for: id },
-    h("input", { id, type: "checkbox", role: "switch", checked: actiu, disabled,
-      onchange: (e) => { explica(e.target.checked); canvia(e.target.checked); } }),
-    h("span", { class: "pista", "aria-hidden": "true" }),
-    h("span", { class: "text" }, h("strong", {}, "Afegeix al document del tema"), detall));
 }
 
 // ---------- Navegació ----------
@@ -240,7 +226,16 @@ function tancaFlux() {
   clearInterval(rellotge);
 }
 
+// Adreces d'abans de quaderns i sessions (10/10/2026): #/classe/… i #/assignatura/<a>/temes.
+const ADRECES_VELLES = [[/^#\/classe\//, "#/sessio/"], [/^(#\/assignatura\/[^/]+)\/temes$/, "$1/quaderns"]];
+
 async function pinta() {
+  for (const [vella, nova] of ADRECES_VELLES) {
+    if (vella.test(location.hash)) {
+      history.replaceState(null, "", location.hash.replace(vella, nova));
+      break;
+    }
+  }
   tancaFlux();
   sortida = null;
   hashAnterior = location.hash;
@@ -248,7 +243,7 @@ async function pinta() {
     assignatures = await api("/api/assignatures");
     const r = ruta();
     pintaLateral(r);
-    if (r.vista === "classe" && r.a && r.c) await pintaClasse(r.a, r.c, r.pestanya, r.sub);
+    if (r.vista === "sessio" && r.a && r.c) await pintaSessio(r.a, r.c, r.pestanya, r.sub);
     else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c);
     else pintaNova();
   } catch (e) {
@@ -302,15 +297,15 @@ function plegaGrup(id) {
 function pintaLateral(r) {
   const plegada = llegeix("lema-lateral-plegada") === "1";
   lateral.classList.toggle("plegada", plegada);
-  // Plegada: el logo, el «+» de nova classe i una inicial per assignatura.
+  // Plegada: el logo, el «+» de nova sessió i una inicial per assignatura.
   if (plegada) {
     lateral.replaceChildren(
       h("a", { href: "#/", class: "logo-mini", title: "LEMA", "aria-label": "LEMA" }, "L"),
       h("button", { type: "button", class: "plega", title: "Desplega la barra", "aria-label": "Desplega la barra lateral",
         "aria-expanded": "false", onclick: () => plegaLateral(false) }, icona("dreta", 16, 2)),
-      h("a", { href: "#/", class: "inicial blau" + (r.vista ? "" : " actiu"), title: "Nova classe", "aria-label": "Nova classe" },
+      h("a", { href: "#/", class: "inicial blau" + (r.vista ? "" : " actiu"), title: "Nova sessió", "aria-label": "Nova sessió" },
         icona("mes", 18, 2.2)),
-      ...assignatures.map((as) => h("a", { href: `#/assignatura/${as.id}/temes`,
+      ...assignatures.map((as) => h("a", { href: `#/assignatura/${as.id}/quaderns`,
         class: "inicial" + (r.a === as.id ? " actiu" : ""), title: as.nom, "aria-label": as.nom }, inicials(as.nom))));
     return;
   }
@@ -318,17 +313,17 @@ function pintaLateral(r) {
   const plegats = grupsPlegats();
   const enllac = (as, c) => {
     const actiu = r.a === as.id && r.c === c.id;
-    return h("a", { href: `#/classe/${as.id}/${c.id}`, class: "classe-nav" + (actiu ? " actiu" : ""),
+    return h("a", { href: `#/sessio/${as.id}/${c.id}`, class: "classe-nav" + (actiu ? " actiu" : ""),
       "aria-current": actiu ? "page" : null },
-    h("span", { class: "classe-nom" }, nomClasse(c)),
+    h("span", { class: "classe-nom" }, nomSessio(c)),
     h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)));
   };
-  // Les classes de cada assignatura, agrupades pel tema. Les que no en tenen, al final.
+  // Les sessions de cada assignatura, agrupades pel quadern. Les que no en tenen, al final.
   const grups = (as) => {
-    const llista = as.temes.map((t) => ({ nom: t.nom, classes: as.classes.filter((c) => c.tema === t.id) }))
-      .filter((g) => g.classes.length);
-    const sense = as.classes.filter((c) => !as.temes.some((t) => t.id === c.tema));
-    if (sense.length) llista.push({ nom: llista.length ? "Sense tema" : null, classes: sense });
+    const llista = as.quaderns.map((t) => ({ nom: t.nom, sessions: as.sessions.filter((c) => c.quadern === t.id) }))
+      .filter((g) => g.sessions.length);
+    const sense = as.sessions.filter((c) => !as.quaderns.some((t) => t.id === c.quadern));
+    if (sense.length) llista.push({ nom: llista.length ? "Sense quadern" : null, sessions: sense });
     return llista;
   };
   lateral.replaceChildren(...[
@@ -339,38 +334,38 @@ function pintaLateral(r) {
       h("button", { type: "button", class: "plega", title: "Plega la barra", "aria-label": "Plega la barra lateral",
         "aria-expanded": "true", onclick: () => plegaLateral(true) }, icona("esquerra", 16, 2))),
     h("a", { href: "#/", class: "boto-sec" + (r.vista ? "" : " actiu") },
-      icona("mes", 16, 2.2), "Nova classe"),
+      icona("mes", 16, 2.2), "Nova sessió"),
     assignatures.map((as) => {
       const plegat = plegats.has(as.id);
       const actiu = r.vista === "assignatura" && r.a === as.id;
       return h("div", { class: "grup" },
         h("div", { class: "cap-grup" },
-          h("h2", {}, h("a", { href: `#/assignatura/${as.id}/temes`, class: actiu ? "actiu" : null,
+          h("h2", {}, h("a", { href: `#/assignatura/${as.id}/quaderns`, class: actiu ? "actiu" : null,
             "aria-current": actiu ? "page" : null }, as.nom)),
           h("button", { type: "button", class: "plega-grup", "data-grup": as.id, "aria-expanded": plegat ? "false" : "true",
             "aria-label": `${plegat ? "Desplega" : "Plega"} ${as.nom}`, title: plegat ? "Desplega" : "Plega",
             onclick: () => plegaGrup(as.id) }, icona(plegat ? "dreta" : "avall", 14, 2))),
-        plegat ? null : as.classes.length
-          ? grups(as).map((g) => [g.nom ? h("h3", { class: "tema-nav" }, g.nom) : null, g.classes.map((c) => enllac(as, c))])
-          : h("p", { class: "buit" }, "Encara no hi ha classes."));
+        plegat ? null : as.sessions.length
+          ? grups(as).map((g) => [g.nom ? h("h3", { class: "quadern-nav" }, g.nom) : null, g.sessions.map((c) => enllac(as, c))])
+          : h("p", { class: "buit" }, "Encara no hi ha sessions."));
     }),
   ].flat());
 }
 
-// ---------- Nova classe ----------
-// Nova classe i Materials són la mateixa pàgina: dalt, la fitxa de la classe. Abans de crear-la,
+// ---------- Nova sessió ----------
+// Nova sessió i Materials són la mateixa pàgina: dalt, la fitxa de la sessió. Abans de crear-la,
 // davall hi ha «Com va»; després, els materials (vegeu pintaMaterials).
 
 function pintaNova() {
   const passos = [
     ["Materials", "Puja les fotos dels apunts i tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne."],
     ["Passa a net", "Claude llig els apunts, busca cada bloc a la font i s'atura una sola vegada per preguntar-te el que la font no resol."],
-    ["Resultat", "El PDF amb la teua notació i les correccions marcades: el del tema sencer, si la classe s'hi afegeix. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
+    ["Resultat", "Els blocs de la sessió s'afegeixen al document del quadern, amb la teua notació i les correccions marcades. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
   ];
   principal.replaceChildren(h("div", { class: "contingut" },
     h("div", { class: "titol" },
-      h("h1", {}, "Nova classe"),
-      h("p", { class: "subtitol" }, "Tria l'assignatura, el tema i el dia. En crear-la, ací mateix hi puges les fotos i tries la font.")),
+      h("h1", {}, "Nova sessió"),
+      h("p", { class: "subtitol" }, "Una sessió és cada vegada que afegeixes apunts a un quadern: una classe, una pràctica… Tria l'assignatura, el quadern i el dia, i en crear-la ací mateix hi puges les fotos i tries la font.")),
     fitxaNova(),
     h("section", { class: "titol", "aria-labelledby": "com-va" },
       h("h2", { id: "com-va", class: "seccio-titol" }, "Com va"),
@@ -382,49 +377,45 @@ function fitxaNova() {
   const avui = new Date();
   const iso = new Date(avui - avui.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   let as = assignatures.find((x) => x.id === llegeix("lema-assignatura")) || assignatures[0];
-  let tema = null;
-  let fusiona = true;
+  let quadern = null;
 
-  // El tema de l'última classe creada en esta assignatura; la primera vegada, l'últim tema.
-  function temaInicial() {
-    const recordat = llegeix(`lema-tema-${as.id}`);
-    if (recordat === null) tema = as.temes.length ? as.temes[as.temes.length - 1].id : null;
-    else tema = as.temes.some((t) => t.id === recordat) ? recordat : null;
-    fusiona = true;
+  // El quadern de l'última sessió creada en esta assignatura; si ja no hi és, l'últim quadern.
+  function quadernInicial() {
+    const recordat = llegeix(`lema-quadern-${as.id}`);
+    quadern = as.quaderns.some((t) => t.id === recordat) ? recordat
+      : as.quaderns.length ? as.quaderns[as.quaderns.length - 1].id : null;
   }
 
   const assig = h("select", { id: "assig",
-    onchange: () => { as = assignatures.find((x) => x.id === assig.value); temaInicial(); pintaTema(); } },
+    onchange: () => { as = assignatures.find((x) => x.id === assig.value); quadernInicial(); pintaQuadernTriat(); } },
   assignatures.map((x) => h("option", { value: x.id, selected: x.id === as.id }, x.nom)));
   const data = h("input", { id: "data", type: "date", value: iso, required: true });
   const titol = h("input", { id: "titol", type: "text", placeholder: "p. ex. Cicles i transposicions" });
-  const boto = h("button", { type: "submit", class: "boto" }, "Crea la classe");
-  const llocTema = h("div", { class: "camp" });
-  const llocInterruptor = h("div", { class: "lloc-interruptor" });
+  const boto = h("button", { type: "submit", class: "boto" }, "Crea la sessió");
+  const llocQuadern = h("div", { class: "camp" });
 
-  function pintaInterruptor() {
-    llocInterruptor.replaceChildren(...(tema ? [interruptorTema(nomTema(as, tema), fusiona,
-      { id: "fusiona", canvia: (si) => { fusiona = si; } })] : []));
+  function pintaQuadernTriat() {
+    llocQuadern.replaceChildren(h("label", { for: "quadern" }, "Quadern"),
+      selectorQuadern(as, quadern, { id: "quadern", canvia: (t) => { quadern = t; } }));
   }
-  function pintaTema() {
-    llocTema.replaceChildren(h("label", { for: "tema" }, "Tema"),
-      selectorTema(as, tema, { id: "tema", canvia: (t) => { if (!tema) fusiona = true; tema = t; pintaInterruptor(); } }));
-    pintaInterruptor();
-  }
-  temaInicial();
-  pintaTema();
+  quadernInicial();
+  pintaQuadernTriat();
 
   return h("form", {
     class: "targeta fitxa-classe",
     onsubmit: async (e) => {
       e.preventDefault();
+      if (!quadern) {
+        avisa("Tria el quadern, o crea'n un amb el «+».");
+        return;
+      }
       boto.disabled = true;
       try {
-        const c = await api("/api/classes", ambJson("POST",
-          { assignatura: as.id, data: data.value, titol: titol.value, tema, fusiona }));
+        const c = await api("/api/sessions", ambJson("POST",
+          { assignatura: as.id, data: data.value, titol: titol.value, quadern }));
         recorda("lema-assignatura", as.id);
-        recorda(`lema-tema-${as.id}`, tema || "");
-        anar(`#/classe/${c.assignatura}/${c.id}/materials`);
+        recorda(`lema-quadern-${as.id}`, quadern);
+        anar(`#/sessio/${c.assignatura}/${c.id}/materials`);
       } catch (err) {
         avisa(err.message);
         boto.disabled = false;
@@ -433,10 +424,11 @@ function fitxaNova() {
   },
   h("div", { class: "camps fitxa-camps" },
     camp("Assignatura", assig),
-    llocTema,
-    camp("Dia de la classe", data),
+    llocQuadern,
+    camp("Dia de la sessió", data),
     camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
-  h("div", { class: "peu-form" }, llocInterruptor, boto));
+  h("div", { class: "peu-form" },
+    h("p", { class: "nota-petita" }, "Els blocs de la sessió s'afegiran al document del quadern."), boto));
 }
 
 // ---------- Assignatura ----------
@@ -444,26 +436,26 @@ function fitxaNova() {
 function pintaAssignatura(a, pestanya) {
   const as = assignatures.find((x) => x.id === a);
   if (!as) throw new Error("No existeix esta assignatura.");
-  pestanya = pestanya === "fonts" ? "fonts" : "temes";
-  const nou = pestanya === "temes" ? formNouTema(as) : null;
-  const noms = { temes: "Temes", fonts: "Fonts" };
+  pestanya = pestanya === "fonts" ? "fonts" : "quaderns";
+  const nou = pestanya === "quaderns" ? formNouQuadern(as) : null;
+  const noms = { quaderns: "Quaderns", fonts: "Fonts" };
   const cos = h("div", { class: "contingut" },
     h("header", { class: "capcalera" },
       h("div", { class: "cap-assig" },
         h("div", {}, h("span", { class: "detall" }, "Assignatura"), h("h1", {}, as.nom)),
         nou ? h("button", { type: "button", class: "boto-sec",
-          onclick: () => { nou.hidden = false; nou.querySelector("input").focus(); } }, icona("mes", 16, 2.2), "Nou tema") : null),
+          onclick: () => { nou.hidden = false; nou.querySelector("input").focus(); } }, icona("mes", 16, 2.2), "Nou quadern") : null),
       h("nav", { class: "pestanyes", "aria-label": "Seccions de l'assignatura" },
         Object.entries(noms).map(([id, nom]) => h("a", { href: `#/assignatura/${a}/${id}`,
           class: id === pestanya ? "actiu" : null, "aria-current": id === pestanya ? "page" : null }, nom)))),
     nou);
-  if (pestanya === "temes") pintaTemes(cos, as);
+  if (pestanya === "quaderns") pintaQuaderns(cos, as);
   else pintaFonts(cos, as);
   principal.replaceChildren(cos);
 }
 
-function formNouTema(as) {
-  const nom = h("input", { id: "nou-tema", type: "text", placeholder: "p. ex. Tema 2. Anells",
+function formNouQuadern(as) {
+  const nom = h("input", { id: "nou-quadern", type: "text", placeholder: "p. ex. Tema 2. Anells",
     onkeydown: (e) => { if (e.key === "Escape") { e.preventDefault(); form.hidden = true; } } });
   const boto = h("button", { type: "submit", class: "boto" }, "Crea");
   const form = h("form", {
@@ -473,7 +465,7 @@ function formNouTema(as) {
       if (!nom.value.trim()) { nom.focus(); return; }
       boto.disabled = true;
       try {
-        await api(`/api/assignatures/${as.id}/temes`, ambJson("POST", { nom: nom.value }));
+        await api(`/api/assignatures/${as.id}/quaderns`, ambJson("POST", { nom: nom.value }));
         pinta();
       } catch (err) {
         avisa(err.message);
@@ -481,52 +473,50 @@ function formNouTema(as) {
       }
     },
   },
-  h("label", { for: "nou-tema", class: "titol-caixa" }, "Nou tema"),
+  h("label", { for: "nou-quadern", class: "titol-caixa" }, "Nou quadern"),
   h("div", { class: "amb-boto" }, nom, boto,
     h("button", { type: "button", class: "boto-sec", onclick: () => { form.hidden = true; } }, "Cancel·la")));
   return form;
 }
 
-// Una línia per classe: dia, nom, estat i, si en té, el seu PDF propi.
-function liniaClasse(as, c, extra) {
+// Una línia per sessió: dia, nom i estat.
+function liniaSessio(as, c, extra) {
   return h("li", {},
     h("span", { class: "data" }, dataCurta(c.data)),
-    h("a", { class: "nom", href: `#/classe/${as.id}/${c.id}` }, nomClasse(c)),
+    h("a", { class: "nom", href: `#/sessio/${as.id}/${c.id}` }, nomSessio(c)),
     h("span", { class: `estat estat-${c.estat}` }, h("span", { class: "punt" }), textEstat(c)),
-    c.pdf_propi ? h("a", { class: "petit", href: urlFitxer(as.id, c.pdf_propi.ruta), target: "_blank" },
-      "PDF propi" + (c.pdf_propi.pagines ? ` · ${c.pdf_propi.pagines} p.` : "")) : null,
     extra);
 }
 
-function pintaTemes(cos, as) {
-  const sense = as.classes.filter((c) => !as.temes.some((t) => t.id === c.tema));
-  if (!as.temes.length) {
+function pintaQuaderns(cos, as) {
+  const sense = as.sessions.filter((c) => !as.quaderns.some((t) => t.id === c.quadern));
+  if (!as.quaderns.length) {
     cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
-      h("strong", {}, "Encara no hi ha cap tema"),
-      h("span", {}, "Crea'n un amb «Nou tema». Després, a cada classe, tria el seu tema i si s'afegeix al document del tema."))));
+      h("strong", {}, "Encara no hi ha cap quadern"),
+      h("span", {}, "Crea'n un amb «Nou quadern»: un tema, unes pràctiques, un article… Cada sessió afegeix els seus blocs al document del seu quadern."))));
   }
-  for (const t of as.temes) cos.append(targetaTema(as, t));
+  for (const t of as.quaderns) cos.append(targetaQuadern(as, t));
   if (sense.length) {
     cos.append(h("section", { class: "targeta", "aria-labelledby": "t-sense" },
-      h("div", { class: "tema-cap" }, h("h2", { id: "t-sense" }, "Sense tema"),
-        h("span", { class: "detall" }, `${sense.length} ${sense.length === 1 ? "classe" : "classes"}`)),
-      h("ul", { class: "llista-classes" }, sense.map((c) => liniaClasse(as, c,
-        as.temes.length ? h("a", { class: "petit", href: `#/classe/${as.id}/${c.id}/materials` }, "Posa-la en un tema") : null)))));
+      h("div", { class: "quadern-cap" }, h("h2", { id: "t-sense" }, "Sense quadern"),
+        h("span", { class: "detall" }, `${sense.length} ${sense.length === 1 ? "sessió" : "sessions"}`)),
+      h("ul", { class: "llista-classes" }, sense.map((c) => liniaSessio(as, c,
+        as.quaderns.length ? h("a", { class: "petit", href: `#/sessio/${as.id}/${c.id}/materials` }, "Posa-la en un quadern") : null)))));
   }
 }
 
-function targetaTema(as, t) {
-  const classes = as.classes.filter((c) => c.tema === t.id);
-  const cap = h("div", { class: "tema-cap" });
+function targetaQuadern(as, t) {
+  const sessions = as.sessions.filter((c) => c.quadern === t.id);
+  const cap = h("div", { class: "quadern-cap" });
   const pintaCap = () => cap.replaceChildren(
-    h("div", { class: "nom-tema" }, h("h2", {}, t.nom),
+    h("div", { class: "nom-quadern" }, h("h2", {}, t.nom),
       h("button", { type: "button", class: "boto-icona petit", title: "Canvia el nom",
         "aria-label": `Canvia el nom de «${t.nom}»`, onclick: edita }, icona("llapis", 16))),
-    h("span", { class: "detall" }, `${classes.length} ${classes.length === 1 ? "classe" : "classes"}`));
+    h("span", { class: "detall" }, `${sessions.length} ${sessions.length === 1 ? "sessió" : "sessions"}`));
 
   // El nom es converteix en un camp de text. Intro desa i Esc cancel·la.
   function edita() {
-    const nom = h("input", { type: "text", value: t.nom, "aria-label": "Nom del tema",
+    const nom = h("input", { type: "text", value: t.nom, "aria-label": "Nom del quadern",
       onkeydown: (e) => {
         if (e.key === "Enter") { e.preventDefault(); desa(); }
         if (e.key === "Escape") { e.preventDefault(); pintaCap(); }
@@ -536,7 +526,7 @@ function targetaTema(as, t) {
       if (!nom.value.trim()) { nom.focus(); return; }
       boto.disabled = true;
       try {
-        await api(`/api/assignatures/${as.id}/temes/${t.id}`, ambJson("PUT", { nom: nom.value }));
+        await api(`/api/assignatures/${as.id}/quaderns/${t.id}`, ambJson("PUT", { nom: nom.value }));
         pinta();
       } catch (err) {
         avisa(err.message);
@@ -550,33 +540,33 @@ function targetaTema(as, t) {
   }
   pintaCap();
 
-  const url = (fitxer) => urlFitxer(as.id, "temes", t.id, fitxer);
+  const url = (fitxer) => urlFitxer(as.id, "quaderns", t.id, fitxer);
   const doc = t.pdf
     ? h("div", { class: "fila-doc" }, icona("doc", 26),
-      h("div", { class: "nom" }, h("strong", {}, "Document del tema"),
+      h("div", { class: "nom" }, h("strong", {}, "Document del quadern"),
         h("span", { class: "detall" }, [t.pdf.pagines ? `${t.pdf.pagines} pàgines` : null,
           `actualitzat el ${new Date(t.pdf.data).toLocaleDateString("ca-ES")}`].filter(Boolean).join(" · "))),
-      h("a", { class: "boto", href: `${url("tema.pdf")}?v=${encodeURIComponent(t.pdf.data)}`, target: "_blank" }, "Obre el PDF"),
-      h("a", { class: "boto-sec", href: url("tema.tex"), download: "tema.tex" }, "Descarrega el .tex"))
+      h("a", { class: "boto", href: `${url("quadern.pdf")}?v=${encodeURIComponent(t.pdf.data)}`, target: "_blank" }, "Obre el PDF"),
+      h("a", { class: "boto-sec", href: url("quadern.tex"), download: "quadern.tex" }, "Descarrega el .tex"))
     : h("div", { class: "fila-doc buida" }, icona("doc", 26),
       h("div", { class: "nom" }, h("strong", {}, "Encara no hi ha document"),
-        h("span", { class: "detall" }, "Es fa la primera vegada que passes a net una classe d'este tema amb l'interruptor encés.")));
+        h("span", { class: "detall" }, "Es fa la primera vegada que passes a net una sessió d'este quadern.")));
   return h("section", { class: "targeta", "aria-label": t.nom }, cap, doc,
-    classes.length
-      ? h("ul", { class: "llista-classes" }, classes.map((c) => liniaClasse(as, c)))
-      : h("p", { class: "nota-petita" }, "Encara no hi ha cap classe en este tema."));
+    sessions.length
+      ? h("ul", { class: "llista-classes" }, sessions.map((c) => liniaSessio(as, c)))
+      : h("p", { class: "nota-petita" }, "Encara no hi ha cap sessió en este quadern."));
 }
 
 function pintaFonts(cos, as) {
   if (!as.fonts.length) {
     cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
       h("strong", {}, "Encara no hi ha cap font"),
-      h("span", {}, "Puja'n una ací baix. Després la triaràs a Materials de cada classe."))));
+      h("span", {}, "Puja'n una ací baix. Després la triaràs a Materials de cada sessió."))));
   }
   for (const f of as.fonts) {
     const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
     cos.append(h("section", { class: "targeta", "aria-label": f.nom },
-      h("div", { class: "tema-cap" }, h("h2", {}, f.nom),
+      h("div", { class: "quadern-cap" }, h("h2", {}, f.nom),
         h("span", { class: "detall" }, [f.que_es, f.origen].filter(Boolean).join(" · "))),
       h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
         h("a", { class: "nom", href: urlFitxer(as.id, "fonts", f.id, p.nom), target: "_blank" }, p.nom),
@@ -584,14 +574,14 @@ function pintaFonts(cos, as) {
           ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
           : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge")))),
       h("p", { class: "nota-petita" },
-        `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades. Es tria a Materials de cada classe.`)));
+        `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades. Es tria a Materials de cada sessió.`)));
   }
   cos.append(h("section", { class: "targeta", "aria-labelledby": "t-font-nova" },
     h("div", { class: "cap-seccio" },
       h("h2", { id: "t-font-nova" }, "Puja una font nova"),
       h("p", {}, "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.")),
     formFontNova(as.id, (font) => {
-      avisa(`S'ha pujat «${font.nom}». Ja la pots triar a Materials de cada classe.`);
+      avisa(`S'ha pujat «${font.nom}». Ja la pots triar a Materials de cada sessió.`);
       pinta();
     })));
 }
@@ -637,36 +627,36 @@ function formFontNova(a, pujada) {
   zona, pdfs,
   h("div", { class: "camps" }, camp("Nom curt", nom), camp("Què és", que), camp("D'on surt", don)),
   h("div", { class: "accions" },
-    h("span", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en totes les classes."),
+    h("span", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en totes les sessions."),
     boto));
 }
 
-// ---------- Classe ----------
+// ---------- Sessió ----------
 
-async function pintaClasse(a, c, pestanya, sub) {
-  const classe = await api(`/api/classes/${a}/${c}`);
+async function pintaSessio(a, c, pestanya, sub) {
+  const sessio = await api(`/api/sessions/${a}/${c}`);
   const assig = assignatures.find((x) => x.id === a);
   if (!pestanya) {
-    pestanya = { nova: "materials", acabada: "resultat" }[classe.estat] || "progres";
+    pestanya = { nova: "materials", acabada: "resultat" }[sessio.estat] || "progres";
   }
-  const costat = pestanya === "resultat" && sub === "costat" && Boolean(classe.pdf);
-  const cos = h("div", { class: "contingut" + (costat ? " ample" : "") }, capcalera(classe, assig, pestanya));
-  if (pestanya === "progres") pintaProgres(cos, classe);
-  else if (pestanya === "resultat") await pintaResultat(cos, classe, assig, costat);
-  else pintaMaterials(cos, classe, assig);
+  const costat = pestanya === "resultat" && sub === "costat" && Boolean(sessio.pdf);
+  const cos = h("div", { class: "contingut" + (costat ? " ample" : "") }, capcalera(sessio, assig, pestanya));
+  if (pestanya === "progres") pintaProgres(cos, sessio);
+  else if (pestanya === "resultat") await pintaResultat(cos, sessio, assig, costat);
+  else pintaMaterials(cos, sessio, assig);
   principal.replaceChildren(cos);
 }
 
-function capcalera(classe, assig, pestanya) {
-  const base = `#/classe/${classe.assignatura}/${classe.id}`;
-  const actives = { materials: true, progres: classe.estat !== "nova", resultat: Boolean(classe.pdf) };
+function capcalera(sessio, assig, pestanya) {
+  const base = `#/sessio/${sessio.assignatura}/${sessio.id}`;
+  const actives = { materials: true, progres: sessio.estat !== "nova", resultat: Boolean(sessio.pdf) };
   const noms = { materials: "Materials", progres: "Progrés", resultat: "Resultat" };
   return h("header", { class: "capcalera" },
     h("div", {},
-      h("span", { class: "detall" }, [assig.nom, nomTema(assig, classe.tema),
-        classe.titol ? dataLlarga(classe.data) : null].filter(Boolean).join(" · ")),
-      h("h1", {}, classe.titol || `Classe del ${dataLlarga(classe.data)}`)),
-    h("nav", { class: "pestanyes", "aria-label": "Seccions de la classe" },
+      h("span", { class: "detall" }, [assig.nom, nomQuadern(assig, sessio.quadern),
+        sessio.titol ? dataLlarga(sessio.data) : null].filter(Boolean).join(" · ")),
+      h("h1", {}, sessio.titol || `Sessió del ${dataLlarga(sessio.data)}`)),
+    h("nav", { class: "pestanyes", "aria-label": "Seccions de la sessió" },
       Object.entries(noms).map(([id, nom]) => (actives[id]
         ? h("a", { href: `${base}/${id}`, class: id === pestanya ? "actiu" : null,
           "aria-current": id === pestanya ? "page" : null }, nom)
@@ -675,11 +665,11 @@ function capcalera(classe, assig, pestanya) {
 
 // ---------- Materials ----------
 
-function pintaMaterials(cos, classe, assig) {
-  const bloquejat = classe.estat === "en_marxa";
+function pintaMaterials(cos, sessio, assig) {
+  const bloquejat = sessio.estat === "en_marxa";
   const desa = async (canvis) => {
     try {
-      await api(`/api/classes/${classe.assignatura}/${classe.id}`, ambJson("PUT", canvis));
+      await api(`/api/sessions/${sessio.assignatura}/${sessio.id}`, ambJson("PUT", canvis));
     } catch (e) {
       avisa(e.message);
     }
@@ -689,37 +679,37 @@ function pintaMaterials(cos, classe, assig) {
       h("div", {}, "Claude està treballant amb estos materials. Els podràs canviar quan pare.")));
   }
   cos.append(
-    fitxaClasse(classe, assig, desa, bloquejat),
+    fitxaSessio(sessio, assig, desa, bloquejat),
     h("div", { class: "materials" },
       h("div", { class: "materials-graella" },
         h("div", { class: "col-materials" },
-          seccioApunts(classe, bloquejat),
-          seccioNota(classe, desa, bloquejat)),
-        seccioFont(classe, assig, desa, bloquejat))),
-    barraPassa(classe, assig),
+          seccioApunts(sessio, bloquejat),
+          seccioNota(sessio, desa, bloquejat)),
+        seccioFont(sessio, assig, desa, bloquejat))),
+    barraPassa(sessio, assig),
   );
 }
 
-// La fitxa d'una classe creada: l'assignatura i el dia queden fixats (són el nom de la carpeta).
-function fitxaClasse(classe, assig, desa, bloquejat) {
-  const a = classe.assignatura;
-  const c = classe.id;
-  const tema = nomTema(assig, classe.tema) ? classe.tema : null;
+// La fitxa d'una sessió creada: l'assignatura i el dia queden fixats (són el nom de la carpeta).
+function fitxaSessio(sessio, assig, desa, bloquejat) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  const quadern = nomQuadern(assig, sessio.quadern) ? sessio.quadern : null;
   const canvia = async (canvis) => { await desa(canvis); pinta(); };
-  const titol = h("input", { id: "titol", type: "text", value: classe.titol || "", disabled: bloquejat,
+  const titol = h("input", { id: "titol", type: "text", value: sessio.titol || "", disabled: bloquejat,
     placeholder: "p. ex. Cicles i transposicions", onchange: (e) => canvia({ titol: e.target.value.trim() }) });
-  // Els blocs de la classe són al document del tema si Resultat el llista entre els fitxers.
-  const alTema = classe.fitxers.some((f) => f.startsWith("temes/") && f.includes(`/blocs/${c}/`));
+  // Els blocs de la sessió són al document del quadern si Resultat el llista entre els fitxers.
+  const alQuadern = sessio.fitxers.some((f) => f.startsWith("quaderns/") && f.includes(`/blocs/${c}/`));
 
   const confirma = h("div", { class: "avis roig", hidden: true, role: "alertdialog", "aria-labelledby": "t-esborra" });
   const esborra = h("button", { type: "button", class: "boto perill",
     onclick: async () => {
       esborra.disabled = true;
-      esborra.textContent = alTema ? "Esborrant i refent el PDF del tema…" : "Esborrant…";
+      esborra.textContent = alQuadern ? "Esborrant i refent el PDF del quadern…" : "Esborrant…";
       try {
-        const r = await api(`/api/classes/${a}/${c}`, { method: "DELETE" });
+        const r = await api(`/api/sessions/${a}/${c}`, { method: "DELETE" });
         anar("#/");
-        avisa(r.avis || `S'ha esborrat «${nomClasse(classe)}». Està a ${r.paperera}.`);
+        avisa(r.avis || `S'ha esborrat «${nomSessio(sessio)}». Està a ${r.paperera}.`);
       } catch (err) {
         avisa(err.message);
         esborra.disabled = false;
@@ -727,41 +717,40 @@ function fitxaClasse(classe, assig, desa, bloquejat) {
       }
     } }, "Esborra");
   confirma.append(icona("avis", 22), h("div", {},
-    h("strong", { id: "t-esborra" }, `Vols esborrar «${nomClasse(classe)}»?`),
+    h("strong", { id: "t-esborra" }, `Vols esborrar «${nomSessio(sessio)}»?`),
     h("span", {}, "Les fotos i el que ha escrit Claude van a la paperera de dades/." +
-      (alTema ? " Els seus blocs es lleven del document del tema i el PDF del tema es torna a fer." : "")),
+      (alQuadern ? " Els seus blocs es lleven del document del quadern i el PDF del quadern es torna a fer." : "")),
     h("div", { class: "botons" }, esborra,
       h("button", { type: "button", class: "boto-sec", onclick: () => { confirma.hidden = true; } }, "Cancel·la"))));
 
-  return h("section", { class: "targeta fitxa-classe", "aria-label": "Fitxa de la classe" },
+  return h("section", { class: "targeta fitxa-classe", "aria-label": "Fitxa de la sessió" },
     h("div", { class: "camps fitxa-camps" },
       h("div", { class: "camp" }, h("span", { class: "etiqueta" }, "Assignatura"), h("span", { class: "fix" }, assig.nom)),
-      h("div", { class: "camp" }, h("label", { for: "tema" }, "Tema"),
-        selectorTema(assig, tema, { id: "tema", disabled: bloquejat,
-          // D'un tema a un altre es manté l'interruptor; de «sense tema» a un tema, s'encén.
-          canvia: (t) => canvia({ tema: t, fusiona: Boolean(t) && (tema ? classe.fusiona : true) }) })),
-      h("div", { class: "camp" }, h("span", { class: "etiqueta" }, "Dia de la classe"), h("span", { class: "fix" }, dataLlarga(classe.data))),
+      h("div", { class: "camp" }, h("label", { for: "quadern" }, "Quadern"),
+        selectorQuadern(assig, quadern, { id: "quadern", disabled: bloquejat, canvia: (t) => canvia({ quadern: t }) })),
+      h("div", { class: "camp" }, h("span", { class: "etiqueta" }, "Dia de la sessió"), h("span", { class: "fix" }, dataLlarga(sessio.data))),
       camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
     h("div", { class: "peu-form" },
-      h("div", { class: "lloc-interruptor" }, tema ? interruptorTema(nomTema(assig, tema), classe.fusiona,
-        { id: "fusiona", disabled: bloquejat, canvia: (si) => canvia({ fusiona: si }) }) : null),
+      h("p", { class: "nota-petita" }, quadern
+        ? "Els blocs de la sessió van al document del quadern."
+        : "Esta sessió encara no té quadern: tria'n un per poder-la passar a net."),
       bloquejat ? null : h("button", { type: "button", class: "enllac-suau",
-        onclick: () => { confirma.hidden = false; esborra.focus(); } }, "Esborra la classe")),
-    classe.estat === "nova" || !tema ? null : h("p", { class: "nota-petita" },
-      "Si canvies el tema o l'interruptor, el que ja ha escrit Claude no es mou: s'aplica la pròxima vegada que passes la classe a net."),
+        onclick: () => { confirma.hidden = false; esborra.focus(); } }, "Esborra la sessió")),
+    sessio.estat === "nova" || !quadern ? null : h("p", { class: "nota-petita" },
+      "Si canvies el quadern, el que ja ha escrit Claude no es mou: s'aplica la pròxima vegada que passes la sessió a net."),
     confirma);
 }
 
-function seccioApunts(classe, bloquejat) {
-  const a = classe.assignatura;
-  const c = classe.id;
+function seccioApunts(sessio, bloquejat) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
 
   async function puja(fitxers) {
     if (!fitxers.length) return;
     const f = new FormData();
     for (const x of fitxers) f.append("fitxers", x);
     try {
-      await api(`/api/classes/${a}/${c}/apunts`, { method: "POST", body: f });
+      await api(`/api/sessions/${a}/${c}/apunts`, { method: "POST", body: f });
       pinta();
     } catch (e) {
       avisa(e.message);
@@ -769,8 +758,8 @@ function seccioApunts(classe, bloquejat) {
   }
 
   let arrossegada = null;  // índex de la foto que s'està movent
-  const fotos = classe.apunts.map((nom, i) => {
-    const url = urlFitxer(a, "classes", c, "apunts", nom);
+  const fotos = sessio.apunts.map((nom, i) => {
+    const url = urlFitxer(a, "sessions", c, "apunts", nom);
     const pdf = nom.toLowerCase().endsWith(".pdf");
     const foto = h("div", {
       class: "foto",
@@ -783,11 +772,11 @@ function seccioApunts(classe, bloquejat) {
         if (arrossegada === null) return;  // fitxers de fora: els agafa la secció
         e.preventDefault();
         e.stopPropagation();
-        const ordre = [...classe.apunts];
+        const ordre = [...sessio.apunts];
         ordre.splice(i, 0, ...ordre.splice(arrossegada, 1));
         arrossegada = null;
         try {
-          await api(`/api/classes/${a}/${c}`, ambJson("PUT", { apunts: ordre }));
+          await api(`/api/sessions/${a}/${c}`, ambJson("PUT", { apunts: ordre }));
           pinta();
         } catch (err) {
           avisa(err.message);
@@ -804,7 +793,7 @@ function seccioApunts(classe, bloquejat) {
         type: "button", class: "boto-icona", "aria-label": `Lleva ${nom}`,
         onclick: async () => {
           try {
-            await api(`/api/classes/${a}/${c}/apunts/${encodeURIComponent(nom)}`, { method: "DELETE" });
+            await api(`/api/sessions/${a}/${c}/apunts/${encodeURIComponent(nom)}`, { method: "DELETE" });
             pinta();
           } catch (e) {
             avisa(e.message);
@@ -835,9 +824,9 @@ function seccioApunts(classe, bloquejat) {
   },
   h("div", { class: "cap-seccio" },
     h("h2", { id: "t-apunts" }, "Apunts"),
-    h("p", {}, classe.apunts.length > 1
-      ? "Les fotos de la classe, en ordre. Arrossega-les per canviar-lo."
-      : "Les fotos de la classe, en ordre.")),
+    h("p", {}, sessio.apunts.length > 1
+      ? "Les fotos de la sessió, en ordre. Arrossega-les per canviar-lo."
+      : "Les fotos de la sessió, en ordre.")),
   h("div", { class: "graella-fotos xicoteta" }, fotos,
     bloquejat ? null : h("label", { for: "fotos", class: "afegeix" },
       icona("puja", 22), h("strong", {}, "Afegeix fotos"), h("span", {}, "o arrossega-les"))),
@@ -846,10 +835,10 @@ function seccioApunts(classe, bloquejat) {
   return seccio;
 }
 
-function seccioFont(classe, assig, desa, bloquejat) {
+function seccioFont(sessio, assig, desa, bloquejat) {
   const seccio = h("section", { class: "targeta compacta", "aria-labelledby": "t-font" });
   // Les fonts triades, amb els temes (PDF) de cada una. Les que ja no existeixen no compten.
-  const triades = classe.fonts.filter((t) => assig.fonts.some((f) => f.id === t.id));
+  const triades = sessio.fonts.filter((t) => assig.fonts.some((f) => f.id === t.id));
 
   async function canvia(fonts) {
     await desa({ fonts });
@@ -873,7 +862,7 @@ function seccioFont(classe, assig, desa, bloquejat) {
             ? [...triades, { id: f.id, temes: [] }]
             : triades.filter((t) => t.id !== f.id)) }),
         h("span", {}, h("strong", {}, f.nom), h("span", { class: "detall" }, detall))),
-      triada ? h("div", { class: "xips", role: "group", "aria-label": `PDF de ${f.nom} on és la classe` },
+      triada ? h("div", { class: "xips", role: "group", "aria-label": `PDF de ${f.nom} on és la sessió` },
         f.pdfs.map((p, i) => {
           const si = triada.temes.includes(p.nom);
           return h("label", { class: "xip" + (si ? " triat" : ""), title: p.nom },
@@ -891,10 +880,10 @@ function seccioFont(classe, assig, desa, bloquejat) {
         h("p", {}, "D'on es reconstrueix cada bloc. Si en marques més d'una i no coincideixen, Claude en tria una i t'ho diu en una noteta.")),
       assig.fonts.length ? h("div", { class: "llista-fonts" }, assig.fonts.map(filaFont)) : null,
       assig.fonts.length ? h("p", { class: "nota-petita" },
-        "Marca els PDF on és la classe. Si no en marques cap, Claude mira l'índex.") : null,
+        "Marca els PDF on és la sessió. Si no en marques cap, Claude mira l'índex.") : null,
       assig.fonts.length ? null : h("p", { class: "detall" },
-        "Esta assignatura encara no té cap font. Puja-la a la pàgina de l'assignatura: la podràs triar en totes les classes."),
-      h("a", { class: "enllac", href: `#/assignatura/${classe.assignatura}/fonts` },
+        "Esta assignatura encara no té cap font. Puja-la a la pàgina de l'assignatura: la podràs triar en totes les sessions."),
+      h("a", { class: "enllac", href: `#/assignatura/${sessio.assignatura}/fonts` },
         icona("mes", 14, 2.2), "Puja una font nova a l'assignatura"),
     ].filter(Boolean));
   }
@@ -903,11 +892,11 @@ function seccioFont(classe, assig, desa, bloquejat) {
   return seccio;
 }
 
-function seccioNota(classe, desa, bloquejat) {
+function seccioNota(sessio, desa, bloquejat) {
   const text = h("textarea", { id: "nota", rows: 2, disabled: bloquejat,
     placeholder: "p. ex. La demostració del teorema la tinc en una altra foto. El professor va canviar una hipòtesi a propòsit.",
     onchange: (e) => desa({ nota: e.target.value }) });
-  text.value = classe.nota || "";
+  text.value = sessio.nota || "";
   return h("section", { class: "targeta compacta" },
     h("div", { class: "cap-seccio" },
       h("h2", {}, "Per a Claude ", h("span", { class: "opcional" }, "(opcional)")),
@@ -915,23 +904,24 @@ function seccioNota(classe, desa, bloquejat) {
     text);
 }
 
-function barraPassa(classe, assig) {
-  const a = classe.assignatura;
-  const c = classe.id;
-  const fonts = classe.fonts
+function barraPassa(sessio, assig) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  const fonts = sessio.fonts
     .map((t) => ({ ...t, nom: assig.fonts.find((f) => f.id === t.id)?.nom }))
     .filter((t) => t.nom);
-  const n = classe.apunts.length;
-  const temaNom = nomTema(assig, classe.tema);
+  const n = sessio.apunts.length;
+  const quadernNom = nomQuadern(assig, sessio.quadern);
   let falta = null;
-  if (!n) falta = "Falten les fotos dels apunts.";
+  if (!quadernNom) falta = "Falta triar el quadern.";
+  else if (!n) falta = "Falten les fotos dels apunts.";
   else if (!fonts.length) falta = "Falta triar la font.";
-  const enMarxa = classe.estat === "en_marxa";
-  const repetir = classe.estat !== "nova";
+  const enMarxa = sessio.estat === "en_marxa";
+  const repetir = sessio.estat !== "nova";
   // Els blocs editats a mà des de «Costat a costat»: Claude els tornarà a escriure (decisió 2).
-  const editats = (classe.editats || []).map((f) => f.split("/").pop());
-  const avisRepetir = "Començarà una conversa nova i Claude tornarà a fer la classe des del principi."
-    + (editats.length ? `\n\nHas editat a mà ${editats.length === 1 ? "1 bloc" : `${editats.length} blocs`} d'esta classe`
+  const editats = (sessio.editats || []).map((f) => f.split("/").pop());
+  const avisRepetir = "Començarà una conversa nova i Claude tornarà a fer la sessió des del principi."
+    + (editats.length ? `\n\nHas editat a mà ${editats.length === 1 ? "1 bloc" : `${editats.length} blocs`} d'esta sessió`
       + ` (${editats.join(", ")}). Claude escriurà tots els blocs de nou i perdràs eixos canvis.` : "")
     + "\n\nContinuar?";
 
@@ -941,8 +931,8 @@ function barraPassa(classe, assig) {
       if (repetir && !confirm(avisRepetir)) return;
       boto.disabled = true;
       try {
-        await api(`/api/classes/${a}/${c}/passa`, { method: "POST" });
-        anar(`#/classe/${a}/${c}/progres`);
+        await api(`/api/sessions/${a}/${c}/passa`, { method: "POST" });
+        anar(`#/sessio/${a}/${c}/progres`);
       } catch (e) {
         avisa(e.message);
         boto.disabled = false;
@@ -960,7 +950,7 @@ function barraPassa(classe, assig) {
         const marcats = t.temes.map((n) => curts[pdfs.indexOf(n)] || n);
         return t.nom + (marcats.length ? ` (${marcats.join(", ")})` : "");
       }).join(", "),
-    temaNom ? (classe.fusiona ? `S'afegirà al PDF de «${temaNom}»` : "PDF a banda del tema") : null,
+    `Va al quadern «${quadernNom}»`,
     "Es fa en una conversa nova de Claude Code",
   ].filter(Boolean).join(" · ");
   return h("div", { class: "barra-accio compacta" },
@@ -989,44 +979,44 @@ function pintaPassos(llista, pas, estat) {
   }));
 }
 
-function avisEstat(classe) {
-  const base = `#/classe/${classe.assignatura}/${classe.id}`;
+function avisEstat(sessio) {
+  const base = `#/sessio/${sessio.assignatura}/${sessio.id}`;
   const avisos = {
     esperant: ["taronja", "Claude s'ha aturat i t'espera", "Llig el seu últim missatge i respon-li baix perquè continue."],
     aturada: ["gris", "Aturada", "Pots escriure-li baix perquè continue on ho havia deixat."],
     error: ["roig", "Hi ha hagut un error", "Mira l'últim missatge. Pots escriure-li baix perquè ho torne a intentar."],
   };
-  if (classe.estat === "acabada") {
+  if (sessio.estat === "acabada") {
     return h("div", { class: "avis blau" }, icona("check", 22, 2.4),
       h("div", {}, h("strong", {}, "Acabada"),
         h("span", {}, "El PDF és a ", h("a", { href: `${base}/resultat` }, "Resultat"), ".")));
   }
-  const avis = avisos[classe.estat];
+  const avis = avisos[sessio.estat];
   if (!avis) return null;
   return h("div", { class: `avis ${avis[0]}`, role: "status" }, icona("avis", 22, 2),
     h("div", {}, h("strong", {}, avis[1]), h("span", {}, avis[2])));
 }
 
-function pintaProgres(cos, classe) {
-  const a = classe.assignatura;
-  const c = classe.id;
-  const enMarxa = classe.estat === "en_marxa";
+function pintaProgres(cos, sessio) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  const enMarxa = sessio.estat === "en_marxa";
   const passos = h("ol", { class: "passos", "aria-label": "Passos" });
-  pintaPassos(passos, classe.pas, classe.estat);
+  pintaPassos(passos, sessio.pas, sessio.estat);
 
   const feed = h("div", { class: "feed", "aria-live": "polite" });
   const treballant = enMarxa ? h("div", { class: "esperant-claude" }, h("span", { class: "gira" }), "Claude hi està treballant…") : null;
   const tempsEl = h("dd", {}, "—");
-  const tokensEl = h("dd", {}, tokens(classe.tokens));
+  const tokensEl = h("dd", {}, tokens(sessio.tokens));
 
   cos.append(
     passos,
-    avisEstat(classe),
+    avisEstat(sessio),
     h("div", { class: "columnes" },
       h("div", { class: "col-principal" },
         h("section", { class: "targeta", "aria-labelledby": "t-feed" },
           h("h2", { id: "t-feed" }, "Què fa Claude"), feed, treballant),
-        enMarxa || !classe.sessio ? null : caixaResposta(classe, classe.estat === "esperant"
+        enMarxa || !sessio.conversa ? null : caixaResposta(sessio, sessio.estat === "esperant"
           ? { titol: "La teua resposta", boto: "Envia i continua",
             placeholder: "P1: …\nP2: …" }
           : { titol: "Escriu-li a Claude", boto: "Envia", placeholder: "p. ex. Continua." })),
@@ -1036,15 +1026,15 @@ function pintaProgres(cos, classe) {
           h("dl", { class: "dades" },
             h("dt", {}, enMarxa ? "Temps" : "Últim torn"), tempsEl,
             h("dt", {}, "Tokens"), tokensEl,
-            h("dt", {}, "Estat"), h("dd", { style: "font-family: var(--sans)" }, ESTATS[classe.estat])),
+            h("dt", {}, "Estat"), h("dd", { style: "font-family: var(--sans)" }, ESTATS[sessio.estat])),
           enMarxa ? h("button", { type: "button", class: "boto-sec",
             onclick: async (e) => {
               e.currentTarget.disabled = true;
-              try { await api(`/api/classes/${a}/${c}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
+              try { await api(`/api/sessions/${a}/${c}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
             } }, icona("stop", 14), "Atura") : null))),
   );
 
-  // Registre: primer el que ja hi havia (classe.events línies) i després el que arriba en directe.
+  // Registre: primer el que ja hi havia (sessio.events línies) i després el que arriba en directe.
   let rebuts = 0;
   let eines = null;     // la llista d'eines on van les línies seguides
   let iniciTorn = null;
@@ -1053,7 +1043,7 @@ function pintaProgres(cos, classe) {
   const afegeix = (node) => {
     const baix = innerHeight + scrollY >= document.body.scrollHeight - 120;
     feed.append(node);
-    if (baix && rebuts > classe.events) scrollTo(0, document.body.scrollHeight);
+    if (baix && rebuts > sessio.events) scrollTo(0, document.body.scrollHeight);
   };
   const liniaEina = (verb, detall, error) => {
     if (!eines) { eines = h("ul", { class: "eines" }); afegeix(eines); }
@@ -1096,7 +1086,7 @@ function pintaProgres(cos, classe) {
         break;
       case "tokens":
         tokensTorn = ev.n;
-        if (enMarxa) tokensEl.textContent = tokens(classe.tokens + tokensTorn);
+        if (enMarxa) tokensEl.textContent = tokens(sessio.tokens + tokensTorn);
         break;
       case "error":
         afegeix(h("div", { class: "avis roig" }, icona("avis", 20), markdown(ev.text)));
@@ -1115,10 +1105,10 @@ function pintaProgres(cos, classe) {
     }
   }
 
-  flux = new EventSource(`/api/classes/${a}/${c}/events`);
+  flux = new EventSource(`/api/sessions/${a}/${c}/events`);
   flux.onmessage = (e) => {
     rebuts += 1;
-    event(JSON.parse(e.data), rebuts > classe.events);
+    event(JSON.parse(e.data), rebuts > sessio.events);
   };
   flux.addEventListener("tancat", tancaFlux);
   flux.onerror = tancaFlux;
@@ -1130,9 +1120,9 @@ function pintaProgres(cos, classe) {
   }
 }
 
-function caixaResposta(classe, { titol, placeholder, boto }) {
-  const a = classe.assignatura;
-  const c = classe.id;
+function caixaResposta(sessio, { titol, placeholder, boto }) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
   const text = h("textarea", { id: "resposta", rows: 5, placeholder,
     onkeydown: (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) form.requestSubmit(); } });
   const triats = h("span", { class: "detall" });
@@ -1148,8 +1138,8 @@ function caixaResposta(classe, { titol, placeholder, boto }) {
       for (const x of fitxers.files) f.append("fitxers", x);
       envia.disabled = true;
       try {
-        await api(`/api/classes/${a}/${c}/respon`, { method: "POST", body: f });
-        anar(`#/classe/${a}/${c}/progres`);
+        await api(`/api/sessions/${a}/${c}/respon`, { method: "POST", body: f });
+        anar(`#/sessio/${a}/${c}/progres`);
       } catch (err) {
         avisa(err.message);
         envia.disabled = false;
@@ -1167,52 +1157,52 @@ function caixaResposta(classe, { titol, placeholder, boto }) {
 
 // ---------- Resultat ----------
 
-async function pintaResultat(cos, classe, assig, costat) {
-  const a = classe.assignatura;
-  const c = classe.id;
-  // Les rutes són relatives a l'assignatura: classes/<classe>/… o temes/<tema>/…
+async function pintaResultat(cos, sessio, assig, costat) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  // Les rutes són relatives a l'assignatura: sessions/<sessió>/… o quaderns/<quadern>/…
   const url = (ruta) => urlFitxer(a, ruta);
-  const propi = `classes/${c}/`;
+  const propi = `sessions/${c}/`;
   const curt = (f) => (f.startsWith(propi) ? f.slice(propi.length) : f);
-  const delTema = Boolean(classe.pdf && classe.pdf.startsWith("temes/"));
-  const tex = classe.pdf && classe.fitxers.find((f) => f === classe.pdf.replace(/\.pdf$/, ".tex"));
-  const resposta = () => (classe.sessio ? caixaResposta(classe, {
+  const delQuadern = Boolean(sessio.pdf && sessio.pdf.startsWith("quaderns/"));
+  const tex = sessio.pdf && sessio.fitxers.find((f) => f === sessio.pdf.replace(/\.pdf$/, ".tex"));
+  const resposta = () => (sessio.conversa ? caixaResposta(sessio, {
     titol: "Hi ha alguna cosa malament?", boto: "Envia a Claude",
     placeholder: "p. ex. Definició 1.2: és r, no n. Teorema 1.4: posa-hi la demostració de la font.",
   }) : null);
 
-  if (classe.pdf) {
-    const base = `#/classe/${a}/${c}/resultat`;
+  if (sessio.pdf) {
+    const base = `#/sessio/${a}/${c}/resultat`;
     const opcio = (href, nom, actiu) => h("a", { href, class: actiu ? "on" : null, "aria-current": actiu ? "page" : null }, nom);
     cos.append(h("div", { class: "fila-vista" },
       h("nav", { class: "seg", "aria-label": "Com es veu el resultat" },
         opcio(base, "PDF sencer", !costat), opcio(`${base}/costat`, "Costat a costat", costat)),
-      costat ? h("a", { class: "enllac-petit", href: url(classe.pdf), target: "_blank" }, "Obre el PDF en una pestanya") : null));
+      costat ? h("a", { class: "enllac-petit", href: url(sessio.pdf), target: "_blank" }, "Obre el PDF en una pestanya") : null));
   }
   if (costat) {
-    pintaCostat(cos, classe);
+    pintaCostat(cos, sessio);
     const caixa = resposta();
     if (caixa) cos.append(caixa);
     return;
   }
 
-  if (classe.pdf) {
-    const titol = delTema ? `Document del tema «${nomTema(assig, classe.tema) || classe.tema}»` : curt(classe.pdf);
+  if (sessio.pdf) {
+    const titol = delQuadern ? `Document del quadern «${nomQuadern(assig, sessio.quadern) || sessio.quadern}»` : curt(sessio.pdf);
     cos.append(h("section", { class: "targeta", "aria-labelledby": "t-pdf" },
       h("div", { class: "accions" },
         h("div", { class: "cap-seccio" },
           h("h2", { id: "t-pdf" }, titol),
-          h("p", {}, delTema
-            ? "El tema sencer, amb esta classe dins: l'informe diu a quines pàgines és. Al marge, d'on ve cada bloc i les marques."
+          h("p", {}, delQuadern
+            ? "El quadern sencer, amb esta sessió dins: l'informe diu a quines pàgines és. Al marge, d'on ve cada bloc i les marques."
             : "Amb la teua notació. Al marge, d'on ve cada bloc i les marques.")),
         h("div", { class: "esquerra" },
-          h("a", { class: "boto", href: url(classe.pdf), target: "_blank" }, "Obre el PDF"),
+          h("a", { class: "boto", href: url(sessio.pdf), target: "_blank" }, "Obre el PDF"),
           tex ? h("a", { class: "boto-sec", href: url(tex), download: tex.split("/").pop() }, "Descarrega el .tex") : null)),
-      h("iframe", { class: "visor-pdf", src: `${url(classe.pdf)}?v=${Date.now()}`, title: titol })));
+      h("iframe", { class: "visor-pdf", src: `${url(sessio.pdf)}?v=${Date.now()}`, title: titol })));
   }
 
   let informe = null;
-  if (classe.fitxers.includes(propi + "informe.md")) {
+  if (sessio.fitxers.includes(propi + "informe.md")) {
     const r = await fetch(url(propi + "informe.md"));
     if (r.ok) informe = await r.text();
   }
@@ -1225,11 +1215,11 @@ async function pintaResultat(cos, classe, assig, costat) {
     h("aside", { class: "col-lateral" },
       h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
         h("h2", { id: "t-fitxers" }, "Fitxers"),
-        h("ul", { class: "fitxers" }, classe.fitxers.map((f) => h("li", {},
+        h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
           h("a", { href: url(f), target: "_blank" }, curt(f)))))),
       h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
         h("h2", { id: "t-sessio" }, "Sessió"),
-        h("dl", { class: "dades" }, h("dt", {}, "Tokens"), h("dd", {}, tokens(classe.tokens)))))));
+        h("dl", { class: "dades" }, h("dt", {}, "Tokens"), h("dd", {}, tokens(sessio.tokens)))))));
 }
 
 // ---------- Resultat costat a costat ----------
@@ -1266,12 +1256,12 @@ function parteix(text, blocs) {
   return { textos: trossos.map((t) => t.linies.map((l) => `${l}\n`).join("")) };
 }
 
-// Esquerra: les fotos dels apunts o el LaTeX de la classe, que es pot editar i compilar (decisió 2).
+// Esquerra: les fotos dels apunts o el LaTeX de la sessió, que es pot editar i compilar (decisió 2).
 // Dreta: el PDF. Cada costat té la seua barra.
-function pintaCostat(cos, classe) {
-  const a = classe.assignatura;
-  const c = classe.id;
-  const enMarxa = classe.estat === "en_marxa";
+function pintaCostat(cos, sessio) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  const enMarxa = sessio.estat === "en_marxa";
   const esquerra = h("div", { class: "panell-cos" });
   const detall = h("span", { class: "nota-petita" });
   const avisos = h("div", { class: "avisos-panell", "aria-live": "polite" });
@@ -1282,11 +1272,11 @@ function pintaCostat(cos, classe) {
 
   const pdf = h("iframe", { class: "visor-costat", title: "PDF definitiu" });
   // Sense la columna de miniatures del visor i amb la pàgina a l'amplada del panell.
-  const recarregaPdf = () => { pdf.src = `${urlFitxer(a, classe.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`; };
+  const recarregaPdf = () => { pdf.src = `${urlFitxer(a, sessio.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`; };
   recarregaPdf();
 
-  const fotos = h("div", { class: "fotos" }, classe.apunts.map((nom, i) => {
-    const src = urlFitxer(a, "classes", c, "apunts", nom);
+  const fotos = h("div", { class: "fotos" }, sessio.apunts.map((nom, i) => {
+    const src = urlFitxer(a, "sessions", c, "apunts", nom);
     return h("figure", {},
       nom.toLowerCase().endsWith(".pdf")
         ? h("iframe", { class: "foto-pdf", src, title: `Apunts ${i + 1}: ${nom}` })
@@ -1346,7 +1336,7 @@ function pintaCostat(cos, classe) {
     avisos.replaceChildren();
     actualitza();
     try {
-      const res = await api(`/api/classes/${a}/${c}/latex`, ambJson("POST", { canvis }));
+      const res = await api(`/api/sessions/${a}/${c}/latex`, ambJson("POST", { canvis }));
       // Els fitxers ja tenen el text nou, haja compilat o no.
       for (const x of canvis) blocs.find((b) => b.fitxer === x.fitxer).text = x.text;
       if (res.ok) {
@@ -1375,7 +1365,7 @@ function pintaCostat(cos, classe) {
     accions.hidden = true;
     avisos.hidden = que !== "latex";
     if (que === "apunts") {
-      const n = classe.apunts.length;
+      const n = sessio.apunts.length;
       detall.textContent = `${n} ${n === 1 ? "foto" : "fotos"}`;
       detall.classList.remove("sense-desar");
       esquerra.replaceChildren(fotos);
@@ -1385,7 +1375,7 @@ function pintaCostat(cos, classe) {
       detall.textContent = "";
       esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, "Carregant el LaTeX…"));
       try {
-        ({ blocs } = await api(`/api/classes/${a}/${c}/latex`));
+        ({ blocs } = await api(`/api/sessions/${a}/${c}/latex`));
       } catch (e) {
         if (actual === "latex") esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, e.message));
         return;
@@ -1393,13 +1383,15 @@ function pintaCostat(cos, classe) {
       blocs = blocs.map((b) => ({ ...b, text: ambSalt(b.text) }));
       if (blocs.length) {
         latex = h("textarea", { class: "latex", spellcheck: "false", readonly: enMarxa,
-          "aria-label": "El LaTeX de la classe", oninput: actualitza });
+          "aria-label": "El LaTeX de la sessió", oninput: actualitza });
         latex.value = ajunta(blocs);
         if (enMarxa) {
-          avis("blau", "Claude està treballant en esta classe.", "El LaTeX es pot llegir, però el podràs editar quan pare.");
+          avis("blau", "Claude està treballant en esta sessió.", "El LaTeX es pot llegir, però el podràs editar quan pare.");
         }
       } else {
-        latex = h("p", { class: "nota-petita buit-panell" }, "Esta classe encara no té blocs.");
+        latex = h("p", { class: "nota-petita buit-panell" }, sessio.estat === "nova"
+          ? "Esta sessió encara no té blocs."
+          : "Esta sessió no té blocs propis al quadern: els seus són entre els d'abans de la web (inicial).");
       }
     }
     if (actual !== "latex") return;  // mentre carregava, has tornat a les fotos

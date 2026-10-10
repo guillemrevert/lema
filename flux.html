@@ -326,7 +326,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       instr: [
         "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a l'assignatura i el tema de la prova. Res més.",
         "Fer la fitxa de la font a partir del <code>.txt</code>.",
-        "Des de la web, la carpeta de la classe ja existeix, i també la del tema si la classe s'hi afegeix. El prompt de la web diu on és cada cosa."
+        "Des de la web, la carpeta de la sessió i la del seu quadern ja existeixen. El prompt de la web diu on és cada cosa."
       ],
       on: "Passos 0 · Materials d'entrada"
     },
@@ -400,14 +400,14 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       id: "pas6", num: 6, nom: "Muntatge i PDF", qui: "claude", fase: "Fase 3",
       resum: "Ajunta els blocs, compila el PDF i entrega l'informe.",
       entra: "Els blocs en LaTeX.",
-      surt: "<code>tema.tex</code>, <code>tema.pdf</code> (els del tema, si la classe s'hi afegeix), els fitxers de text i l'informe.",
+      surt: "<code>tema.tex</code> i <code>tema.pdf</code> (des de la web, <code>quadern.tex</code> i <code>quadern.pdf</code>, els del quadern), els fitxers de text i l'informe.",
       instr: [
         "Plantilla LaTeX mínima amb un entorn per a cada tipus de bloc.",
         "Marques: dubte, correcció, nota i caixa «no vist a classe».",
         "Notetes numerades al marge (N1, N2…), les mateixes que a l'informe.",
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
         "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>.",
-        "Si la classe s'afegeix al document d'un tema (decisió 9): els blocs van a la carpeta del tema, en una carpeta per classe; al <code>tema.tex</code> del tema només s'hi afegeixen els <code>\\input</code> d'esta classe, en ordre de data; les notetes continuen la numeració del tema; es compila el tema, i l'informe diu a quines pàgines és la classe.",
+        "Des de la web, la sessió s'afegeix sempre al document del seu quadern (decisió 9): els blocs van a la carpeta del quadern, en una carpeta per sessió; al <code>quadern.tex</code> només s'hi afegeixen els <code>\\input</code> d'esta sessió, en ordre de data; les etiquetes dels blocs porten davant el nom de la sessió (<code>\\label{2026-10-10-B01}</code>); les notetes continuen la numeració del quadern; es compila el quadern, i l'informe diu a quines pàgines és la sessió.",
         "Si l'usuari edita el LaTeX des de la web (decisió 2), les correccions no desfan els seus canvis; si n'hi ha un d'erroni, es diu amb una noteta."
       ],
       on: "Passos 6 · Decisions 2 i 9"
@@ -426,6 +426,14 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 8, data: "2026-10-10",
+      titol: "«Tema» passa a dir-se quadern i «classe», sessió: un quadern pot ser un tema, unes pràctiques o un article. Cada sessió va sempre al document del seu quadern.",
+      passos: {
+        pas0: "Des de la web, la carpeta de la sessió i la del seu quadern ja existeixen.",
+        pas6: "La decisió 9 passa a «Document per quadern»: la sessió s'afegeix sempre al document del quadern (ja no hi ha document a banda), el document és <code>quadern.tex</code>, i les etiquetes dels blocs d'una sessió porten davant el nom de la sessió, perquè no es repetisquen entre sessions."
+      }
+    },
     {
       versio: 7, data: "2026-10-10",
       titol: "Des de la web, l'usuari pot editar el LaTeX dels blocs i tornar a compilar. Claude no desfà eixos canvis.",

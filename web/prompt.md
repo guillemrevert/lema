@@ -1,4 +1,4 @@
-Passa a net la classe de `{carpeta}` seguint el flux de `CLAUDE.md`, del pas 0 al 6.
+Passa a net la sessió de `{carpeta}` seguint el flux de `CLAUDE.md`, del pas 0 al 6.
 
 Treballes des de la web local (`web-local.md`), així que els materials no són a `prova-1/` sinó ací:
 
@@ -19,7 +19,7 @@ On va cada cosa:
 - La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix, reutilitza-la.
 - El diccionari de notació, a `{carpeta_assig}/notacio.yaml`. Si ja existeix, consulta'l i amplia'l.
 - El perfil de lletra, a `dades/perfil-lletra.md`. Si ja existeix, consulta'l en la lectura i amplia'l amb les respostes.
-- La plantilla és `plantilla-base.tex`, a l'arrel del repositori: `tema.tex` la carrega amb `\input{{plantilla}}`. No la modifiques; si cal canviar-la, apunta-ho a `millores.md`.
+- La plantilla és `plantilla-base.tex`, a l'arrel del repositori: `quadern.tex` la carrega amb `\input{{plantilla}}`. No la modifiques; si cal canviar-la, apunta-ho a `millores.md`.
 - Fora de `dades/` no pots escriure: el repositori està muntat només de lectura.
 
 Normes de la web:

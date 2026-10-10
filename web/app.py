@@ -1,17 +1,21 @@
 """Web local de LEMA.
 
-Crea classes, hi guarda els fitxers i llança Claude Code («Passa a net») en una
-conversa nova per a cada classe. El que fa Claude es resumeix, línia a línia, a
-registre/events.jsonl de la classe, i la web ho llig en directe.
+Crea sessions, hi guarda els fitxers i llança Claude Code («Passa a net») en una
+conversa nova per a cada sessió. El que fa Claude es resumeix, línia a línia, a
+registre/events.jsonl de la sessió, i la web ho llig en directe.
 
 Dades (fora de git):
   dades/perfil-lletra.md
   dades/assignatures/<assignatura>/
     notacio.yaml
-    fonts/<font>/          font.json, els PDF, el text extret i index.txt
-    temes/<tema>/          tema.json, tema.tex, tema.pdf i blocs/<classe>/ de cada classe que s'hi afegeix
-    classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/, el que escriu Claude i,
-                           si l'usuari edita el LaTeX des de la web, edicions.json
+    fonts/<font>/           font.json, els PDF, el text extret i index.txt
+    quaderns/<quadern>/     quadern.json, quadern.tex, quadern.pdf i blocs/<sessió>/ de cada sessió
+                            (blocs/inicial/: el document d'abans de la web)
+    sessions/<AAAA-MM-DD>/  sessio.json, apunts/, adjunts/, registre/, el que escriu Claude i,
+                            si l'usuari edita el LaTeX des de la web, edicions.json
+
+Fins al 10/10/2026, els quaderns es deien temes (temes/, tema.json) i les sessions,
+classes (classes/, classe.json): migra_dades() ho canvia una vegada, en arrancar.
 """
 
 import asyncio
@@ -45,8 +49,8 @@ MARCA_PAS = re.compile(r"^\W*PAS\s+(\d)\b", re.M)
 MARCA_ESTAT = re.compile(r"^\W*ESTAT:\s*(esperant|acabat)", re.M | re.I)
 
 app = FastAPI()
-processos = {}  # (assignatura, classe) -> procés de Claude en marxa
-aturats = set()  # classes que l'usuari ha aturat
+processos = {}  # (assignatura, sessió) -> procés de Claude en marxa
+aturats = set()  # sessions que l'usuari ha aturat
 tasques = set()  # perquè asyncio no perda les tasques en segon pla
 
 
@@ -99,35 +103,67 @@ def carpeta_assig(a):
     return DADES / "assignatures" / a
 
 
-def carpeta_classe(a, c):
-    return dins(carpeta_assig(a) / "classes", c)
+def carpeta_sessio(a, s):
+    return dins(carpeta_assig(a) / "sessions", s)
 
 
-def carpeta_tema(a, t):
-    return dins(carpeta_assig(a) / "temes", t)
+def carpeta_quadern(a, q):
+    return dins(carpeta_assig(a) / "quaderns", q)
 
 
-def migra(dades):
-    """Abans del 07/10/2026, cada classe tenia una sola font (`font` i `tema_font`).
-    Abans del 10/10/2026, les classes no tenien tema."""
+def migra_sessio(dades):
+    """Les fitxes d'abans: fins al 07/10/2026, una sola font (`font` i `tema_font`); fins al 10/10/2026,
+    `tema`, `fusiona` i `sessio` (la conversa de Claude) en lloc de `quadern` i `conversa`."""
     if "font" in dades:
         font, tema = dades.pop("font"), dades.pop("tema_font", None)
         dades["fonts"] = [{"id": font, "temes": [tema] if tema else []}] if font else []
-    dades.setdefault("tema", None)
-    dades.setdefault("fusiona", False)
+    if "tema" in dades:
+        dades["quadern"] = dades.pop("tema")
+    if "sessio" in dades:
+        dades["conversa"] = dades.pop("sessio")
+    dades.pop("fusiona", None)
+    dades.setdefault("quadern", None)
+    dades.setdefault("conversa", None)
     return dades
 
 
-def llig_classe(a, c):
-    dades = migra(llig(carpeta_classe(a, c) / "classe.json"))
-    if dades["estat"] == "en_marxa" and (a, c) not in processos:
+def migra_dades():
+    """Una sola vegada (10/10/2026, guia Q): els temes passen a quaderns i les classes, a sessions.
+
+    Abans de canviar res, copia dades/assignatures/ a dades/copia-<data>/. Si ja està fet, no fa res."""
+    base = DADES / "assignatures"
+    if not any(base.glob("*/temes")) and not any(base.glob("*/classes")):
+        return
+    copia = DADES / f"copia-{datetime.now():%Y%m%d-%H%M%S}"
+    shutil.copytree(base, copia / "assignatures")
+    for assig in sorted(p for p in base.iterdir() if p.is_dir()):
+        if (assig / "temes").is_dir():
+            (assig / "temes").rename(assig / "quaderns")
+            for quadern in (assig / "quaderns").iterdir():
+                for vell, nou in (("tema.json", "quadern.json"), ("tema.tex", "quadern.tex"), ("tema.pdf", "quadern.pdf")):
+                    if (quadern / vell).exists():
+                        (quadern / vell).rename(quadern / nou)
+                for ext in ("aux", "log", "out", "toc"):  # es tornen a fer en compilar
+                    (quadern / f"tema.{ext}").unlink(missing_ok=True)
+        if (assig / "classes").is_dir():
+            (assig / "classes").rename(assig / "sessions")
+            for sessio in (assig / "sessions").iterdir():
+                if (sessio / "classe.json").exists():
+                    escriu(sessio / "sessio.json", migra_sessio(llig(sessio / "classe.json")))
+                    (sessio / "classe.json").unlink()
+    print(f"LEMA: temes i classes passen a quaderns i sessions. Còpia d'abans a {copia}", flush=True)
+
+
+def llig_sessio(a, s):
+    dades = migra_sessio(llig(carpeta_sessio(a, s) / "sessio.json"))
+    if dades["estat"] == "en_marxa" and (a, s) not in processos:
         dades["estat"] = "aturada"  # el servidor s'ha reiniciat a mitges
     return dades
 
 
-def desa_classe(a, c, **canvis):
-    ruta = carpeta_classe(a, c) / "classe.json"
-    dades = migra(llig(ruta))
+def desa_sessio(a, s, **canvis):
+    ruta = carpeta_sessio(a, s) / "sessio.json"
+    dades = migra_sessio(llig(ruta))
     dades.update(canvis)
     escriu(ruta, dades)
     return dades
@@ -175,11 +211,11 @@ def pagines_pdf(pdf, modificat):
     return pagines_vistes[pdf][1]
 
 
-def info_tema(carpeta):
-    """El que diu tema.json i, si el tema ja s'ha compilat, les pàgines i la data del PDF."""
-    dades = llig(carpeta / "tema.json")
+def info_quadern(carpeta):
+    """El que diu quadern.json i, si el quadern ja s'ha compilat, les pàgines i la data del PDF."""
+    dades = llig(carpeta / "quadern.json")
     info = {"id": carpeta.name, "nom": dades["nom"], "creat": dades.get("creat"), "pdf": None}
-    pdf = carpeta / "tema.pdf"
+    pdf = carpeta / "quadern.pdf"
     if pdf.exists():
         st = pdf.stat()
         info["pdf"] = {"pagines": pagines_pdf(pdf, st.st_mtime_ns),
@@ -187,39 +223,15 @@ def info_tema(carpeta):
     return info
 
 
-def pdf_propi(carpeta):
-    """El PDF que Claude ha deixat a la carpeta de la classe (sense tema, o amb l'interruptor apagat)."""
-    pdf = carpeta / "tema.pdf"
-    if not pdf.exists():
-        return None
-    return {"ruta": f"classes/{carpeta.name}/tema.pdf", "pagines": pagines_pdf(pdf, pdf.stat().st_mtime_ns)}
-
-
-def al_tema(a, dades):
-    """La carpeta del tema si la classe hi té blocs i el tema ja té PDF; si no, None."""
-    if not dades.get("tema"):
-        return None
-    carpeta = carpeta_assig(a) / "temes" / dades["tema"]
-    if (carpeta / "blocs" / dades["id"]).is_dir() and (carpeta / "tema.pdf").exists():
-        return carpeta
-    return None
-
-
 def document_de(a, dades):
-    """El document que ensenya la classe: la seua carpeta, el PDF (ruta relativa a l'assignatura)
-    i la carpeta dels blocs de la classe.
-
-    Si els blocs de la classe són al document del tema, és el del tema, tret que l'interruptor
-    estiga apagat i la classe tinga un PDF propi. None si la classe encara no té PDF."""
-    c = dades["id"]
-    carpeta = carpeta_classe(a, c)
-    propis = sorted(p.name for p in carpeta.glob("*.pdf"))
-    tema = al_tema(a, dades)
-    if tema and (dades["fusiona"] or not propis):
-        return {"carpeta": tema, "pdf": f"temes/{tema.name}/tema.pdf", "blocs": tema / "blocs" / c}
-    if propis:
-        return {"carpeta": carpeta, "pdf": f"classes/{c}/{propis[0]}", "blocs": carpeta / "blocs"}
-    return None
+    """El document de la sessió, que és sempre el del seu quadern (decisió 9): la carpeta del quadern,
+    el PDF (ruta relativa a l'assignatura) i la carpeta dels blocs de la sessió. None si encara no hi ha PDF."""
+    if not dades.get("quadern"):
+        return None
+    quadern = carpeta_assig(a) / "quaderns" / dades["quadern"]
+    if not (quadern / "quadern.pdf").exists():
+        return None
+    return {"carpeta": quadern, "pdf": f"quaderns/{quadern.name}/quadern.pdf", "blocs": quadern / "blocs" / dades["id"]}
 
 
 compilant = set()  # carpetes de documents que la web està compilant
@@ -239,14 +251,14 @@ async def compila_document(carpeta, pdf):
 
 
 def edicions(carpeta):
-    """Els blocs que l'usuari ha editat a mà des de la web ({fitxer: data}). Les classes d'abans no en tenen."""
+    """Els blocs que l'usuari ha editat a mà des de la web ({fitxer: data}). Les sessions d'abans no en tenen."""
     ruta = carpeta / "edicions.json"
     return llig(ruta)["blocs"] if ruta.exists() else {}
 
 
-def nota_edicions(a, c):
+def nota_edicions(a, s):
     """El que la web afegeix als missatges per a Claude si l'usuari ha editat blocs a mà (decisió 2)."""
-    blocs = edicions(carpeta_classe(a, c))
+    blocs = edicions(carpeta_sessio(a, s))
     if not blocs:
         return ""
     rutes = ", ".join(f"`dades/assignatures/{a}/{f}`" for f in blocs)
@@ -266,54 +278,53 @@ def nombre_events(carpeta):
     return ruta.read_text(encoding="utf-8").count("\n") if ruta.exists() else 0
 
 
-# ---------- Assignatures, fonts i temes ----------
+# ---------- Assignatures, fonts i quaderns ----------
 
 @app.get("/api/assignatures")
 def assignatures():
     resultat = []
     for a, nom in ASSIGNATURES.items():
         base = carpeta_assig(a)
-        classes = []
-        for fitxa in sorted((base / "classes").glob("*/classe.json"), reverse=True):
-            d = llig_classe(a, fitxa.parent.name)
-            classes.append({**{k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "tema", "fusiona")},
-                            "pdf_propi": pdf_propi(fitxa.parent)})
+        sessions = []
+        for fitxa in sorted((base / "sessions").glob("*/sessio.json"), reverse=True):
+            d = llig_sessio(a, fitxa.parent.name)
+            sessions.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "quadern")})
         fonts = [info_font(f.parent) for f in sorted((base / "fonts").glob("*/font.json"))]
-        temes = sorted((info_tema(f.parent) for f in (base / "temes").glob("*/tema.json")),
-                       key=lambda t: ordre_natural(t["nom"]))
-        resultat.append({"id": a, "nom": nom, "classes": classes, "fonts": fonts, "temes": temes})
+        quaderns = sorted((info_quadern(f.parent) for f in (base / "quaderns").glob("*/quadern.json")),
+                          key=lambda q: ordre_natural(q["nom"]))
+        resultat.append({"id": a, "nom": nom, "sessions": sessions, "fonts": fonts, "quaderns": quaderns})
     return resultat
 
 
-class NouTema(BaseModel):
+class NouQuadern(BaseModel):
     nom: str
 
 
-@app.post("/api/assignatures/{a}/temes")
-def crea_tema(a: str, nou: NouTema):
+@app.post("/api/assignatures/{a}/quaderns")
+def crea_quadern(a: str, nou: NouQuadern):
     nom = nou.nom.strip()
-    id_tema = slug(nom)
-    if not id_tema:
-        raise HTTPException(400, "El tema necessita un nom")
-    carpeta = carpeta_assig(a) / "temes" / id_tema
+    id_quadern = slug(nom)
+    if not id_quadern:
+        raise HTTPException(400, "El quadern necessita un nom")
+    carpeta = carpeta_assig(a) / "quaderns" / id_quadern
     if carpeta.exists():
-        raise HTTPException(409, f"Ja hi ha un tema que es diu «{nom}»")
+        raise HTTPException(409, f"Ja hi ha un quadern que es diu «{nom}»")
     carpeta.mkdir(parents=True)
-    escriu(carpeta / "tema.json", {"nom": nom, "creat": ara()})
-    return info_tema(carpeta)
+    escriu(carpeta / "quadern.json", {"nom": nom, "creat": ara()})
+    return info_quadern(carpeta)
 
 
-@app.put("/api/assignatures/{a}/temes/{t}")
-def reanomena_tema(a: str, t: str, canvi: NouTema):
+@app.put("/api/assignatures/{a}/quaderns/{q}")
+def reanomena_quadern(a: str, q: str, canvi: NouQuadern):
     """Només canvia el nom: la carpeta es queda igual perquè no es trenque cap ruta."""
-    carpeta = carpeta_tema(a, t)
+    carpeta = carpeta_quadern(a, q)
     nom = canvi.nom.strip()
     if not nom:
-        raise HTTPException(400, "El tema necessita un nom")
-    dades = llig(carpeta / "tema.json")
+        raise HTTPException(400, "El quadern necessita un nom")
+    dades = llig(carpeta / "quadern.json")
     dades["nom"] = nom
-    escriu(carpeta / "tema.json", dades)
-    return info_tema(carpeta)
+    escriu(carpeta / "quadern.json", dades)
+    return info_quadern(carpeta)
 
 
 @app.post("/api/assignatures/{a}/fonts")
@@ -340,82 +351,81 @@ async def puja_font(a: str, nom: str = Form(...), que_es: str = Form(...),
     return info_font(carpeta)
 
 
-# ---------- Classes ----------
+# ---------- Sessions ----------
 
-class NovaClasse(BaseModel):
+class NovaSessio(BaseModel):
     assignatura: str
     data: str
     titol: str = ""
-    tema: str | None = None
-    fusiona: bool = True  # afegir-la al document del tema; només compta si hi ha tema
+    quadern: str = ""  # cada sessió va al document d'un quadern (decisió 9); buit: error clar, baix
 
 
-class FontClasse(BaseModel):
+class FontSessio(BaseModel):
     id: str
-    temes: list[str] = []  # els PDF de la font on és la classe; buit: Claude mira l'índex
+    temes: list[str] = []  # els PDF de la font on és la sessió; buit: Claude mira l'índex
 
 
-class CanvisClasse(BaseModel):
+class CanvisSessio(BaseModel):
     titol: str | None = None
-    tema: str | None = None
-    fusiona: bool = False
-    fonts: list[FontClasse] | None = None
+    quadern: str | None = None
+    fonts: list[FontSessio] | None = None
     nota: str | None = None
     apunts: list[str] | None = None
 
 
-@app.post("/api/classes")
-def crea_classe(nova: NovaClasse):
+@app.post("/api/sessions")
+def crea_sessio(nova: NovaSessio):
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", nova.data):
         raise HTTPException(400, "Data no vàlida")
-    base = carpeta_assig(nova.assignatura) / "classes"
-    if nova.tema:
-        carpeta_tema(nova.assignatura, nova.tema)  # 404 si no existeix
-    id_classe, n = nova.data, 2
-    while (base / id_classe).exists():
-        id_classe, n = f"{nova.data}-{n}", n + 1
-    (base / id_classe / "apunts").mkdir(parents=True)
+    base = carpeta_assig(nova.assignatura) / "sessions"
+    if not nova.quadern:
+        raise HTTPException(400, "Tria el quadern, o crea'n un amb el «+»")
+    carpeta_quadern(nova.assignatura, nova.quadern)  # 404 si no existeix
+    id_sessio, n = nova.data, 2
+    while (base / id_sessio).exists():
+        id_sessio, n = f"{nova.data}-{n}", n + 1
+    (base / id_sessio / "apunts").mkdir(parents=True)
     fonts = sorted((carpeta_assig(nova.assignatura) / "fonts").glob("*/font.json"))
     dades = {
-        "id": id_classe, "assignatura": nova.assignatura, "data": nova.data,
-        "titol": nova.titol.strip(), "apunts": [],
-        "tema": nova.tema or None, "fusiona": bool(nova.tema) and nova.fusiona,
+        "id": id_sessio, "assignatura": nova.assignatura, "data": nova.data,
+        "titol": nova.titol.strip(), "apunts": [], "quadern": nova.quadern,
         # Si l'assignatura només en té una, ja va triada.
         "fonts": [{"id": fonts[0].parent.name, "temes": []}] if len(fonts) == 1 else [],
         "nota": "", "estat": "nova", "pas": None,
-        "sessio": None, "tokens": 0, "creada": ara(),
+        "conversa": None, "tokens": 0, "creada": ara(),
     }
-    escriu(base / id_classe / "classe.json", dades)
+    escriu(base / id_sessio / "sessio.json", dades)
     return dades
 
 
-@app.get("/api/classes/{a}/{c}")
-def classe(a: str, c: str):
-    """La classe, amb els fitxers i el PDF en rutes relatives a la carpeta de l'assignatura."""
-    dades = llig_classe(a, c)
-    carpeta = carpeta_classe(a, c)
+@app.get("/api/sessions/{a}/{s}")
+def sessio(a: str, s: str):
+    """La sessió, amb els fitxers i el PDF en rutes relatives a la carpeta de l'assignatura."""
+    dades = llig_sessio(a, s)
+    carpeta = carpeta_sessio(a, s)
     fitxers = []
     for arrel, carpetes, noms in os.walk(carpeta):
         if arrel == str(carpeta):  # el que puja l'usuari i el registre no són resultats
             carpetes[:] = [d for d in carpetes if d not in ("apunts", "adjunts", "registre")]
         rel = Path(arrel).relative_to(carpeta)
         fitxers += [(rel / n).as_posix() for n in noms
-                    if Path(n).suffix not in SOROLL and n != "classe.json"]
+                    if Path(n).suffix not in SOROLL and n != "sessio.json"]
     fitxers.sort()
-    fitxers = [f"classes/{c}/{f}" for f in fitxers]
-    tema = al_tema(a, dades)
-    if tema:
-        fitxers += [f"temes/{tema.name}/{n}" for n in ("tema.tex", "tema.pdf") if (tema / n).exists()]
-        fitxers += sorted(f"temes/{tema.name}/blocs/{c}/{b.name}" for b in (tema / "blocs" / c).iterdir())
+    fitxers = [f"sessions/{s}/{f}" for f in fitxers]
     document = document_de(a, dades)
+    if document:
+        quadern = document["carpeta"]
+        fitxers += [f"quaderns/{quadern.name}/{n}" for n in ("quadern.tex", "quadern.pdf") if (quadern / n).exists()]
+        if document["blocs"].is_dir():
+            fitxers += sorted(f"quaderns/{quadern.name}/blocs/{s}/{b.name}" for b in document["blocs"].iterdir())
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
             "editats": list(edicions(carpeta)), "events": nombre_events(carpeta)}
 
 
-@app.get("/api/classes/{a}/{c}/latex")
-def latex(a: str, c: str):
-    """Els blocs del document de la classe, en l'ordre del document (B01, B02…), amb el text de cada un."""
-    document = document_de(a, llig_classe(a, c))
+@app.get("/api/sessions/{a}/{s}/latex")
+def latex(a: str, s: str):
+    """Els blocs de la sessió al document del quadern, en l'ordre del document (B01, B02…), amb el text de cada un."""
+    document = document_de(a, llig_sessio(a, s))
     if not document or not document["blocs"].is_dir():
         return {"blocs": []}
     base = carpeta_assig(a)
@@ -433,30 +443,30 @@ class CanvisLatex(BaseModel):
     canvis: list[BlocLatex]
 
 
-@app.post("/api/classes/{a}/{c}/latex")
-async def desa_latex(a: str, c: str, canvis: CanvisLatex):
+@app.post("/api/sessions/{a}/{s}/latex")
+async def desa_latex(a: str, s: str, canvis: CanvisLatex):
     """Desa els blocs que l'usuari ha editat, ho apunta a edicions.json i torna a compilar el document.
 
     Si la compilació falla, els blocs es queden desats (per arreglar-los) i el PDF és el d'abans."""
-    if (a, c) in processos:
-        raise HTTPException(409, "Claude està treballant en esta classe: el LaTeX el podràs editar quan pare")
-    document = document_de(a, llig_classe(a, c))
+    if (a, s) in processos:
+        raise HTTPException(409, "Claude està treballant en esta sessió: el LaTeX el podràs editar quan pare")
+    document = document_de(a, llig_sessio(a, s))
     if not document:
-        raise HTTPException(400, "Esta classe encara no té document")
+        raise HTTPException(400, "Esta sessió encara no té document")
     if not canvis.canvis:
         raise HTTPException(400, "No hi ha cap canvi")
     base = carpeta_assig(a)
     blocs = {b.relative_to(base).as_posix() for b in document["blocs"].glob("*.tex")}
     for bloc in canvis.canvis:
-        if bloc.fitxer not in blocs:  # només els blocs d'esta classe: res fora
-            raise HTTPException(400, f"{bloc.fitxer} no és un bloc d'esta classe")
+        if bloc.fitxer not in blocs:  # només els blocs d'esta sessió: res fora
+            raise HTTPException(400, f"{bloc.fitxer} no és un bloc d'esta sessió")
     if document["carpeta"] in compilant:
         raise HTTPException(409, "Ja s'està compilant: espera que acabe")
     compilant.add(document["carpeta"])
     try:
         for bloc in canvis.canvis:
             (base / bloc.fitxer).write_text(bloc.text, encoding="utf-8", newline="")
-        carpeta = carpeta_classe(a, c)
+        carpeta = carpeta_sessio(a, s)
         editats = edicions(carpeta) | {bloc.fitxer: ara() for bloc in canvis.canvis}
         escriu(carpeta / "edicions.json", {"blocs": dict(sorted(editats.items(), key=lambda e: ordre_natural(e[0])))})
         ok, sortida = await compila_document(document["carpeta"], base / document["pdf"])
@@ -469,83 +479,82 @@ async def desa_latex(a: str, c: str, canvis: CanvisLatex):
             "missatge": "\n".join(linies[1:]) if m else sortida}
 
 
-@app.put("/api/classes/{a}/{c}")
-def modifica_classe(a: str, c: str, canvis: CanvisClasse):
-    actual = llig_classe(a, c)
+@app.put("/api/sessions/{a}/{s}")
+def modifica_sessio(a: str, s: str, canvis: CanvisSessio):
+    actual = llig_sessio(a, s)
     nous = canvis.model_dump(exclude_unset=True)
     if "apunts" in nous and sorted(nous["apunts"]) != sorted(actual["apunts"]):
         raise HTTPException(400, "L'ordre ha de tindre les mateixes fotos")
-    if {"tema", "fusiona"} & nous.keys():
-        if (a, c) in processos:
-            raise HTTPException(409, "Claude està treballant: canvia el tema quan pare")
-        if nous.get("tema"):
-            carpeta_tema(a, nous["tema"])
-        if not (nous["tema"] if "tema" in nous else actual["tema"]):
-            nous["tema"], nous["fusiona"] = None, False  # sense tema no hi ha document del tema
+    if "quadern" in nous:
+        if (a, s) in processos:
+            raise HTTPException(409, "Claude està treballant: canvia el quadern quan pare")
+        if not nous["quadern"]:
+            raise HTTPException(400, "Cada sessió ha de tindre quadern")
+        carpeta_quadern(a, nous["quadern"])  # 404 si no existeix
     if "fonts" in nous:
         ids = [f["id"] for f in nous["fonts"]]
         if len(set(ids)) != len(ids):
             raise HTTPException(400, "Hi ha una font repetida")
         for f in nous["fonts"]:
             carpeta = dins(carpeta_assig(a) / "fonts", f["id"])
-            for tema in f["temes"]:
-                dins(carpeta, tema)
-    return desa_classe(a, c, **nous)
+            for pdf in f["temes"]:
+                dins(carpeta, pdf)
+    return desa_sessio(a, s, **nous)
 
 
-async def treu_del_tema(tema, c):
-    """Lleva de tema.tex les línies dels blocs de la classe i torna a compilar el tema.
+async def treu_del_quadern(quadern, s):
+    """Lleva de quadern.tex les línies dels blocs de la sessió i torna a compilar el quadern.
 
     Torna un avís si el PDF no s'ha pogut refer; en eixe cas es queda el PDF d'abans."""
-    tex = tema / "tema.tex"
+    tex = quadern / "quadern.tex"
     if not tex.exists():
         return None
     linies = tex.read_text(encoding="utf-8").splitlines(keepends=True)
-    tex.write_text("".join(l for l in linies if f"blocs/{c}/" not in l), encoding="utf-8", newline="")
-    ok, sortida = await compila_document(tema, tema / "tema.pdf")
+    tex.write_text("".join(l for l in linies if f"blocs/{s}/" not in l), encoding="utf-8", newline="")
+    ok, sortida = await compila_document(quadern, quadern / "quadern.pdf")
     if not ok:
-        return (f"Els blocs de la classe ja no són a «{llig(tema / 'tema.json')['nom']}», però el PDF del tema "
+        return (f"Els blocs de la sessió ja no són a «{llig(quadern / 'quadern.json')['nom']}», però el PDF del quadern "
                 f"no s'ha pogut refer i encara és el d'abans. {sortida[-300:]}")
     return None
 
 
-@app.delete("/api/classes/{a}/{c}")
-async def esborra_classe(a: str, c: str):
-    """La classe va a dades/paperera/; si tenia blocs al document d'un tema, també, i el tema es refà."""
-    if (a, c) in processos:
-        raise HTTPException(409, "Claude està treballant en esta classe: atura'l abans d'esborrar-la")
-    carpeta = carpeta_classe(a, c)
-    desti = DADES / "paperera" / a / f"{c}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+@app.delete("/api/sessions/{a}/{s}")
+async def esborra_sessio(a: str, s: str):
+    """La sessió va a dades/paperera/; si tenia blocs al document d'un quadern, també, i el quadern es refà."""
+    if (a, s) in processos:
+        raise HTTPException(409, "Claude està treballant en esta sessió: atura'l abans d'esborrar-la")
+    carpeta = carpeta_sessio(a, s)
+    desti = DADES / "paperera" / a / f"{s}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
     desti.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(carpeta, desti)
     avisos = []
-    for blocs in sorted((carpeta_assig(a) / "temes").glob(f"*/blocs/{c}")):
-        tema = blocs.parent.parent
-        shutil.move(blocs, desti / f"blocs-del-{tema.name}")
-        avis = await treu_del_tema(tema, c)
+    for blocs in sorted((carpeta_assig(a) / "quaderns").glob(f"*/blocs/{s}")):
+        quadern = blocs.parent.parent
+        shutil.move(blocs, desti / f"blocs-del-{quadern.name}")
+        avis = await treu_del_quadern(quadern, s)
         if avis:
             avisos.append(avis)
     return {"paperera": desti.relative_to(ARREL).as_posix(), "avis": " ".join(avisos) or None}
 
 
-@app.post("/api/classes/{a}/{c}/apunts")
-async def puja_apunts(a: str, c: str, fitxers: list[UploadFile] = File(...)):
-    carpeta = carpeta_classe(a, c) / "apunts"
+@app.post("/api/sessions/{a}/{s}/apunts")
+async def puja_apunts(a: str, s: str, fitxers: list[UploadFile] = File(...)):
+    carpeta = carpeta_sessio(a, s) / "apunts"
     if any(Path(f.filename or "").suffix.lower() not in APUNTS for f in fitxers):
         raise HTTPException(400, "Els apunts han de ser JPG, PNG, WebP o PDF")
-    apunts = llig_classe(a, c)["apunts"]
+    apunts = llig_sessio(a, s)["apunts"]
     for f in fitxers:
         nom = nom_lliure(carpeta, f.filename)
         (carpeta / nom).write_bytes(await f.read())
         apunts.append(nom)
-    return desa_classe(a, c, apunts=apunts)
+    return desa_sessio(a, s, apunts=apunts)
 
 
-@app.delete("/api/classes/{a}/{c}/apunts/{nom}")
-def lleva_apunt(a: str, c: str, nom: str):
-    dins(carpeta_classe(a, c) / "apunts", nom).unlink()
-    apunts = [n for n in llig_classe(a, c)["apunts"] if n != nom]
-    return desa_classe(a, c, apunts=apunts)
+@app.delete("/api/sessions/{a}/{s}/apunts/{nom}")
+def lleva_apunt(a: str, s: str, nom: str):
+    dins(carpeta_sessio(a, s) / "apunts", nom).unlink()
+    apunts = [n for n in llig_sessio(a, s)["apunts"] if n != nom]
+    return desa_sessio(a, s, apunts=apunts)
 
 
 @app.get("/api/fitxer/{a}/{ruta:path}")
@@ -555,29 +564,26 @@ def fitxer(a: str, ruta: str):
 
 # ---------- Claude ----------
 
-def ordre_claude(missatge, sessio=None):
+def ordre_claude(missatge, conversa=None):
     ordre = ["claude", "-p", missatge, "--output-format", "stream-json", "--verbose",
              "--permission-mode", "bypassPermissions"]
-    if sessio:
-        ordre += ["--resume", sessio]
+    if conversa:
+        ordre += ["--resume", conversa]
     if os.environ.get("LEMA_MODEL"):
         ordre += ["--model", os.environ["LEMA_MODEL"]]
     # Sense terminal no pot preguntar amb l'eina: escriu les preguntes i acaba el torn.
     return ordre + ["--disallowedTools", "AskUserQuestion"]
 
 
-# Bloc {document} de prompt.md: on va el document, segons si la classe s'afegeix al tema.
-DOCUMENT_CLASSE = """\
-- Tot el que generes, dins de `{carpeta}`: `esquema.yaml`, `blocs/`, `tema.tex` i `tema.pdf`, `informe.md` i `millores.md`.{nota_tema}
-- Per compilar: `python compila.py {carpeta}`. `tema.tex` ha de ser l'únic `.tex` de l'arrel de la classe."""
-
-DOCUMENT_TEMA = """\
-- **Document del tema «{tema_nom}»**, a `{carpeta_tema}`. Esta classe, del {data}, s'hi afegeix (decisió 9 de `CLAUDE.md`):
-  - Els blocs d'esta classe van a `{carpeta_tema}/blocs/{classe}/`, numerats B01, B02… Si la carpeta ja té blocs d'una passada anterior d'esta classe, esborra'ls i lleva'n els `\\input` de `tema.tex` abans d'escriure'n de nous.
-  - `tema.tex` és a l'arrel de `{carpeta_tema}`. Si no existeix, crea'l amb el nom del tema com a títol. Si existeix, no toques els blocs de les altres classes: afegeix-hi només els `\\input{blocs/{classe}/Bnn}` d'esta classe, en ordre de data de classe. {classes_tema}
-  - Les notetes continuen la numeració del tema: mira quina és l'última als blocs que ja hi ha.
-  - Per compilar: `python compila.py {carpeta_tema}`. `tema.tex` ha de ser l'únic `.tex` de l'arrel del tema.
-  - A la carpeta de la classe, `{carpeta}`, van `esquema.yaml`, `informe.md` i `millores.md`. A l'informe, digues a quines pàgines del PDF del tema és esta classe."""
+# Bloc {document} de prompt.md: on va el document de la sessió (decisió 9).
+DOCUMENT_QUADERN = """\
+- **Quadern «{quadern_nom}»**, a `{carpeta_quadern}`. Esta sessió, del {data}, s'afegeix al seu document (decisió 9 de `CLAUDE.md`):
+  - Els blocs d'esta sessió van a `{carpeta_quadern}/blocs/{sessio}/`, numerats B01, B02… Si la carpeta ja té blocs d'una passada anterior d'esta sessió, esborra'ls i lleva'n els `\\input` de `quadern.tex` abans d'escriure'n de nous.
+  - Les etiquetes dels blocs d'esta sessió porten davant el nom de la seua carpeta, perquè no es repetisquen amb les d'altres sessions: `\\label{{sessio}-B01}`, `\\label{{sessio}-B02}`… Per citar blocs d'altres sessions, fes servir l'etiqueta que ja tenen (les de `inicial` són `B01`, `B02`…).
+  - `quadern.tex` és a l'arrel de `{carpeta_quadern}`. Si no existeix, crea'l amb el nom del quadern com a títol. Si existeix, no toques els blocs de les altres sessions: afegeix-hi només els `\\input{blocs/{sessio}/Bnn}` d'esta sessió, en ordre de data de sessió. {sessions_quadern}
+  - Les notetes continuen la numeració del quadern: mira quina és l'última als blocs que ja hi ha.
+  - Per compilar: `python compila.py {carpeta_quadern}`. `quadern.tex` ha de ser l'únic `.tex` de l'arrel del quadern.
+  - A la carpeta de la sessió, `{carpeta}`, van `esquema.yaml`, `informe.md` i `millores.md`. A l'informe, digues a quines pàgines del PDF del quadern és esta sessió."""
 
 
 def omple(plantilla, valors):
@@ -588,41 +594,36 @@ def data_llarga(iso):
     return "/".join(reversed(iso.split("-")))
 
 
-def document_classe(a, dades, valors):
-    """El bloc {document} del prompt."""
-    tema = dades.get("tema")
-    fitxa = carpeta_assig(a) / "temes" / tema / "tema.json" if tema else None
-    if not fitxa or not fitxa.exists():
-        return omple(DOCUMENT_CLASSE, {**valors, "nota_tema": ""})
-    nom = llig(fitxa)["nom"]
-    if not dades.get("fusiona"):
-        nota = f" La classe és del tema «{nom}», però té el seu document a banda."
-        return omple(DOCUMENT_CLASSE, {**valors, "nota_tema": nota})
+def document_sessio(a, dades, valors):
+    """El bloc {document} del prompt: el quadern de la sessió i les sessions que ja hi són."""
+    q = dades["quadern"]
+    fitxa = carpeta_assig(a) / "quaderns" / q / "quadern.json"
     altres = []
     for carpeta in sorted(p for p in (fitxa.parent / "blocs").glob("*") if p.is_dir()):
         if carpeta.name == dades["id"]:
             continue
         if carpeta.name == "inicial":
-            altres.append("`inicial` (el document que ja hi havia abans dels temes de la web: va primer i no el toques)")
+            altres.append("`inicial` (el document que ja hi havia abans de la web: va primer i no el toques)")
             continue
-        fitxa_classe = carpeta_assig(a) / "classes" / carpeta.name / "classe.json"
-        data = llig(fitxa_classe)["data"] if fitxa_classe.exists() else None
+        fitxa_sessio = carpeta_assig(a) / "sessions" / carpeta.name / "sessio.json"
+        data = llig(fitxa_sessio)["data"] if fitxa_sessio.exists() else None
         altres.append(f"`{carpeta.name}`" + (f" ({data_llarga(data)})" if data else ""))
-    classes = ("Classes que ja hi són, amb la carpeta dels seus blocs: " + ", ".join(altres) + "."
-               if altres else "Encara no n'hi ha cap altra: el tema comença amb esta classe.")
-    return omple(DOCUMENT_TEMA, {**valors, "tema_nom": nom, "carpeta_tema": f"dades/assignatures/{a}/temes/{tema}",
-                                 "data": data_llarga(dades["data"]), "classes_tema": classes})
+    sessions = ("Sessions que ja hi són, amb la carpeta dels seus blocs: " + ", ".join(altres) + "."
+                if altres else "Encara no n'hi ha cap altra: el quadern comença amb esta sessió.")
+    return omple(DOCUMENT_QUADERN, {**valors, "quadern_nom": llig(fitxa)["nom"],
+                                    "carpeta_quadern": f"dades/assignatures/{a}/quaderns/{q}",
+                                    "data": data_llarga(dades["data"]), "sessions_quadern": sessions})
 
 
-def prompt_classe(a, dades):
+def prompt_sessio(a, dades):
     base = f"dades/assignatures/{a}"
-    carpeta = f"{base}/classes/{dades['id']}"
+    carpeta = f"{base}/sessions/{dades['id']}"
     fonts = []
     for f in dades["fonts"]:
         nom = llig(carpeta_assig(a) / "fonts" / f["id"] / "font.json")["nom"]
         temes = ", ".join(f"`{t}`" for t in f["temes"]) or "no ho sap; mira l'índex"
         fonts.append(f"  - {nom}: `{base}/fonts/{f['id']}`. "
-                     f"{'Temes' if len(f['temes']) > 1 else 'Tema'} on és la classe: {temes}.")
+                     f"{'Temes' if len(f['temes']) > 1 else 'Tema'} de la font on és la sessió: {temes}.")
     valors = {
         "assignatura": ASSIGNATURES[a],
         "carpeta": carpeta,
@@ -631,11 +632,11 @@ def prompt_classe(a, dades):
         "apunts": "\n".join(f"  {i}. `{carpeta}/apunts/{n}`"
                             for i, n in enumerate(dades["apunts"], 1)),
         "nota": dades["nota"].strip() or "cap",
-        # De la carpeta de la classe, o de la del tema, a l'arrel del repositori hi ha cinc nivells.
+        # De la carpeta del quadern a l'arrel del repositori hi ha cinc nivells.
         "plantilla": "../../../../../plantilla-base",
-        "classe": dades["id"],
+        "sessio": dades["id"],
     }
-    valors["document"] = document_classe(a, dades, valors)
+    valors["document"] = document_sessio(a, dades, valors)
     return omple((ARREL / "web" / "prompt.md").read_text(encoding="utf-8"), valors)
 
 
@@ -661,9 +662,9 @@ def suma_tokens(us):
                                         "cache_read_input_tokens", "output_tokens"))
 
 
-async def executa(a, c, missatge, sessio=None):
+async def executa(a, s, missatge, conversa=None):
     """Una crida a Claude Code: llig el que fa i ho resumeix a events.jsonl."""
-    carpeta = carpeta_classe(a, c)
+    carpeta = carpeta_sessio(a, s)
     registre = carpeta / "registre"
     registre.mkdir(exist_ok=True)
     nom = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -672,9 +673,9 @@ async def executa(a, c, missatge, sessio=None):
         with open(registre / f"claude-{nom}.jsonl", "w", encoding="utf-8") as cru, \
              open(registre / f"claude-{nom}.err", "w", encoding="utf-8") as err:
             proc = await asyncio.create_subprocess_exec(
-                *ordre_claude(missatge, sessio), cwd=ARREL,
+                *ordre_claude(missatge, conversa), cwd=ARREL,
                 stdout=asyncio.subprocess.PIPE, stderr=err, limit=64 * 2**20)
-            processos[(a, c)] = proc
+            processos[(a, s)] = proc
             async for linia in proc.stdout:
                 cru.write(linia.decode("utf-8", "replace"))
                 try:
@@ -683,7 +684,7 @@ async def executa(a, c, missatge, sessio=None):
                     continue
                 tipus = m.get("type")
                 if m.get("session_id"):
-                    sessio = m["session_id"]
+                    conversa = m["session_id"]
                 if tipus == "assistant":
                     msg = m.get("message", {})
                     if msg.get("id") not in vistos:  # un missatge pot arribar en diverses línies
@@ -693,7 +694,7 @@ async def executa(a, c, missatge, sessio=None):
                     for bloc in msg.get("content", []):
                         if bloc.get("type") == "text" and bloc["text"].strip():
                             for n in MARCA_PAS.findall(bloc["text"]):
-                                desa_classe(a, c, pas=int(n))
+                                desa_sessio(a, s, pas=int(n))
                                 afegeix_event(carpeta, t="pas", n=int(n))
                             for e in MARCA_ESTAT.findall(bloc["text"]):
                                 estat = "acabada" if e.lower() == "acabat" else "esperant"
@@ -711,7 +712,7 @@ async def executa(a, c, missatge, sessio=None):
                 elif tipus == "result":
                     final = m
             await proc.wait()
-        if (a, c) in aturats:
+        if (a, s) in aturats:
             estat = "aturada"
         elif final is None or final.get("is_error") or proc.returncode:
             estat = "error"
@@ -723,12 +724,12 @@ async def executa(a, c, missatge, sessio=None):
     except Exception as e:  # p. ex. no troba claude
         estat = "error"
         afegeix_event(carpeta, t="error", text=f"{type(e).__name__}: {e}")
-    total = llig(carpeta / "classe.json").get("tokens", 0) + tokens
+    total = llig(carpeta / "sessio.json").get("tokens", 0) + tokens
     afegeix_event(carpeta, t="fi", estat=estat, tokens=tokens,
                   durada=(final or {}).get("duration_ms"))
-    desa_classe(a, c, estat=estat, sessio=sessio, tokens=total)
-    processos.pop((a, c), None)
-    aturats.discard((a, c))
+    desa_sessio(a, s, estat=estat, conversa=conversa, tokens=total)
+    processos.pop((a, s), None)
+    aturats.discard((a, s))
 
 
 def en_segon_pla(corrutina):
@@ -737,39 +738,39 @@ def en_segon_pla(corrutina):
     tasca.add_done_callback(tasques.discard)
 
 
-@app.post("/api/classes/{a}/{c}/passa")
-async def passa_a_net(a: str, c: str):
-    dades = llig_classe(a, c)
-    if (a, c) in processos:
+@app.post("/api/sessions/{a}/{s}/passa")
+async def passa_a_net(a: str, s: str):
+    dades = llig_sessio(a, s)
+    if (a, s) in processos:
         raise HTTPException(409, "Ja està en marxa")
+    if not dades["quadern"] or not (carpeta_assig(a) / "quaderns" / dades["quadern"] / "quadern.json").exists():
+        raise HTTPException(400, "Tria el quadern a Materials")
     if not dades["apunts"]:
         raise HTTPException(400, "Falten les fotos dels apunts")
     if not dades["fonts"] or not all((carpeta_assig(a) / "fonts" / f["id"] / "font.json").exists()
                                      for f in dades["fonts"]):
         raise HTTPException(400, "Falta triar la font")
-    if dades["fusiona"] and not (carpeta_assig(a) / "temes" / dades["tema"] / "tema.json").exists():
-        raise HTTPException(400, "El tema d'esta classe ja no existeix: tria'n un altre a Materials")
-    carpeta = carpeta_classe(a, c)
+    carpeta = carpeta_sessio(a, s)
     if (carpeta / "edicions.json").exists():
         # Claude tornarà a escriure tots els blocs: les edicions a mà es perden (la web ho ha avisat).
         (carpeta / "registre").mkdir(exist_ok=True)
         (carpeta / "edicions.json").replace(carpeta / "registre" / f"edicions-{datetime.now():%Y%m%d-%H%M%S}.json")
     afegeix_event(carpeta, t="inici")
-    processos[(a, c)] = None  # reservat fins que arranca el procés
-    desa_classe(a, c, estat="en_marxa", pas=None, sessio=None)
-    en_segon_pla(executa(a, c, prompt_classe(a, dades)))
+    processos[(a, s)] = None  # reservat fins que arranca el procés
+    desa_sessio(a, s, estat="en_marxa", pas=None, conversa=None)
+    en_segon_pla(executa(a, s, prompt_sessio(a, dades)))
     return {"ok": True}
 
 
-@app.post("/api/classes/{a}/{c}/respon")
-async def respon(a: str, c: str, text: str = Form(""),
+@app.post("/api/sessions/{a}/{s}/respon")
+async def respon(a: str, s: str, text: str = Form(""),
                  fitxers: list[UploadFile] | None = File(None)):
-    dades = llig_classe(a, c)
-    if (a, c) in processos:
+    dades = llig_sessio(a, s)
+    if (a, s) in processos:
         raise HTTPException(409, "Claude encara està treballant")
-    if not dades["sessio"]:
+    if not dades["conversa"]:
         raise HTTPException(400, "Encara no hi ha cap conversa: passa-la a net primer")
-    carpeta = carpeta_classe(a, c)
+    carpeta = carpeta_sessio(a, s)
     adjunts = []
     for f in fitxers or []:
         (carpeta / "adjunts").mkdir(exist_ok=True)
@@ -780,29 +781,29 @@ async def respon(a: str, c: str, text: str = Form(""),
         raise HTTPException(400, "El missatge és buit")
     missatge = text.strip()
     if adjunts:
-        rutes = ", ".join(f"`dades/assignatures/{a}/classes/{c}/adjunts/{n}`" for n in adjunts)
+        rutes = ", ".join(f"`dades/assignatures/{a}/sessions/{s}/adjunts/{n}`" for n in adjunts)
         missatge += f"\n\nFitxers adjunts: {rutes}"
-    missatge += nota_edicions(a, c)
+    missatge += nota_edicions(a, s)
     afegeix_event(carpeta, t="usuari", text=text.strip(), adjunts=adjunts)
-    processos[(a, c)] = None
-    desa_classe(a, c, estat="en_marxa")
-    en_segon_pla(executa(a, c, missatge, dades["sessio"]))
+    processos[(a, s)] = None
+    desa_sessio(a, s, estat="en_marxa")
+    en_segon_pla(executa(a, s, missatge, dades["conversa"]))
     return {"ok": True}
 
 
-@app.post("/api/classes/{a}/{c}/atura")
-def atura(a: str, c: str):
-    proc = processos.get((a, c))
+@app.post("/api/sessions/{a}/{s}/atura")
+def atura(a: str, s: str):
+    proc = processos.get((a, s))
     if proc is None:
         raise HTTPException(409, "No està en marxa")
-    aturats.add((a, c))
+    aturats.add((a, s))
     proc.terminate()
     return {"ok": True}
 
 
-@app.get("/api/classes/{a}/{c}/events")
-async def events(a: str, c: str, des_de: int = 0):
-    ruta = carpeta_classe(a, c) / "registre" / "events.jsonl"
+@app.get("/api/sessions/{a}/{s}/events")
+async def events(a: str, s: str, des_de: int = 0):
+    ruta = carpeta_sessio(a, s) / "registre" / "events.jsonl"
 
     def linies():
         # Només les línies acabades: la darrera pot estar escrivint-se.
@@ -811,7 +812,7 @@ async def events(a: str, c: str, des_de: int = 0):
     async def flux():
         vistes = des_de
         while True:
-            en_marxa = (a, c) in processos
+            en_marxa = (a, s) in processos
             noves = linies()
             for linia in noves[vistes:]:
                 yield f"data: {linia}\n\n"
@@ -833,4 +834,5 @@ async def sense_cache(request, call_next):
     return resposta
 
 
+migra_dades()
 app.mount("/", StaticFiles(directory=ARREL / "web" / "static", html=True), name="web")

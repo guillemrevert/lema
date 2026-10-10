@@ -225,7 +225,7 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .interruptor input:disabled + .pista { opacity: 0.5; }
 .interruptor:has(input:disabled) { cursor: not-allowed; }
 .interruptor .text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tema-nav { margin-top: 8px; padding: 0 6px; font-size: 12px; font-weight: 600; color: var(--suau); }
+.quadern-nav { margin-top: 8px; padding: 0 6px; font-size: 12px; font-weight: 600; color: var(--suau); }
 @media (prefers-reduced-motion: reduce) {
   .interruptor .pista, .interruptor .pista::after { transition: none; }
 }
@@ -381,9 +381,9 @@ dl.dades dd { margin: 0; font-family: var(--mono); }
 /* ---------- Pàgina d'assignatura ---------- */
 .capcalera > .cap-assig { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .cap-assig > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.tema-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
-.nom-tema { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.nom-tema h2 { overflow-wrap: anywhere; }
+.quadern-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.nom-quadern { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.nom-quadern h2 { overflow-wrap: anywhere; }
 .boto-icona.petit { width: 34px; height: 34px; border: 0; background: none; color: var(--suau); }
 .boto-icona.petit:hover { background: #EFEEE8; color: var(--tinta); }
 .edita-nom { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 8px; }

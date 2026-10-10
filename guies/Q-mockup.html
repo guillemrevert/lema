@@ -1,0 +1,562 @@
+<title>Quaderns i sessions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Mock-up estàtic de la Q: la web reorganitzada al voltant del quadern.
+   Dalt, tres pantalles netes dins d'un marc de navegador; davall, la guia part per part.
+   Només tema clar, com la web de LEMA (mateixos colors i lletres que web/static/style.css).
+   Les imatges són a guies/img/, fora de git: fotos dels apunts i pàgines del document del Tema 1. */
+:root {
+  color-scheme: light;
+  --pagina: #E7E5DD;
+  --fons: #F7F6F2;
+  --lateral: #EFEEE8;
+  --sup: #FFFFFF;
+  --tinta: #1B1E24;
+  --text-2: #3A404B;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora: #DEDCD4;
+  --vora-forta: #CFCDC4;
+  --linia: #ECEBE5;
+  --blau: #1F4FB8;
+  --blau-clar: #E8EEFA;
+  --blau-fons: #F6F8FD;
+  --blau-text: #1A43A0;
+  --blau-vora: #C9D5F0;
+  --taronja: #B45309;
+  --taronja-clar: #FDF1E4;
+  --roig-clar: #FBE9E7;
+  --visor: #525659;
+  --visor-barra: #323639;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--pagina); color: var(--tinta); font: 15px/1.55 var(--sans); padding-block: 32px 80px; padding-inline: 16px; }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--blau); }
+button { font: inherit; }
+code { font: 0.9em var(--mono); background: var(--lateral); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+
+/* ---------- Document ---------- */
+.doc { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+.intro { display: flex; flex-direction: column; gap: 14px; max-width: 780px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suau); }
+.intro h1 { font: 600 46px/1.05 var(--serif); text-wrap: balance; }
+.intro p { font-size: 17px; color: var(--text-2); }
+.paraules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; max-width: 900px; }
+.paraula { padding: 16px 18px; background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; display: flex; flex-direction: column; gap: 4px; }
+.paraula b { font: 600 22px/1.2 var(--serif); }
+.paraula .abans { font-size: 13px; color: var(--suau); }
+.paraula span { font-size: 14px; color: var(--text-2); }
+.seccio { display: flex; flex-direction: column; gap: 20px; }
+.seccio > header { display: flex; flex-direction: column; gap: 6px; max-width: 780px; }
+.seccio h2 { font: 600 32px/1.15 var(--serif); text-wrap: balance; }
+.seccio > header p { color: var(--text-2); font-size: 16px; }
+.pantalla { display: flex; flex-direction: column; gap: 10px; }
+.pantalla > h3 { font: 600 20px/1.2 var(--serif); }
+.pantalla > p { color: var(--text-2); max-width: 780px; }
+
+/* ---------- Marc del navegador ---------- */
+.marc { border: 1px solid var(--vora-forta); border-radius: 12px; overflow: hidden; background: var(--fons); box-shadow: 0 12px 32px rgba(27, 30, 36, 0.12); }
+.marc-barra { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--lateral); border-bottom: 1px solid var(--vora); min-width: 0; }
+.marc-barra i { width: 11px; height: 11px; border-radius: 50%; background: var(--vora-forta); flex: none; }
+.marc-barra .url { margin-left: 10px; flex: 1; min-width: 0; padding: 4px 12px; border-radius: 6px; background: var(--sup); font: 12px var(--mono); color: var(--suau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- La web de LEMA ---------- */
+.app { display: flex; flex-wrap: wrap; font-size: 15px; line-height: 1.5; }
+.lateral { flex: 1 1 240px; max-width: 100%; background: var(--lateral); border-right: 1px solid var(--vora); padding: 26px 16px; display: flex; flex-direction: column; gap: 22px; }
+.logo { display: flex; flex-direction: column; gap: 2px; padding: 0 6px; }
+.logo-nom { font: 600 30px/1 var(--serif); letter-spacing: 0.04em; }
+.logo-sub { font-size: 12px; color: var(--suau); line-height: 1.35; }
+.boto-nova { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); font-weight: 600; }
+.grup { display: flex; flex-direction: column; gap: 4px; }
+.grup > h3 { padding: 0 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); margin-bottom: 4px; }
+.quadern-nav { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; font-weight: 600; font-size: 14px; line-height: 1.35; color: var(--tinta); }
+.quadern-nav svg { flex: none; margin-top: 1px; color: var(--suau); }
+.quadern-nav.actiu { background: var(--sup); border-color: var(--vora); }
+.quadern-nav.actiu svg { color: var(--blau); }
+.sessions-nav { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px 18px; padding-left: 10px; border-left: 1px solid var(--vora-forta); }
+.sessio-nav { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 8px; border: 1px solid transparent; }
+.sessio-nav.actiu { background: var(--sup); border-color: var(--vora); }
+.sessio-nom { font-size: 13.5px; font-weight: 500; }
+.estat { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--suau); }
+.estat::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--apagat); }
+.estat.fet::before { background: var(--blau); }
+.nou-quadern { padding: 6px 10px; font-size: 13.5px; color: var(--blau); font-weight: 500; }
+.sense { padding: 6px 10px 0; font-size: 12px; font-weight: 600; color: var(--suau); }
+.buit { padding: 0 6px; font-size: 14px; color: var(--suau); }
+
+.principal { flex: 999 1 560px; min-width: 0; padding: 30px clamp(16px, 2.4vw, 32px) 40px; display: flex; flex-direction: column; gap: 20px; }
+.capcalera { display: flex; flex-direction: column; gap: 14px; }
+.capcalera .detall { font-size: 14px; color: var(--suau); }
+.capcalera h2 { font: 600 34px/1.1 var(--serif); text-wrap: balance; display: flex; align-items: baseline; gap: 10px; }
+.llapis { flex: none; color: var(--suau); }
+.dades-quadern { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.dades-quadern .xifres { font-size: 14px; color: var(--text-2); }
+.pestanyes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--vora); }
+.pestanyes span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--suau); }
+.pestanyes .actiu { margin-bottom: -1px; border-bottom: 2px solid var(--blau); color: var(--tinta); font-weight: 600; }
+
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.entre { justify-content: space-between; }
+.peu { font-size: 13px; color: var(--suau); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--vora-forta); border-radius: 8px; overflow: hidden; background: var(--sup); }
+.seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; border-left: 1px solid var(--vora-forta); background: transparent; font-size: 14px; font-weight: 500; color: var(--text-2); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button.on { background: var(--blau-clar); color: var(--blau-text); font-weight: 600; }
+.boto { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--blau); color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.boto.gran { min-height: 48px; padding: 0 24px; font-size: 16px; }
+.boto-sec { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); color: var(--tinta); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.targeta { background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.targeta h3 { font: 600 21px/1.2 var(--serif); }
+
+/* Visor del PDF del navegador */
+.visor { display: flex; flex-direction: column; background: var(--visor); border-radius: 10px; overflow: hidden; }
+.visor-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--visor-barra); color: #E8EAED; font-size: 13px; }
+.visor-pagines { overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; }
+.visor-pagines img { display: block; width: 100%; max-width: 560px; height: auto; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+.visor.alt { height: 560px; }
+.visor.alt .visor-pagines { flex: 1; min-height: 0; }
+
+/* Sessions del quadern */
+.sessions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.sessions li { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 4px; border-top: 1px solid var(--linia); }
+.sessions li:first-child { border-top: 0; }
+.sessions .data { font: 500 13px var(--mono); color: var(--suau); }
+.sessions .nom { display: flex; flex-direction: column; min-width: 0; }
+.sessions .nom b { font-weight: 600; }
+.sessions .nom span { font-size: 13px; color: var(--suau); }
+
+/* Pantalla dividida */
+.dividida { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+.panell { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; overflow: hidden; height: 640px; }
+.panell-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--linia); }
+.panell-cos { flex: 1; min-height: 0; overflow: auto; background: var(--fons); }
+.panell .visor { height: 100%; border-radius: 0; }
+.panell .visor-pagines { flex: 1; min-height: 0; }
+.fotos { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.cap-sessio { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 2px 2px; border-top: 1px solid var(--vora); font-size: 14px; }
+.cap-sessio:first-child { border-top: 0; padding-top: 0; }
+.cap-sessio b { font-weight: 600; }
+.cap-sessio a { font-size: 13px; }
+.fotos figure { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.fotos img { display: block; width: 100%; height: auto; border: 1px solid var(--linia); border-radius: 6px; background: var(--sup); }
+.fotos figcaption { font-size: 12px; color: var(--suau); }
+.latex { margin: 0; padding: 14px 16px; font: 12.5px/1.6 var(--mono); white-space: pre-wrap; background: var(--sup); height: 100%; overflow: auto; }
+
+.avis { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 18px; border-radius: 12px; border: 1px solid; font-size: 15px; }
+.avis.blau { background: var(--blau-clar); border-color: var(--blau-vora); color: #173A8A; }
+.avis > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.resposta { background: var(--sup); border: 2px solid var(--blau); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.resposta label { font: 600 21px/1.2 var(--serif); }
+.resposta textarea { width: 100%; min-height: 72px; padding: 12px; border: 1px solid var(--vora-forta); border-radius: 8px; font: inherit; resize: vertical; }
+
+/* Formulari de la sessió */
+.camps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.camp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.camp > span { font-weight: 600; font-size: 14px; }
+.control { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--vora-forta); border-radius: 8px; background: var(--sup); font-size: 15px; color: var(--tinta); }
+.amb-mes { display: flex; gap: 8px; }
+.amb-mes .control { flex: 1; min-width: 0; }
+.mes { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; border: 1px solid var(--vora-forta); border-radius: 8px; background: var(--sup); font-size: 20px; }
+.miniatures { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.miniatures img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--vora); border-radius: 8px; display: block; }
+.barra-accio { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-radius: 12px; background: var(--tinta); color: #FFFFFF; }
+.barra-accio span { font-size: 14px; color: #C9CCD3; }
+
+/* ---------- Guia part per part ---------- */
+.parts { display: flex; flex-direction: column; gap: 20px; }
+.part { background: var(--sup); border: 1px solid var(--vora); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 20px; }
+.part-cap { display: flex; align-items: center; gap: 14px; }
+.part-num { width: 34px; height: 34px; border-radius: 50%; background: var(--tinta); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font: 600 15px var(--mono); flex: none; }
+.part-cap h3 { font: 600 25px/1.2 var(--serif); text-wrap: balance; }
+.part-cos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.part-cos.sol { grid-template-columns: minmax(0, 1fr); }
+.part-text { display: flex; flex-direction: column; gap: 12px; max-width: 68ch; }
+.part-text p b { font-weight: 600; }
+.cal { padding: 12px 16px; background: var(--fons); border-radius: 10px; font-size: 14px; color: var(--text-2); }
+.cal b { color: var(--tinta); }
+.part-mostra { background: var(--fons); border: 1px solid var(--linia); border-radius: 12px; padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.alternatives { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; align-items: start; }
+.alt { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--linia); border-radius: 12px; background: var(--fons); }
+.alt strong { font-size: 16px; }
+.alt span { font-size: 14px; color: var(--text-2); }
+.reco { align-self: flex-start; padding: 1px 9px; border-radius: 999px; background: var(--blau-clar); color: var(--blau-text); font-size: 12px; font-weight: 600; }
+.ruta { font: 12.5px/1.7 var(--mono); background: var(--sup); border: 1px solid var(--linia); border-radius: 8px; padding: 12px 14px; white-space: pre; overflow-x: auto; margin: 0; }
+.decisions { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 860px; font-size: 16px; }
+.decisions li::marker { font-weight: 600; }
+.decisions span { color: var(--text-2); }
+
+@media (max-width: 860px) {
+  .part-cos { grid-template-columns: minmax(0, 1fr); }
+  .panell { height: 520px; }
+}
+@media (max-width: 640px) {
+  .intro h1 { font-size: 36px; }
+  .capcalera h2 { font-size: 28px; }
+  .part { padding: 18px; }
+}
+</style>
+
+<div class="doc">
+
+<!-- ================= Introducció ================= -->
+<header class="intro">
+  <span class="eyebrow">LEMA · web local · mock-up de la Q</span>
+  <h1>Quaderns i sessions</h1>
+  <p>Ara la web està pensada per classes, però el que t'emportes és el document del tema. Per això el Tema 1 està en tres llocs: el document del tema (12 pàgines) i dos PDF antics de les classes del 05/10 i del 30/09, que en són còpies. A més, «Resultat» de cada classe t'ensenya eixes còpies, no el document del tema.</p>
+  <p>La proposta és donar-li la volta: <b>el quadern és el document</b>, i té la seua pàgina, on el mires i el revises. <b>La sessió només és com hi entren apunts nous</b>: puges les fotos, Claude les passa a net i el resultat va al quadern.</p>
+  <p>És un mock-up: no funciona res, només ensenya com seria. Fa servir les fotos i el document del Tema 1 d'Estructures Algebraiques.</p>
+</header>
+
+<div class="paraules">
+  <div class="paraula"><span class="abans">Abans: tema</span><b>Quadern</b><span>El document que creix sessió a sessió. Pot ser un tema, unes pràctiques, un article…</span></div>
+  <div class="paraula"><span class="abans">Abans: classe</span><b>Sessió</b><span>Cada vegada que hi afegeixes apunts: una classe, una pràctica, una tarda de lectura…</span></div>
+</div>
+
+<!-- ================= Pantalles ================= -->
+<section class="seccio" aria-labelledby="t-pantalles">
+  <header>
+    <h2 id="t-pantalles">Les pantalles</h2>
+    <p>Tres pantalles: la pàgina del quadern, el quadern costat a costat i una sessió. Davall s'explica cada part.</p>
+  </header>
+
+  <!-- Pantalla 1 -->
+  <div class="pantalla">
+    <h3>1 · La pàgina del quadern</h3>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/quadern/estructures-algebraiques/tema-1-grups</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Assignatures, quaderns i sessions">
+          <div class="logo"><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de Manuscrits Acadèmics</span></div>
+          <span class="boto-nova">+ Nova sessió</span>
+          <div class="grup">
+            <h3>Anàlisi II</h3>
+            <p class="buit">Encara no hi ha quaderns.</p>
+            <span class="nou-quadern">+ Nou quadern</span>
+          </div>
+          <div class="grup">
+            <h3>Estructures Algebraiques</h3>
+            <span class="quadern-nav actiu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <div class="sessions-nav">
+              <span class="sessio-nav"><span class="sessio-nom">Sessió del 10/10</span><span class="estat">Sense començar</span></span>
+              <span class="sessio-nav"><span class="sessio-nom">Classe de teoria</span><span class="estat fet">Acabada</span></span>
+              <span class="sessio-nav"><span class="sessio-nom">Sessió del 30/09</span><span class="estat fet">Acabada</span></span>
+            </div>
+            <span class="nou-quadern">+ Nou quadern</span>
+            <span class="sense">Sense quadern</span>
+            <span class="sessio-nav"><span class="sessio-nom">Sessió del 30/09</span><span class="estat">Sense començar</span></span>
+          </div>
+        </nav>
+        <div class="principal">
+          <div class="capcalera">
+            <div>
+              <span class="detall">Estructures Algebraiques · Quadern</span>
+              <h2>Tema 1. Grups. Subgrups. Homomorfismes de grups <svg class="llapis" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="Canvia el nom"><path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13 7l4 4"/></svg></h2>
+            </div>
+            <div class="dades-quadern">
+              <span class="xifres">12 pàgines · actualitzat el 10/10/2026 · 3 sessions</span>
+              <div class="fila"><a class="boto-sec" href="#t-pantalles">Obre el PDF</a><a class="boto-sec" href="#t-pantalles">Descarrega el .tex</a><a class="boto" href="#t-pantalles">+ Nova sessió en este quadern</a></div>
+            </div>
+          </div>
+          <div class="seg" style="align-self: flex-start"><button type="button" class="on">PDF sencer</button><button type="button">Costat a costat</button></div>
+          <div class="visor alt">
+            <div class="visor-barra"><span>tema.pdf</span><span>1 / 12</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div>
+            <div class="visor-pagines"><img src="img/q1-01.png" alt="Pàgina 1 del document del Tema 1"><img src="img/q1-02.png" alt="Pàgina 2 del document del Tema 1"></div>
+          </div>
+          <section class="targeta" aria-labelledby="m-sessions">
+            <div class="fila entre"><h3 id="m-sessions">Sessions</h3><a class="boto-sec" href="#t-pantalles">+ Nova sessió</a></div>
+            <ul class="sessions">
+              <li><span class="data">—</span><span class="nom"><b>Abans de la web</b><span>Les pissarres de setembre i la Prova 1, ja dins del document</span></span><span></span></li>
+              <li><span class="data">30/09</span><span class="nom"><b>Sessió del 30/09</b><span>9 fotos · acabada</span></span><a href="#t-pantalles">Obre la sessió</a></li>
+              <li><span class="data">05/10</span><span class="nom"><b>Classe de teoria</b><span>2 fotos · acabada</span></span><a href="#t-pantalles">Obre la sessió</a></li>
+              <li><span class="data">10/10</span><span class="nom"><b>Sessió del 10/10</b><span>Sense fotos · sense començar</span></span><a href="#t-pantalles">Puja els apunts</a></li>
+            </ul>
+          </section>
+          <form class="resposta" onsubmit="return false">
+            <label for="m1-r">Hi ha alguna cosa malament al quadern?</label>
+            <textarea id="m1-r" placeholder="p. ex. Definició 1.31: és l_t, no l_1. Teorema 1.4: posa-hi la demostració de la font."></textarea>
+            <div class="fila entre"><span class="boto-sec">Adjunta fitxers</span><button type="button" class="boto">Envia a Claude</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 2 -->
+  <div class="pantalla">
+    <h3>2 · El quadern, costat a costat</h3>
+    <p>Les fotos de totes les sessions, en ordre de data i amb el nom de cada sessió damunt. A la dreta, el document. El LaTeX és el de tot el quadern.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/quadern/estructures-algebraiques/tema-1-grups/costat</span></div>
+      <div class="app">
+        <div class="principal">
+          <div class="capcalera">
+            <div><span class="detall">Estructures Algebraiques · Quadern</span><h2>Tema 1. Grups. Subgrups. Homomorfismes de grups</h2></div>
+          </div>
+          <div class="seg" style="align-self: flex-start"><button type="button">PDF sencer</button><button type="button" class="on">Costat a costat</button></div>
+          <div class="dividida">
+            <section class="panell" aria-label="Apunts de totes les sessions">
+              <div class="panell-cap"><div class="seg"><button type="button" class="on">Apunts</button><button type="button">LaTeX</button></div><span class="peu">2 sessions · 11 fotos</span></div>
+              <div class="panell-cos">
+                <div class="fotos">
+                  <div class="cap-sessio"><b>Sessió del 30/09 · 9 fotos</b><a href="#t-pantalles">Obre la sessió</a></div>
+                  <figure><img src="img/s0930-1.jpg" alt="Pissarra 1 de la sessió del 30/09"><figcaption>Foto 1</figcaption></figure>
+                  <figure><img src="img/s0930-2.jpg" alt="Pissarra 2 de la sessió del 30/09"><figcaption>Foto 2 · … fins a la 9</figcaption></figure>
+                  <div class="cap-sessio"><b>Classe de teoria · 05/10 · 2 fotos</b><a href="#t-pantalles">Obre la sessió</a></div>
+                  <figure><img src="img/apunts-p1.jpg" alt="Pàgina 1 dels apunts del 05/10"><figcaption>Foto 1</figcaption></figure>
+                  <figure><img src="img/apunts-p2.jpg" alt="Pàgina 2 dels apunts del 05/10"><figcaption>Foto 2</figcaption></figure>
+                </div>
+              </div>
+            </section>
+            <section class="panell" aria-label="Document del quadern">
+              <div class="visor">
+                <div class="visor-barra"><span>tema.pdf</span><span>9 / 12</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div>
+                <div class="visor-pagines"><img src="img/q1-09.png" alt="Pàgina 9 del document"><img src="img/q1-10.png" alt="Pàgina 10 del document"></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 3 -->
+  <div class="pantalla">
+    <h3>3 · Una sessió</h3>
+    <p>La sessió ja no té «Resultat»: quan acaba, et porta al quadern.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/sessio/estructures-algebraiques/2026-10-05/materials</span></div>
+      <div class="app">
+        <div class="principal">
+          <div class="capcalera">
+            <div><span class="detall">Estructures Algebraiques · Quadern «Tema 1. Grups. Subgrups. Homomorfismes de grups» · 05/10/2026</span><h2>Classe de teoria</h2></div>
+            <div class="pestanyes"><span class="actiu">Materials</span><span>Progrés</span></div>
+          </div>
+          <div class="avis blau">
+            <div><b>Esta sessió ja és al quadern.</b><span>Els seus blocs són al document «Tema 1. Grups. Subgrups. Homomorfismes de grups».</span></div>
+            <a class="boto" href="#t-pantalles">Mira-la al quadern →</a>
+          </div>
+          <section class="targeta" aria-label="Fitxa de la sessió">
+            <div class="camps">
+              <label class="camp"><span>Quadern</span><span class="amb-mes"><span class="control">Tema 1. Grups. Subgrups… <span aria-hidden="true">▾</span></span><span class="mes" aria-label="Nou quadern">+</span></span></label>
+              <label class="camp"><span>Dia</span><span class="control">05/10/2026</span></label>
+              <label class="camp"><span>Títol <span style="font-weight: 400; color: var(--suau)">(opcional)</span></span><span class="control">Classe de teoria</span></label>
+            </div>
+          </section>
+          <section class="targeta" aria-label="Apunts de la sessió">
+            <h3>Apunts</h3>
+            <div class="miniatures"><img src="img/apunts-p1.jpg" alt="Foto 1"><img src="img/apunts-p2.jpg" alt="Foto 2"></div>
+          </section>
+          <div class="barra-accio">
+            <div style="display: flex; flex-direction: column; gap: 2px"><strong>Acabada</strong><span>2 fotos · Font: Wuolah · Va al quadern «Tema 1…»</span></div>
+            <button type="button" class="boto gran">Torna a passar a net</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Part per part ================= -->
+<section class="seccio" aria-labelledby="t-parts">
+  <header>
+    <h2 id="t-parts">Part per part</h2>
+    <p>Per a cada part: què veus, per a què serveix i què caldria canviar a LEMA. Quan hi ha dues maneres de fer-la, les tens al final de la part, amb la proposta marcada.</p>
+  </header>
+
+  <div class="parts">
+
+    <article class="part" aria-labelledby="p1">
+      <div class="part-cap"><span class="part-num">1</span><h3 id="p1">Les paraules: quadern i sessió</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què canvia.</b> A tota la web, «tema» passa a dir-se «quadern» i «classe» passa a «sessió». «Nova classe» és «Nova sessió», la pestanya «Temes» de l'assignatura és «Quaderns», i a la barra lateral les sessions van dins dels seus quaderns.</p>
+          <p><b>Per què.</b> L'eina pot servir per a més coses que els apunts d'un tema: unes pràctiques, un article, uns apunts de lectura. «Quadern» i «sessió» serveixen per a tots eixos casos.</p>
+          <p><b>L'assignatura es queda</b> com a nivell de dalt (Anàlisi II, Estructures Algebraiques). Si algun dia vols quaderns que no siguen de cap assignatura, és un canvi a banda (pregunta 6, al final).</p>
+          <p class="cal"><b>Què cal.</b> Canviar els textos de la web. Si també es canvien els noms de dins (carpetes i fitxers), es decideix a la part 9.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p2">
+      <div class="part-cap"><span class="part-num">2</span><h3 id="p2">La barra lateral: quaderns, amb les sessions dins</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> Per a cada assignatura, els seus quaderns. Cada quadern és un enllaç amb una icona de llibre que obri el document. Davall, una mica més endins i més xicotetes, les seues sessions, de la més nova a la més vella.</p>
+          <p><b>Què pots fer.</b> Clicar un quadern per mirar el document, o una sessió per pujar-hi apunts i passar-la a net. «+ Nou quadern» crea un quadern a eixa assignatura.</p>
+          <p><b>Sense quadern.</b> Les sessions d'abans que no en tenen (la del 30/09 que no es va començar) ixen davall, perquè les poses en un quadern o les esborres. Les noves sempre en tenen (part 7).</p>
+          <p class="cal"><b>Què cal.</b> Canviar com es pinta la barra lateral. La barra plegada (la tira d'inicials) es queda igual.</p>
+        </div>
+        <div class="part-mostra">
+          <span class="quadern-nav actiu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg>Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+          <div class="sessions-nav">
+            <span class="sessio-nav"><span class="sessio-nom">Sessió del 10/10</span><span class="estat">Sense començar</span></span>
+            <span class="sessio-nav"><span class="sessio-nom">Classe de teoria</span><span class="estat fet">Acabada</span></span>
+            <span class="sessio-nav"><span class="sessio-nom">Sessió del 30/09</span><span class="estat fet">Acabada</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Quaderns amb les sessions dins</strong><span>El quadern és un enllaç al document.</span></div>
+        <div class="alt"><strong>Com ara</strong><span>Sessions agrupades per quadern, amb el nom del quadern només com a títol. El document s'obri des de la pàgina de l'assignatura.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p3">
+      <div class="part-cap"><span class="part-num">3</span><h3 id="p3">La pàgina del quadern</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què veus.</b> Una pàgina nova per a cada quadern (pantalla 1):</p>
+          <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px">
+            <li>el nom, amb el llapis per canviar-lo;</li>
+            <li>quantes pàgines té el document i quan es va actualitzar;</li>
+            <li>«Obre el PDF», «Descarrega el .tex» i «+ Nova sessió en este quadern», que crea la sessió ja dins del quadern;</li>
+            <li>l'interruptor «PDF sencer / Costat a costat»;</li>
+            <li>la llista de sessions, en ordre de data;</li>
+            <li>el quadre per demanar correccions a Claude (part 5).</li>
+          </ul>
+          <p><b>«Abans de la web».</b> El Tema 1 va començar amb el document que ja tenies, amb les pissarres de setembre i la Prova 1. Ix com una fila més a la llista, sense enllaç, perquè no té cap sessió a la web.</p>
+          <p><b>Per a què serveix.</b> Tot el que és del document està en un lloc. Ja no hi ha un PDF per classe.</p>
+          <p class="cal"><b>Què cal.</b> Una pàgina nova a la web (<code>#/quadern/&lt;assignatura&gt;/&lt;quadern&gt;</code>). La pàgina de l'assignatura es queda amb la llista de quaderns i les fonts, i cada quadern hi enllaça.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Una pàgina per quadern</strong><span>El document es mira i es revisa ací, i les sessions només pugen apunts.</span></div>
+        <div class="alt"><strong>El document a cada sessió</strong><span>Com ara, a «Resultat» de cada classe, però sempre amb el document del quadern i només amb les fotos d'eixa sessió.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p4">
+      <div class="part-cap"><span class="part-num">4</span><h3 id="p4">El quadern, costat a costat</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> El mateix «Costat a costat» que ja tens, però del quadern sencer (pantalla 2).</p>
+          <p><b>A l'esquerra, «Apunts»:</b> les fotos de totes les sessions, en ordre de data. Damunt de cada sessió, el seu nom i un enllaç per obrir-la.</p>
+          <p><b>A l'esquerra, «LaTeX»:</b> tot el LaTeX del quadern en un sol text. Les línies de marca porten també la carpeta de la sessió: <code>%%%% 2026-10-05/B41.tex %%%%</code>. Els blocs d'abans de la web porten <code>inicial/</code>.</p>
+          <p><b>A la dreta:</b> el document del quadern.</p>
+          <p><b>Editar i compilar</b> funciona igual que ara. Les edicions s'apunten al quadern, i Claude les rep en qualsevol correcció del quadern.</p>
+          <p class="cal"><b>Què cal.</b> Moure «Costat a costat» de la sessió al quadern, i que llija els blocs i les fotos de totes les sessions. <code>edicions.json</code> passa de la carpeta de la classe a la del quadern.</p>
+        </div>
+        <pre class="ruta">%%%% inicial/B50.tex %%%%
+\begin{exemple}\label{B50}% …
+%%%% inicial/B51.tex %%%%
+\begin{proposicio}\label{B51}% …
+%%%% 2026-10-10/B01.tex %%%%
+\begin{definicio}% …</pre>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p5">
+      <div class="part-cap"><span class="part-num">5</span><h3 id="p5">Demanar correccions a Claude</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què veus.</b> A la pàgina del quadern, «Hi ha alguna cosa malament al quadern?», igual que el quadre que hi ha ara a «Resultat».</p>
+          <p><b>El problema.</b> Ara cada correcció continua la conversa de Claude de la classe. Al quadern hi ha moltes sessions, cada una amb la seua conversa, i els blocs d'abans de la web no en tenen cap.</p>
+          <p><b>Proposta.</b> Cada quadern té la seua conversa de Claude per a les correccions. La primera correcció l'obri, i les següents la continuen, perquè Claude recorde el que ja ha fet. Claude rep on és el quadern, quins blocs són de cada sessió i quins has editat a mà. Les sessions es queden amb la seua conversa per passar a net i per al punt de control.</p>
+          <p class="cal"><b>Què cal.</b> Un prompt nou, curt, per a les correccions del quadern, i guardar la conversa a la fitxa del quadern.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Una conversa per quadern</strong><span>Tots els canvis al document passen per un lloc. Claude ha de llegir el quadern la primera vegada.</span></div>
+        <div class="alt"><strong>La conversa de l'última sessió</strong><span>No cal res nou, però Claude coneix bé només els blocs d'eixa sessió, i si l'última sessió es torna a passar a net, la conversa es perd.</span></div>
+        <div class="alt"><strong>Tries la sessió</strong><span>Un desplegable damunt del quadre. Més precís, però has de saber de quina sessió és cada bloc.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p6">
+      <div class="part-cap"><span class="part-num">6</span><h3 id="p6">La sessió</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> Com ara, però només amb «Materials» i «Progrés» (pantalla 3). «Materials» és on puges les fotos i tries les fonts; «Progrés» és on veus Claude treballar i respons el punt de control.</p>
+          <p><b>Quan acaba</b>, dalt ix «Esta sessió ja és al quadern» amb un botó per anar-hi. Ja no hi ha «Resultat».</p>
+          <p class="cal"><b>Què cal.</b> Llevar «Resultat» de la sessió, i l'avís amb l'enllaç al quadern.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="pestanyes"><span class="actiu">Materials</span><span>Progrés</span></div>
+          <div class="avis blau"><div><b>Esta sessió ja és al quadern.</b></div><a class="boto" href="#p6">Mira-la al quadern →</a></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p7">
+      <div class="part-cap"><span class="part-num">7</span><h3 id="p7">Cada sessió va al seu quadern, sempre</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què canvia.</b> Per crear una sessió cal triar-ne el quadern, o crear-ne un amb el «+». Desapareix l'interruptor «Afegeix al document del tema»: els blocs de la sessió sempre van al document del quadern.</p>
+          <p><b>Per què.</b> L'interruptor és el que permetia tindre un document a banda per classe, i d'ací ve que hi haja còpies.</p>
+          <p class="cal"><b>Què cal.</b> Canviar el formulari de «Nova sessió» i la fitxa de «Materials», i la decisió 9 de <code>CLAUDE.md</code>, que ja no tindria el cas «document a banda».</p>
+        </div>
+        <div class="part-mostra">
+          <label class="camp"><span>Quadern</span><span class="amb-mes"><span class="control">Tema 1. Grups. Subgrups… <span aria-hidden="true">▾</span></span><span class="mes" aria-label="Nou quadern">+</span></span></label>
+          <p class="peu">Sense l'interruptor «Afegeix al document del tema».</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Sempre al quadern</strong><span>Un sol document per quadern.</span></div>
+        <div class="alt"><strong>Mantenir l'interruptor</strong><span>Una sessió pot tindre el seu document a banda, com ara.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p8">
+      <div class="part-cap"><span class="part-num">8</span><h3 id="p8">Les còpies d'abans</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què passa.</b> Les classes del 05/10 i del 30/09 tenen un PDF propi, de 10 i 12 pàgines, d'abans de fer els temes. El seu contingut ja és al document del Tema 1, al tros «Abans de la web».</p>
+          <p><b>Proposta.</b> Els seus PDF, <code>tema.tex</code> i <code>blocs/</code> van a la paperera. Les dues sessions es queden al Tema 1 amb les fotos, l'informe i la conversa de Claude, però sense document propi.</p>
+          <p class="cal"><b>Què cal.</b> Moure eixos fitxers a <code>dades/paperera/</code> en implementar-ho, a mà, i comprovar abans que el document del Tema 1 té els mateixos blocs.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>A la paperera</strong><span>No es perd res: si cal, es recuperen d'allí.</span></div>
+        <div class="alt"><strong>Deixar-los on són</strong><span>La web ja no els ensenya, però continuen a la carpeta de cada sessió.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p9">
+      <div class="part-cap"><span class="part-num">9</span><h3 id="p9">Els noms de dins</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>La pregunta.</b> Les carpetes i els fitxers de <code>dades/</code> es diuen <code>temes/</code>, <code>classes/</code>, <code>tema.json</code>… Claude els llig i els escriu, i <code>CLAUDE.md</code> en parla.</p>
+          <p><b>Proposta.</b> Canviar-los també, perquè la web, Claude i tu parleu igual. La web mou les carpetes una vegada, en arrancar, i les dades d'abans es lligen igual. <code>CLAUDE.md</code>, el prompt i <code>flux.html</code> (v8) passen a dir «quadern» i «sessió».</p>
+          <p class="cal"><b>Què cal.</b> El canvi de noms a les dades i al codi, i una passada a les instruccions.</p>
+        </div>
+        <pre class="ruta">dades/assignatures/&lt;assignatura&gt;/
+  quaderns/&lt;quadern&gt;/   quadern.json, tema.tex, tema.pdf,
+                       edicions.json, blocs/&lt;sessió&gt;/
+  sessions/&lt;AAAA-MM-DD&gt;/  sessio.json, apunts/, registre/,
+                       esquema.yaml, informe.md</pre>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Canviar-los també</strong><span>Tot es diu igual a tot arreu. Més feina ara, i cal tocar les instruccions de Claude.</span></div>
+        <div class="alt"><strong>Només els textos de la web</strong><span>Per dins es continua dient <code>temes/</code> i <code>classes/</code>. Menys feina, però cada vegada que mires una carpeta has de traduir.</span></div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= Decisions ================= -->
+<section class="seccio" aria-labelledby="t-decidir">
+  <header>
+    <h2 id="t-decidir">Què has de decidir</h2>
+    <p>Si no dius res, van les propostes. Amb les respostes escric la guia, probablement en fases, com la E.</p>
+  </header>
+  <ol class="decisions">
+    <li><b>Barra lateral</b> (part 2): <span>quaderns amb les sessions dins (proposta), o com ara.</span></li>
+    <li><b>On es mira el document</b> (part 3): <span>a la pàgina del quadern (proposta), o a cada sessió.</span></li>
+    <li><b>Correccions a Claude</b> (part 5): <span>una conversa per quadern (proposta), la de l'última sessió, o tries la sessió.</span></li>
+    <li><b>Sessió sempre al quadern</b> (part 7): <span>sí, sense l'interruptor (proposta), o mantenir-lo.</span></li>
+    <li><b>Les còpies d'abans</b> (part 8): <span>a la paperera (proposta), o deixar-les on són.</span></li>
+    <li><b>Quaderns sense assignatura</b> (part 1): <span>de moment no (proposta), o ja ara, per a pràctiques o articles que no són de cap assignatura.</span></li>
+    <li><b>Els noms de dins</b> (part 9): <span>canviar-los també (proposta), o només els textos de la web.</span></li>
+  </ol>
+</section>
+
+</div>
