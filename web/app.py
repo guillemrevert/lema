@@ -895,6 +895,13 @@ async def events(a: str, s: str, des_de: int = 0):
     return StreamingResponse(flux(), media_type="text/event-stream")
 
 
+@app.get("/api/versio")
+def versio():
+    """Canvia cada vegada que canvia un fitxer de la pàgina (web/static/). La pàgina oberta la compara
+    amb la que tenia en carregar-se i, si és diferent, es recarrega (guia R)."""
+    return {"versio": str(max(f.stat().st_mtime_ns for f in (ARREL / "web" / "static").iterdir() if f.is_file()))}
+
+
 @app.middleware("http")
 async def sense_cache(request, call_next):
     """Que el navegador sempre agafe la versió nova de la web després d'un canvi."""

@@ -35,6 +35,7 @@ let flux = null;      // EventSource del registre de Claude
 let rellotge = null;  // interval del temps del torn
 let sortida = null;   // la posa «Costat a costat»: diu si el LaTeX té canvis sense desar
 let hashAnterior = location.hash;
+let versio = null;    // la versió de la web quan es va carregar esta pestanya (guia R)
 
 if (window.marked) {
   // Els missatges de Claude no poden injectar HTML a la pàgina.
@@ -241,7 +242,17 @@ async function pinta() {
   sortida = null;
   hashAnterior = location.hash;
   try {
-    assignatures = await api("/api/assignatures");
+    const [llista, ara] = await Promise.all([api("/api/assignatures"), api("/api/versio").catch(() => null)]);
+    // Si la web ha canviat des que es va obrir esta pestanya, es recarrega per no fer servir el codi vell.
+    // Els canvis al LaTeX sense desar ja s'han preguntat abans de moure's (potsEixir).
+    if (ara) {
+      if (versio === null) versio = ara.versio;
+      else if (ara.versio !== versio) {
+        location.reload();
+        return;
+      }
+    }
+    assignatures = llista;
     const r = ruta();
     pintaLateral(r);
     if (r.vista === "sessio" && r.a && r.c) await pintaSessio(r.a, r.c, r.pestanya, r.sub);
