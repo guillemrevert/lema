@@ -134,6 +134,22 @@ function recorda(clau, valor) {
   try { localStorage.setItem(clau, valor); } catch { /* sense emmagatzematge */ }
 }
 
+// Noms curts per als PDF d'una font: sense l'extensió ni les paraules que tenen tots en comú
+// («wuolah-premium-Tema-1-EA.pdf» → «Tema 1»). Si el que canvia és un número, es manté la paraula d'abans.
+function nomsCurts(noms) {
+  const paraules = noms.map((n) => n.replace(/\.pdf$/i, "").split(/[\s_-]+/).filter(Boolean));
+  if (paraules.length < 2) return paraules.map((p) => p.join(" "));
+  const comunes = (llistes) => {
+    let k = 0;
+    while (llistes.every((p) => k < p.length - 1 && p[k] === llistes[0][k])) k += 1;
+    return k;
+  };
+  let davant = comunes(paraules);
+  const darrere = comunes(paraules.map((p) => [...p].reverse()));
+  if (davant && paraules.some((p) => /^\d/.test(p[davant] || ""))) davant -= 1;
+  return paraules.map((p) => p.slice(davant, p.length - darrere).join(" ") || p.join(" "));
+}
+
 // ---------- Temes ----------
 
 const nomTema = (assig, id) => assig.temes.find((t) => t.id === id)?.nom;
@@ -266,8 +282,27 @@ function pintaLateral(r) {
 }
 
 // ---------- Nova classe ----------
+// Nova classe i Materials són la mateixa pàgina: dalt, la fitxa de la classe. Abans de crear-la,
+// davall hi ha «Com va»; després, els materials (vegeu pintaMaterials).
 
 function pintaNova() {
+  const passos = [
+    ["Materials", "Puja les fotos dels apunts i tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne."],
+    ["Passa a net", "Claude llig els apunts, busca cada bloc a la font i s'atura una sola vegada per preguntar-te el que la font no resol."],
+    ["Resultat", "El PDF amb la teua notació i les correccions marcades: el del tema sencer, si la classe s'hi afegeix. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
+  ];
+  principal.replaceChildren(h("div", { class: "contingut" },
+    h("div", { class: "titol" },
+      h("h1", {}, "Nova classe"),
+      h("p", { class: "subtitol" }, "Tria l'assignatura, el tema i el dia. En crear-la, ací mateix hi puges les fotos i tries la font.")),
+    fitxaNova(),
+    h("section", { class: "titol", "aria-labelledby": "com-va" },
+      h("h2", { id: "com-va", class: "seccio-titol" }, "Com va"),
+      h("ol", { class: "com-va" }, passos.map(([nom, text], i) => h("li", {},
+        h("span", { class: "num" }, i + 1), h("strong", {}, nom), h("span", { class: "detall" }, text)))))));
+}
+
+function fitxaNova() {
   const avui = new Date();
   const iso = new Date(avui - avui.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   let as = assignatures.find((x) => x.id === llegeix("lema-assignatura")) || assignatures[0];
@@ -303,8 +338,8 @@ function pintaNova() {
   temaInicial();
   pintaTema();
 
-  const form = h("form", {
-    class: "targeta",
+  return h("form", {
+    class: "targeta fitxa-classe",
     onsubmit: async (e) => {
       e.preventDefault();
       boto.disabled = true;
@@ -320,27 +355,12 @@ function pintaNova() {
       }
     },
   },
-  h("div", { class: "camps dos" },
+  h("div", { class: "camps fitxa-camps" },
     camp("Assignatura", assig),
     llocTema,
     camp("Dia de la classe", data),
     camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
   h("div", { class: "peu-form" }, llocInterruptor, boto));
-
-  const passos = [
-    ["Materials", "Puja les fotos dels apunts i tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne."],
-    ["Passa a net", "Claude llig els apunts, busca cada bloc a la font i s'atura una sola vegada per preguntar-te el que la font no resol."],
-    ["Resultat", "El PDF amb la teua notació i les correccions marcades: el del tema sencer, si la classe s'hi afegeix. Si hi veus alguna cosa malament, li ho dius i ho corregeix."],
-  ];
-  principal.replaceChildren(h("div", { class: "contingut estret" },
-    h("div", { class: "titol" },
-      h("h1", {}, "Nova classe"),
-      h("p", { class: "subtitol" }, "Tria l'assignatura, el tema i el dia. Després hi puges les fotos dels apunts i la font.")),
-    form,
-    h("section", { class: "titol", "aria-labelledby": "com-va" },
-      h("h2", { id: "com-va", class: "seccio-titol" }, "Com va"),
-      h("ol", { class: "com-va" }, passos.map(([nom, text], i) => h("li", {},
-        h("span", { class: "num" }, i + 1), h("strong", {}, nom), h("span", { class: "detall" }, text)))))));
 }
 
 // ---------- Classe ----------
@@ -390,31 +410,67 @@ function pintaMaterials(cos, classe, assig) {
       h("div", {}, "Claude està treballant amb estos materials. Els podràs canviar quan pare.")));
   }
   cos.append(
-    seccioTema(classe, assig, desa, bloquejat),
-    seccioApunts(classe, bloquejat),
-    seccioFont(classe, assig, desa, bloquejat),
-    seccioNota(classe, desa, bloquejat),
+    fitxaClasse(classe, assig, desa, bloquejat),
+    h("div", { class: "materials" },
+      h("div", { class: "materials-graella" },
+        seccioApunts(classe, bloquejat),
+        h("div", { class: "col-materials" },
+          seccioFont(classe, assig, desa, bloquejat),
+          seccioNota(classe, desa, bloquejat)))),
     barraPassa(classe, assig),
   );
 }
 
-function seccioTema(classe, assig, desa, bloquejat) {
+// La fitxa d'una classe creada: l'assignatura i el dia queden fixats (són el nom de la carpeta).
+function fitxaClasse(classe, assig, desa, bloquejat) {
+  const a = classe.assignatura;
+  const c = classe.id;
   const tema = nomTema(assig, classe.tema) ? classe.tema : null;
   const canvia = async (canvis) => { await desa(canvis); pinta(); };
-  return h("section", { class: "targeta compacta", "aria-labelledby": "t-tema" },
-    h("div", { class: "cap-seccio" },
-      h("h2", { id: "t-tema" }, "Tema"),
-      h("p", {}, "A quin tema pertany la classe, i si s'afegeix al document del tema.")),
-    h("div", { class: "fila-tema" },
-      h("div", { class: "camp" },
-        h("label", { for: "tema", class: "ocult" }, "Tema"),
+  const titol = h("input", { id: "titol", type: "text", value: classe.titol || "", disabled: bloquejat,
+    placeholder: "p. ex. Cicles i transposicions", onchange: (e) => canvia({ titol: e.target.value.trim() }) });
+  // Els blocs de la classe són al document del tema si Resultat el llista entre els fitxers.
+  const alTema = classe.fitxers.some((f) => f.startsWith("temes/") && f.includes(`/blocs/${c}/`));
+
+  const confirma = h("div", { class: "avis roig", hidden: true, role: "alertdialog", "aria-labelledby": "t-esborra" });
+  const esborra = h("button", { type: "button", class: "boto perill",
+    onclick: async () => {
+      esborra.disabled = true;
+      esborra.textContent = alTema ? "Esborrant i refent el PDF del tema…" : "Esborrant…";
+      try {
+        const r = await api(`/api/classes/${a}/${c}`, { method: "DELETE" });
+        anar("#/");
+        avisa(r.avis || `S'ha esborrat «${nomClasse(classe)}». Està a ${r.paperera}.`);
+      } catch (err) {
+        avisa(err.message);
+        esborra.disabled = false;
+        esborra.textContent = "Esborra";
+      }
+    } }, "Esborra");
+  confirma.append(icona("avis", 22), h("div", {},
+    h("strong", { id: "t-esborra" }, `Vols esborrar «${nomClasse(classe)}»?`),
+    h("span", {}, "Les fotos i el que ha escrit Claude van a la paperera de dades/." +
+      (alTema ? " Els seus blocs es lleven del document del tema i el PDF del tema es torna a fer." : "")),
+    h("div", { class: "botons" }, esborra,
+      h("button", { type: "button", class: "boto-sec", onclick: () => { confirma.hidden = true; } }, "Cancel·la"))));
+
+  return h("section", { class: "targeta fitxa-classe", "aria-label": "Fitxa de la classe" },
+    h("div", { class: "camps fitxa-camps" },
+      h("div", { class: "camp" }, h("span", { class: "etiqueta" }, "Assignatura"), h("span", { class: "fix" }, assig.nom)),
+      h("div", { class: "camp" }, h("label", { for: "tema" }, "Tema"),
         selectorTema(assig, tema, { id: "tema", disabled: bloquejat,
           // D'un tema a un altre es manté l'interruptor; de «sense tema» a un tema, s'encén.
           canvia: (t) => canvia({ tema: t, fusiona: Boolean(t) && (tema ? classe.fusiona : true) }) })),
-      tema ? interruptorTema(nomTema(assig, tema), classe.fusiona,
+      h("div", { class: "camp" }, h("span", { class: "etiqueta" }, "Dia de la classe"), h("span", { class: "fix" }, dataLlarga(classe.data))),
+      camp("Títol ", titol, h("span", { class: "opcional" }, "(opcional)"))),
+    h("div", { class: "peu-form" },
+      h("div", { class: "lloc-interruptor" }, tema ? interruptorTema(nomTema(assig, tema), classe.fusiona,
         { id: "fusiona", disabled: bloquejat, canvia: (si) => canvia({ fusiona: si }) }) : null),
-    classe.estat === "nova" ? null : h("p", { class: "nota-petita" },
-      "Si canvies el tema o l'interruptor, el que ja ha escrit Claude no es mou: s'aplica la pròxima vegada que passes la classe a net."));
+      bloquejat ? null : h("button", { type: "button", class: "enllac-suau",
+        onclick: () => { confirma.hidden = false; esborra.focus(); } }, "Esborra la classe")),
+    classe.estat === "nova" || !tema ? null : h("p", { class: "nota-petita" },
+      "Si canvies el tema o l'interruptor, el que ja ha escrit Claude no es mou: s'aplica la pròxima vegada que passes la classe a net."),
+    confirma);
 }
 
 function seccioApunts(classe, bloquejat) {
@@ -475,14 +531,14 @@ function seccioApunts(classe, bloquejat) {
             avisa(e.message);
           }
         },
-      }, icona("creu"))));
+      }, icona("creu", 14, 2))));
     return foto;
   });
 
   const input = h("input", { type: "file", id: "fotos", class: "ocult", multiple: true,
     accept: "image/jpeg,image/png,image/webp,application/pdf", onchange: (e) => puja(e.target.files) });
   const seccio = h("section", {
-    class: "targeta", "aria-labelledby": "t-apunts",
+    class: "targeta compacta", "aria-labelledby": "t-apunts",
     ondragover: (e) => {
       if (!bloquejat && arrossegada === null && e.dataTransfer.types.includes("Files")) {
         e.preventDefault();
@@ -503,16 +559,16 @@ function seccioApunts(classe, bloquejat) {
     h("p", {}, classe.apunts.length > 1
       ? "Les fotos de la classe, en ordre. Arrossega-les per canviar-lo."
       : "Les fotos de la classe, en ordre.")),
-  h("div", { class: "graella-fotos" }, fotos,
+  h("div", { class: "graella-fotos xicoteta" }, fotos,
     bloquejat ? null : h("label", { for: "fotos", class: "afegeix" },
-      icona("puja", 26), h("strong", {}, "Afegeix fotos"), h("span", {}, "o arrossega-les ací"))),
+      icona("puja", 22), h("strong", {}, "Afegeix fotos"), h("span", {}, "o arrossega-les"))),
   input,
   h("p", { class: "nota-petita" }, "JPG, PNG, WebP o PDF."));
   return seccio;
 }
 
 function seccioFont(classe, assig, desa, bloquejat) {
-  const seccio = h("section", { class: "targeta", "aria-labelledby": "t-font" });
+  const seccio = h("section", { class: "targeta compacta", "aria-labelledby": "t-font" });
   // Les fonts triades, amb els temes (PDF) de cada una. Les que ja no existeixen no compten.
   const triades = classe.fonts.filter((t) => assig.fonts.some((f) => f.id === t.id));
   let nova = !assig.fonts.length;  // el formulari d'una font nova, obert
@@ -522,34 +578,31 @@ function seccioFont(classe, assig, desa, bloquejat) {
     pinta();
   }
 
-  function opcio(titol, detall, actiu, onchange, cos) {
-    return h("div", { class: "opcio" + (actiu ? " triada" : "") },
-      h("label", { class: "opcio-cap" },
-        h("input", { type: "checkbox", checked: actiu, disabled: bloquejat, onchange }),
-        h("span", {}, h("strong", {}, titol), h("span", { class: "detall" }, detall))),
-      actiu && cos ? cos() : null);
-  }
-
-  function cosFont(f) {
-    const temes = triades.find((t) => t.id === f.id).temes;
+  function filaFont(f) {
+    const triada = triades.find((t) => t.id === f.id);
+    const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
+    const detall = [f.que_es, `${f.pdfs.length} PDF · ${pagines} pàgines`].filter(Boolean).join(" · ");
+    const noms = nomsCurts(f.pdfs.map((p) => p.nom));
     const marca = (nom, si) => canvia(triades.map((t) => (t.id !== f.id ? t : {
       id: t.id,
       // En l'ordre de la font, no en el que s'han marcat.
-      temes: f.pdfs.map((p) => p.nom).filter((n) => (n === nom ? si : temes.includes(n))),
+      temes: f.pdfs.map((p) => p.nom).filter((n) => (n === nom ? si : t.temes.includes(n))),
     })));
-    return h("div", { class: "opcio-cos" },
-      h("fieldset", { class: "temes" },
-        h("legend", {}, "En quins temes de la font és la classe? ", h("span", { class: "opcional" }, "(opcional)")),
-        h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
-          h("label", { class: "nom" },
-            h("input", { type: "checkbox", checked: temes.includes(p.nom), disabled: bloquejat,
-              onchange: (e) => marca(p.nom, e.target.checked) }),
-            p.nom),
-          p.amb_text
-            ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
-            : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge"))))),
-      h("p", { class: "nota-petita" },
-        "Si no en marques cap, Claude mirarà l'índex. Si els marques, no llig pàgines que no calen."));
+    return h("div", { class: "font-fila" },
+      h("label", { class: "cap" },
+        h("input", { type: "checkbox", checked: Boolean(triada), disabled: bloquejat,
+          onchange: (e) => canvia(e.target.checked
+            ? [...triades, { id: f.id, temes: [] }]
+            : triades.filter((t) => t.id !== f.id)) }),
+        h("span", {}, h("strong", {}, f.nom), h("span", { class: "detall" }, detall))),
+      triada ? h("div", { class: "xips", role: "group", "aria-label": `PDF de ${f.nom} on és la classe` },
+        f.pdfs.map((p, i) => {
+          const si = triada.temes.includes(p.nom);
+          return h("label", { class: "xip" + (si ? " triat" : ""), title: p.nom },
+            h("input", { type: "checkbox", checked: si, disabled: bloquejat, onchange: (e) => marca(p.nom, e.target.checked) }),
+            `${noms[i]} · ${p.pagines} p.`,
+            p.amb_text ? null : h("span", { class: "sense-text", title: "No té text: es llegirà com a imatge" }, "sense text"));
+        })) : null);
   }
 
   function cosNova() {
@@ -567,9 +620,9 @@ function seccioFont(classe, assig, desa, bloquejat) {
         pdfs.files = e.dataTransfer.files;
         pdfs.dispatchEvent(new Event("change"));
       } },
-    icona("puja", 26), h("span", {}, h("strong", {}, "Tria els PDF de la font"), triats));
+    icona("puja", 24), h("span", {}, h("strong", {}, "Tria els PDF de la font"), triats));
     return h("form", {
-      class: "opcio-cos",
+      class: "font-nova",
       onsubmit: async (e) => {
         e.preventDefault();
         if (!pdfs.files.length) { avisa("Tria almenys un PDF"); return; }
@@ -590,10 +643,14 @@ function seccioFont(classe, assig, desa, bloquejat) {
         }
       },
     },
+    h("strong", {}, "Font nova"),
     zona, pdfs,
     h("div", { class: "camps" }, camp("Nom curt", nom), camp("Què és", que), camp("D'on surt", don)),
+    h("p", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en les classes següents."),
     h("div", { class: "accions" },
-      h("span", { class: "nota-petita" }, "Es guarda a l'assignatura: la podràs triar en les classes següents."),
+      assig.fonts.length
+        ? h("button", { type: "button", class: "boto-sec", onclick: () => { nova = false; pintaSeccio(); } }, "Cancel·la")
+        : h("span"),
       boto));
   }
 
@@ -601,22 +658,13 @@ function seccioFont(classe, assig, desa, bloquejat) {
     seccio.replaceChildren(
       h("div", { class: "cap-seccio" },
         h("h2", { id: "t-font" }, "Fonts"),
-        h("p", {}, "D'on es reconstrueix cada bloc. Pots marcar-ne més d'una: si un bloc és a més d'una i no coincideixen, Claude en tria una i t'ho diu en una noteta.")),
-      h("fieldset", { class: "opcions" },
-        h("legend", { class: "ocult" }, "Tria les fonts"),
-        assig.fonts.map((f) => {
-          const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
-          const detall = [f.que_es, `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades`]
-            .filter(Boolean).join(" · ");
-          return opcio(f.nom, detall, triades.some((t) => t.id === f.id),
-            (e) => canvia(e.target.checked
-              ? [...triades, { id: f.id, temes: [] }]
-              : triades.filter((t) => t.id !== f.id)),
-            () => cosFont(f));
-        }),
-        bloquejat ? null : opcio("Puja una font nova",
-          "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.", nova,
-          (e) => { nova = e.target.checked; pintaSeccio(); }, cosNova)));
+        h("p", {}, "D'on es reconstrueix cada bloc. Si en marques més d'una i no coincideixen, Claude en tria una i t'ho diu en una noteta.")),
+      assig.fonts.length ? h("div", { class: "llista-fonts" }, assig.fonts.map(filaFont)) : null,
+      assig.fonts.length ? h("p", { class: "nota-petita" },
+        "Marca els PDF on és la classe. Si no en marques cap, Claude mira l'índex.") : null,
+      bloquejat ? null : nova ? cosNova()
+        : h("button", { type: "button", class: "enllac", onclick: () => { nova = true; pintaSeccio(); } },
+          icona("mes", 14, 2.2), "Puja una font nova"));
   }
 
   pintaSeccio();
@@ -624,13 +672,14 @@ function seccioFont(classe, assig, desa, bloquejat) {
 }
 
 function seccioNota(classe, desa, bloquejat) {
-  const text = h("textarea", { id: "nota", rows: 3, disabled: bloquejat,
+  const text = h("textarea", { id: "nota", rows: 2, disabled: bloquejat,
     placeholder: "p. ex. La demostració del teorema la tinc en una altra foto. El professor va canviar una hipòtesi a propòsit.",
     onchange: (e) => desa({ nota: e.target.value }) });
   text.value = classe.nota || "";
-  return h("section", { class: "targeta" },
-    h("h2", {}, "Per a Claude ", h("span", { class: "opcional" }, "(opcional)")),
-    h("label", { for: "nota", class: "detall" }, "Alguna cosa que haja de saber abans de començar."),
+  return h("section", { class: "targeta compacta" },
+    h("div", { class: "cap-seccio" },
+      h("h2", {}, "Per a Claude ", h("span", { class: "opcional" }, "(opcional)")),
+      h("label", { for: "nota", class: "detall" }, "Alguna cosa que haja de saber abans de començar.")),
     text);
 }
 
@@ -666,11 +715,17 @@ function barraPassa(classe, assig) {
   const resum = falta || [
     `${n} ${n === 1 ? "foto" : "fotos"}`,
     (fonts.length > 1 ? "Fonts: " : "Font: ") +
-      fonts.map((t) => t.nom + (t.temes.length ? ` (${t.temes.join(", ")})` : "")).join(", "),
+      fonts.map((t) => {
+        // Els PDF marcats, amb el nom curt de la font («Tema 1»).
+        const pdfs = assig.fonts.find((f) => f.id === t.id).pdfs.map((p) => p.nom);
+        const curts = nomsCurts(pdfs);
+        const marcats = t.temes.map((n) => curts[pdfs.indexOf(n)] || n);
+        return t.nom + (marcats.length ? ` (${marcats.join(", ")})` : "");
+      }).join(", "),
     temaNom ? (classe.fusiona ? `S'afegirà al PDF de «${temaNom}»` : "PDF a banda del tema") : null,
     "Es fa en una conversa nova de Claude Code",
   ].filter(Boolean).join(" · ");
-  return h("div", { class: "barra-accio" },
+  return h("div", { class: "barra-accio compacta" },
     h("div", {}, h("strong", {}, enMarxa ? "Claude hi està treballant" : falta ? "Encara no" : "A punt per passar a net"),
       h("span", {}, resum)),
     boto);

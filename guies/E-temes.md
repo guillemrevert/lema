@@ -1,6 +1,6 @@
 # Guia E · Temes, nova classe en una pàgina i pàgina d'assignatura
 
-**Estat:** fase 1 aprovada i implementada el 10/10/2026; falta la prova amb Claude (passos 2 a 6 de «Com es prova»). Fases 2 i 3: proposta. Cada fase té el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
+**Estat:** fase 1 aprovada i implementada el 10/10/2026; falta la prova amb Claude (passos 2 a 6 de «Com es prova»). Fase 2 feta el 10/10/2026. Fase 3: proposta. Cada fase té el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/E-mockup.html`](E-mockup.html), publicat a https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum. Ensenya quatre pantalles netes i, davall, setze parts explicades amb les alternatives una al costat de l'altra. Quan ací es diu «part 7», és la part 7 del mock-up.
 
@@ -182,6 +182,16 @@ A `localhost:8300`, amb Estructures Algebraiques:
 ---
 
 ## Fase 2 · O i F · Nova classe i Materials en una sola pàgina
+
+**Estat:** feta el 10/10/2026, amb les propostes de les parts 4, 6, 7, 9 i 10, i el formulari de fonts plegat davall d'un enllaç (part 8 B, fins a la fase 3). Provada a `localhost:8300`: Nova classe en una fila de quatre camps; Materials de la classe del 30/09 (2a part), amb nou fotos, en poc més d'una pantalla i la barra enganxada a baix; les fitxes dels PDF («Tema 1 · 23 p.»); obrir i tancar el formulari de font nova. Esborrar, amb dades de prova després netejades: una classe amb blocs al tema (va a la paperera amb els seus blocs, `tema.tex` perd les seues línies i el PDF del tema passa de 5 a 3 pàgines), el cas en què el tema no compila (avisa i es queda el PDF d'abans) i una classe sense tema. No s'ha provat amb Claude en marxa (esborrar i canviar la fitxa han de quedar bloquejats).
+
+**Desviacions:**
+
+- Els blocs que la classe tenia al tema no s'esborren: van a la paperera amb la classe, en una carpeta `blocs-del-<tema>/`. Es busquen a tots els temes, no només al de la classe, per si n'ha canviat.
+- Els comentaris de `tema.tex` que parlen de la classe («% Classe del …») es queden; només es lleven les línies `\input` dels seus blocs.
+- La pàgina de Nova classe passa a tindre la mateixa amplària que la de la classe, perquè en crear-la la fitxa no canvie de mida.
+- Regla nova a `style.css`: `[hidden]` amaga sempre. Sense ella, el quadre de confirmació d'esborrar es veia sempre.
+- El resum de la barra fa servir els noms curts dels PDF: «Wuolah (Tema 1, Tema 2)».
 
 ### Què notaràs
 

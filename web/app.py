@@ -17,6 +17,7 @@ import asyncio
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import unicodedata
@@ -365,6 +366,48 @@ def modifica_classe(a: str, c: str, canvis: CanvisClasse):
             for tema in f["temes"]:
                 dins(carpeta, tema)
     return desa_classe(a, c, **nous)
+
+
+async def treu_del_tema(tema, c):
+    """Lleva de tema.tex les línies dels blocs de la classe i torna a compilar el tema.
+
+    Torna un avís si el PDF no s'ha pogut refer; en eixe cas es queda el PDF d'abans."""
+    tex = tema / "tema.tex"
+    if not tex.exists():
+        return None
+    linies = tex.read_text(encoding="utf-8").splitlines(keepends=True)
+    tex.write_text("".join(l for l in linies if f"blocs/{c}/" not in l), encoding="utf-8", newline="")
+    pdf = tema / "tema.pdf"
+    abans = pdf.read_bytes() if pdf.exists() else None
+    proc = await asyncio.to_thread(
+        subprocess.run, [sys.executable, str(ARREL / "compila.py"), str(tema)],
+        capture_output=True, text=True, encoding="utf-8")
+    if proc.returncode:
+        if abans is not None:
+            pdf.write_bytes(abans)
+        motiu = (proc.stdout + proc.stderr).strip()[-300:]
+        return (f"Els blocs de la classe ja no són a «{llig(tema / 'tema.json')['nom']}», però el PDF del tema "
+                f"no s'ha pogut refer i encara és el d'abans. {motiu}")
+    return None
+
+
+@app.delete("/api/classes/{a}/{c}")
+async def esborra_classe(a: str, c: str):
+    """La classe va a dades/paperera/; si tenia blocs al document d'un tema, també, i el tema es refà."""
+    if (a, c) in processos:
+        raise HTTPException(409, "Claude està treballant en esta classe: atura'l abans d'esborrar-la")
+    carpeta = carpeta_classe(a, c)
+    desti = DADES / "paperera" / a / f"{c}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+    desti.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(carpeta, desti)
+    avisos = []
+    for blocs in sorted((carpeta_assig(a) / "temes").glob(f"*/blocs/{c}")):
+        tema = blocs.parent.parent
+        shutil.move(blocs, desti / f"blocs-del-{tema.name}")
+        avis = await treu_del_tema(tema, c)
+        if avis:
+            avisos.append(avis)
+    return {"paperera": desti.relative_to(ARREL).as_posix(), "avis": " ".join(avisos) or None}
 
 
 @app.post("/api/classes/{a}/{c}/apunts")

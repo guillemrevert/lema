@@ -31,6 +31,7 @@ a { color: var(--blau); }
 a:hover { color: var(--blau-fosc); }
 :focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
 h1, h2, h3 { margin: 0; }
+[hidden] { display: none !important; }
 .ocult { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---------- Estructura ---------- */
@@ -173,7 +174,6 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .temes legend { padding: 0; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
 
 /* ---------- Temes ---------- */
-.camps.dos { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
 .amb-boto { display: flex; gap: 8px; min-width: 0; }
 .amb-boto select, .amb-boto input { flex: 1; min-width: 0; }
 .amb-boto .boto, .amb-boto .boto-sec { padding: 0 16px; }
@@ -181,9 +181,6 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .peu-form > .boto { margin-left: auto; }
 .lloc-interruptor { flex: 1 1 320px; min-width: 0; }
 .lloc-interruptor:empty { display: none; }
-.fila-tema { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px; }
-.fila-tema > .camp { flex: 0 1 380px; min-width: 0; }
-.fila-tema > .interruptor { flex: 1 1 300px; }
 .interruptor { position: relative; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; min-width: 0; }
 .interruptor input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
 .interruptor .pista {
@@ -205,6 +202,60 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
   .interruptor .pista, .interruptor .pista::after { transition: none; }
 }
 
+/* ---------- Fitxa de la classe: Nova classe i Materials ---------- */
+.fitxa-classe { container-type: inline-size; gap: 16px; }
+.camps.fitxa-camps { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.55fr) minmax(0, 0.9fr) minmax(0, 1.2fr); gap: 16px; }
+@container (max-width: 760px) { .camps.fitxa-camps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 440px) { .camps.fitxa-camps { grid-template-columns: minmax(0, 1fr); } }
+.camp > .etiqueta { font-weight: 600; font-size: 14px; }
+.fix { min-height: 44px; display: flex; align-items: center; overflow-wrap: anywhere; }
+.peu-form > .enllac-suau { margin-left: auto; }
+.enllac-suau {
+  background: none; border: 0; padding: 6px 2px; font: inherit; font-size: 13px; color: var(--suau);
+  text-decoration: underline; cursor: pointer;
+}
+.enllac-suau:hover { color: var(--roig-text); }
+.enllac {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0;
+  padding: 4px 0; font: 600 14px var(--sans); color: var(--blau); cursor: pointer;
+}
+.enllac:hover { color: var(--blau-fosc); text-decoration: underline; }
+.avis .botons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.boto.perill { background: var(--roig); }
+.boto.perill:hover { background: var(--roig-text); }
+
+/* ---------- Materials, en dues columnes ---------- */
+.materials { container-type: inline-size; }
+.materials-graella { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+@container (max-width: 820px) { .materials-graella { grid-template-columns: minmax(0, 1fr); } }
+.col-materials { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.graella-fotos.xicoteta { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 12px; }
+.graella-fotos.xicoteta .foto { gap: 4px; }
+.graella-fotos.xicoteta .pag { top: 6px; left: 6px; padding: 0 7px; font-size: 11px; }
+.graella-fotos.xicoteta .nom-fitxer { font-size: 11px; }
+.graella-fotos.xicoteta .boto-icona { width: 28px; height: 28px; border: 0; background: none; }
+.graella-fotos.xicoteta .afegeix { padding: 8px; gap: 4px; }
+.graella-fotos.xicoteta .afegeix strong { font-size: 13px; }
+.graella-fotos.xicoteta .afegeix span { font-size: 12px; }
+.llista-fonts { display: flex; flex-direction: column; }
+.font-fila { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; border-top: 1px solid var(--linia); }
+.font-fila:first-child { border-top: 0; padding-top: 0; }
+.font-fila .cap { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.font-fila .cap input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--blau); flex: none; }
+.font-fila .cap > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.xips { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 28px; }
+.xip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border: 1px solid var(--vora-forta);
+  border-radius: 999px; background: #FFFFFF; font-size: 13px; cursor: pointer;
+}
+.xip input { width: 14px; height: 14px; margin: 0; accent-color: var(--blau); }
+.xip.triat { border-color: var(--blau); background: var(--blau-clar); color: var(--blau-text); }
+.xip:has(input:focus-visible) { outline: 2px solid var(--blau); outline-offset: 2px; }
+.xip .sense-text { font-size: 11px; color: var(--taronja-text); }
+.font-nova { display: flex; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid var(--linia); }
+.font-nova .camps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+#nota { min-height: 0; }
+
 /* ---------- Barra de «Passa a net» ---------- */
 .barra-accio {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
@@ -212,6 +263,12 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 }
 .barra-accio > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .barra-accio span { font-size: 14px; color: #C9CCD3; }
+/* A Materials, enganxada a la vora de baix mentre la pàgina és més llarga que la finestra. */
+.barra-accio.compacta {
+  position: sticky; bottom: 12px; z-index: 5; padding: 12px 20px;
+  box-shadow: 0 10px 28px rgba(27, 30, 36, 0.22);
+}
+.barra-accio.compacta .boto.gran { min-height: 44px; font-size: 15px; }
 
 /* ---------- Passos ---------- */
 .passos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
