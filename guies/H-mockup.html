@@ -1,0 +1,547 @@
+<title>Revisió costat a costat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Mock-up estàtic de la H (versió 2). Dalt, dues pantalles netes de «Resultat → Costat a costat»
+   dins d'un marc de navegador; davall, la guia part per part, amb un tros de pantalla al costat de cada explicació.
+   Només tema clar, com la web de LEMA (mateixos colors i lletres que web/static/style.css).
+   Les imatges són a guies/img/, fora de git: són fotos dels apunts i pàgines del PDF de la classe del 05/10. */
+:root {
+  color-scheme: light;
+  --pagina: #E7E5DD;
+  --fons: #F7F6F2;
+  --lateral: #EFEEE8;
+  --sup: #FFFFFF;
+  --tinta: #1B1E24;
+  --text-2: #3A404B;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora: #DEDCD4;
+  --vora-forta: #CFCDC4;
+  --linia: #ECEBE5;
+  --blau: #1F4FB8;
+  --blau-clar: #E8EEFA;
+  --blau-fons: #F6F8FD;
+  --blau-text: #1A43A0;
+  --blau-vora: #C9D5F0;
+  --taronja: #B45309;
+  --taronja-clar: #FDF1E4;
+  --taronja-text: #8F4207;
+  --roig: #B4231B;
+  --roig-clar: #FBE9E7;
+  --roig-text: #9A1E17;
+  --visor: #525659;
+  --visor-barra: #323639;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--pagina); color: var(--tinta); font: 15px/1.55 var(--sans); padding-block: 32px 80px; padding-inline: 16px; }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--blau); }
+button { font: inherit; }
+code { font: 0.9em var(--mono); background: var(--lateral); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+
+/* ---------- Document ---------- */
+.doc { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+.intro { display: flex; flex-direction: column; gap: 14px; max-width: 780px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suau); }
+.intro h1 { font: 600 46px/1.05 var(--serif); text-wrap: balance; }
+.intro p { font-size: 17px; color: var(--text-2); }
+.passos-us { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; max-width: 1100px; }
+.passos-us li { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; font-size: 14px; color: var(--text-2); }
+.passos-us b { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--tinta); }
+.passos-us b span { width: 26px; height: 26px; border-radius: 50%; background: var(--blau-clar); color: var(--blau-text); display: inline-flex; align-items: center; justify-content: center; font: 600 13px var(--mono); flex: none; }
+.seccio { display: flex; flex-direction: column; gap: 20px; }
+.seccio > header { display: flex; flex-direction: column; gap: 6px; max-width: 780px; }
+.seccio h2 { font: 600 32px/1.15 var(--serif); text-wrap: balance; }
+.seccio > header p { color: var(--text-2); font-size: 16px; }
+.pantalla { display: flex; flex-direction: column; gap: 10px; }
+.pantalla > h3 { font: 600 20px/1.2 var(--serif); }
+.pantalla > p { color: var(--text-2); max-width: 780px; }
+
+/* ---------- Marc del navegador ---------- */
+.marc { border: 1px solid var(--vora-forta); border-radius: 12px; overflow: hidden; background: var(--fons); box-shadow: 0 12px 32px rgba(27, 30, 36, 0.12); }
+.marc-barra { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--lateral); border-bottom: 1px solid var(--vora); min-width: 0; }
+.marc-barra i { width: 11px; height: 11px; border-radius: 50%; background: var(--vora-forta); flex: none; }
+.marc-barra .url { margin-left: 10px; flex: 1; min-width: 0; padding: 4px 12px; border-radius: 6px; background: var(--sup); font: 12px var(--mono); color: var(--suau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- La web de LEMA ---------- */
+.app { display: flex; flex-wrap: wrap; font-size: 15px; line-height: 1.5; }
+.lateral { flex: 0 0 64px; background: var(--lateral); border-right: 1px solid var(--vora); padding: 24px 10px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.logo-mini { font: 600 24px/1 var(--serif); padding: 4px 0; }
+.plega { width: 36px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: none; color: var(--suau); font-size: 16px; }
+.inicial { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--vora); background: var(--sup); font: 600 12px var(--sans); }
+.inicial.blau { color: var(--blau); border-color: var(--blau); font-size: 18px; }
+.inicial.actiu { background: var(--tinta); border-color: var(--tinta); color: #FFFFFF; }
+
+.principal { flex: 999 1 560px; min-width: 0; padding: 30px clamp(16px, 2.4vw, 32px) 40px; display: flex; flex-direction: column; gap: 20px; }
+.capcalera { display: flex; flex-direction: column; gap: 16px; }
+.capcalera .detall { font-size: 14px; color: var(--suau); }
+.capcalera h2 { font: 600 36px/1.1 var(--serif); }
+.pestanyes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--vora); }
+.pestanyes span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--suau); }
+.pestanyes .actiu { margin-bottom: -1px; border-bottom: 2px solid var(--blau); color: var(--tinta); font-weight: 600; }
+
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.entre { justify-content: space-between; }
+.peu { font-size: 13px; color: var(--suau); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--vora-forta); border-radius: 8px; overflow: hidden; background: var(--sup); }
+.seg button { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; border-left: 1px solid var(--vora-forta); background: transparent; font-size: 14px; font-weight: 500; color: var(--text-2); cursor: pointer; }
+.seg button:first-child { border-left: 0; }
+.seg button.on { background: var(--blau-clar); color: var(--blau-text); font-weight: 600; }
+.boto { display: inline-flex; align-items: center; min-height: 40px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--blau); color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; }
+.boto:disabled { background: #9AA6C4; cursor: not-allowed; }
+.boto-sec { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); color: var(--tinta); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.enllac { font-size: 14px; }
+
+/* Pantalla dividida: dos panells de la mateixa alçària, cada un amb la seua barra. */
+.dividida { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+.panell { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; overflow: hidden; }
+.panell-cap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--linia); }
+.panell-cos { height: 700px; overflow: auto; }
+.fotos { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: var(--fons); }
+.fotos figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.fotos img { display: block; width: 100%; height: auto; border: 1px solid var(--linia); border-radius: 6px; background: var(--sup); }
+.fotos figcaption { font-size: 12px; color: var(--suau); }
+
+/* El visor de PDF del navegador */
+.visor { display: flex; flex-direction: column; height: 100%; background: var(--visor); }
+.visor-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--visor-barra); color: #E8EAED; font-size: 13px; }
+.visor-barra span { white-space: nowrap; }
+.visor-pagines { flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; }
+.visor-pagines img { display: block; width: 100%; max-width: 560px; height: auto; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+
+/* L'editor del LaTeX: un requadre per bloc */
+.editor { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: var(--fons); }
+.bloc { display: flex; flex-direction: column; gap: 6px; }
+.bloc-cap { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.bloc-cap b { font: 600 13px var(--mono); }
+.bloc-cap span { color: var(--suau); }
+.marca-mod { padding: 1px 8px; border-radius: 999px; background: var(--blau-clar); color: var(--blau-text); font-size: 12px; font-weight: 600; }
+.bloc textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--vora-forta); border-radius: 8px; background: var(--sup); font: 12.5px/1.55 var(--mono); color: var(--tinta); resize: vertical; white-space: pre; overflow: auto; }
+.bloc.mod textarea { border: 2px solid var(--blau); padding: 9px 11px; }
+.estat-editor { font-size: 13px; color: var(--blau-text); font-weight: 600; }
+/* Un sol text continu: el quadre ocupa tot el panell. */
+.editor-unic { display: flex; overflow: hidden; }
+.editor-unic textarea { flex: 1; width: 100%; height: 100%; margin: 0; padding: 14px 16px; border: 0; border-radius: 0; background: var(--sup); font: 12.5px/1.6 var(--mono); color: var(--tinta); resize: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+.editor-unic textarea:focus-visible { outline: 2px solid var(--blau); outline-offset: -2px; }
+.mostra-text { width: 100%; min-height: 200px; padding: 12px 14px; border: 1px solid var(--vora-forta); border-radius: 8px; background: var(--sup); font: 12.5px/1.6 var(--mono); color: var(--tinta); resize: vertical; white-space: pre-wrap; }
+
+.avis { display: flex; gap: 12px; align-items: flex-start; padding: 12px 16px; border-radius: 10px; border: 1px solid; font-size: 14px; }
+.avis > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.avis.roig { background: var(--roig-clar); border-color: #EFC2BD; color: #7A1812; }
+.avis.blau { background: var(--blau-clar); border-color: var(--blau-vora); color: #173A8A; }
+.avis.taronja { background: var(--taronja-clar); border-color: #F0CBA4; color: #6E3306; }
+.avis.verd { background: var(--blau-fons); border-color: var(--blau-vora); color: #173A8A; }
+.avis code { background: rgba(255, 255, 255, 0.6); }
+
+.resposta { background: var(--sup); border: 2px solid var(--blau); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.resposta label { font: 600 21px/1.2 var(--serif); }
+.resposta textarea { width: 100%; min-height: 72px; padding: 12px; border: 1px solid var(--vora-forta); border-radius: 8px; font: inherit; resize: vertical; }
+
+/* ---------- Guia part per part ---------- */
+.parts { display: flex; flex-direction: column; gap: 20px; }
+.part { background: var(--sup); border: 1px solid var(--vora); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 20px; }
+.part-cap { display: flex; align-items: center; gap: 14px; }
+.part-num { width: 34px; height: 34px; border-radius: 50%; background: var(--tinta); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font: 600 15px var(--mono); flex: none; }
+.part-cap h3 { font: 600 25px/1.2 var(--serif); text-wrap: balance; }
+.part-cos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.part-text { display: flex; flex-direction: column; gap: 12px; max-width: 66ch; }
+.part-text p b { font-weight: 600; }
+.cal { padding: 12px 16px; background: var(--fons); border-radius: 10px; font-size: 14px; color: var(--text-2); }
+.cal b { color: var(--tinta); }
+.part-mostra { background: var(--fons); border: 1px solid var(--linia); border-radius: 12px; padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.part-mostra .panell-cos { height: 340px; }
+.alternatives { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; align-items: start; }
+.alt { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.alt figcaption { display: flex; flex-direction: column; gap: 3px; }
+.alt figcaption strong { font-size: 16px; }
+.alt figcaption span { font-size: 14px; color: var(--text-2); }
+.reco { align-self: flex-start; padding: 1px 9px; border-radius: 999px; background: var(--blau-clar); color: var(--blau-text); font-size: 12px; font-weight: 600; }
+.triat { align-self: flex-start; padding: 1px 9px; border-radius: 999px; background: var(--tinta); color: #FFFFFF; font-size: 12px; font-weight: 600; }
+.dialeg { background: var(--sup); border: 1px solid var(--vora-forta); border-radius: 10px; box-shadow: 0 8px 24px rgba(27, 30, 36, 0.14); padding: 18px; display: flex; flex-direction: column; gap: 14px; max-width: 440px; }
+.dialeg p { font-size: 14px; }
+.missatge { align-self: flex-end; max-width: 92%; background: var(--blau-clar); border-radius: 12px; padding: 12px 16px; font-size: 14px; }
+.missatge .qui { font-size: 12px; color: var(--blau-text); font-weight: 600; }
+.missatge p + p { margin-top: 6px; }
+.missatge .afegit { color: var(--suau); }
+.decisions { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 840px; font-size: 16px; }
+.decisions li::marker { font-weight: 600; }
+.decisions ul { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--text-2); }
+.triades { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.triades li { padding: 12px 14px; background: var(--sup); border: 1px solid var(--vora); border-radius: 10px; font-size: 14px; color: var(--text-2); display: flex; flex-direction: column; gap: 2px; }
+.triades b { color: var(--tinta); font-size: 15px; }
+
+@media (max-width: 860px) {
+  .part-cos { grid-template-columns: minmax(0, 1fr); }
+  .panell-cos { height: 520px; }
+}
+@media (max-width: 640px) {
+  .intro h1 { font-size: 36px; }
+  .capcalera h2 { font-size: 30px; }
+  .part { padding: 18px; }
+}
+</style>
+
+<div class="doc">
+
+<!-- ================= Introducció ================= -->
+<header class="intro">
+  <span class="eyebrow">LEMA · web local · mock-up de la H, versió 2</span>
+  <h1>Revisió costat a costat</h1>
+  <p>Ara, a «Resultat», només hi ha el PDF. Per comprovar-lo amb els apunts has d'obrir les fotos en una altra pestanya i anar d'una a l'altra. I si veus una cosa malament, l'única manera d'arreglar-la és demanar-la a Claude.</p>
+  <p>Amb esta versió, «Resultat» té un interruptor nou, «Costat a costat», que divideix la pantalla en dos: a l'esquerra, les fotos dels teus apunts; a la dreta, el PDF definitiu. Amb un botó, l'esquerra canvia al codi LaTeX dels blocs, i el pots modificar tu mateix: deses, es torna a compilar i el PDF de la dreta s'actualitza.</p>
+  <p>És un mock-up: no funciona res, només ensenya com seria. Fa servir les fotos i el PDF de la classe del 05/10 d'Estructures Algebraiques. Ja té les teues tries: dins de «Resultat», fotos senceres o LaTeX a l'esquerra, PDF a la dreta, cada costat es mou sol i el LaTeX es pot editar.</p>
+</header>
+
+<section class="seccio" aria-labelledby="t-us">
+  <header><h2 id="t-us">Com s'usaria</h2></header>
+  <ol class="passos-us">
+    <li><b><span>1</span>Obris «Costat a costat»</b>A «Resultat», canvies l'interruptor de «PDF sencer» a «Costat a costat».</li>
+    <li><b><span>2</span>Compares</b>Baixes per les fotos a l'esquerra i pel PDF a la dreta, cada un al seu ritme.</li>
+    <li><b><span>3</span>Corregeixes</b>Si veus un error, passes l'esquerra a «LaTeX», el canvies i cliques «Desa i compila». O el demanes a Claude, com ara.</li>
+    <li><b><span>4</span>Comproves</b>El PDF de la dreta es torna a carregar amb el canvi.</li>
+  </ol>
+</section>
+
+<!-- ================= Les pantalles ================= -->
+<section class="seccio" aria-labelledby="t-pantalles">
+  <header>
+    <h2 id="t-pantalles">Les pantalles</h2>
+    <p>Dues pantalles: amb les fotos a l'esquerra i amb el LaTeX. Davall s'explica cada part.</p>
+  </header>
+
+  <div class="pantalla">
+    <h3>Costat a costat, amb les fotos</h3>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/classe/estructures-algebraiques/2026-10-05/resultat/costat</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Barra lateral plegada">
+          <span class="logo-mini">L</span>
+          <span class="plega" aria-hidden="true">»</span>
+          <span class="inicial blau">+</span>
+          <span class="inicial">AII</span>
+          <span class="inicial actiu">EA</span>
+        </nav>
+        <div class="principal">
+          <div class="capcalera">
+            <div><span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups · 05/10/2026</span><h2>Classe de teoria</h2></div>
+            <div class="pestanyes"><span>Materials</span><span>Progrés</span><span class="actiu">Resultat</span></div>
+          </div>
+          <div class="fila entre">
+            <div class="seg"><button type="button">PDF sencer</button><button type="button" class="on">Costat a costat</button></div>
+            <a class="enllac" href="#t-pantalles">Obre el PDF en una pestanya ↗</a>
+          </div>
+          <div class="dividida">
+            <section class="panell" aria-label="Apunts">
+              <div class="panell-cap">
+                <div class="seg"><button type="button" class="on">Apunts</button><button type="button">LaTeX</button></div>
+                <span class="peu">2 fotos</span>
+              </div>
+              <div class="panell-cos">
+                <div class="fotos">
+                  <figure><img src="img/apunts-p1.jpg" alt="Pàgina 1 dels apunts del 05/10"><figcaption>Foto 1</figcaption></figure>
+                  <figure><img src="img/apunts-p2.jpg" alt="Pàgina 2 dels apunts del 05/10"><figcaption>Foto 2</figcaption></figure>
+                </div>
+              </div>
+            </section>
+            <section class="panell" aria-label="PDF definitiu">
+              <div class="panell-cos">
+                <div class="visor">
+                  <div class="visor-barra"><span>tema.pdf</span><span>8 / 10</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div>
+                  <div class="visor-pagines">
+                    <img src="img/pdf-08.png" alt="Pàgina 8 del PDF">
+                    <img src="img/pdf-09.png" alt="Pàgina 9 del PDF">
+                    <img src="img/pdf-10.png" alt="Pàgina 10 del PDF">
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+          <form class="resposta" onsubmit="return false">
+            <label for="m1-resposta">Hi ha alguna cosa malament?</label>
+            <textarea id="m1-resposta" placeholder="p. ex. Definició 1.31: és l_t, no l_1. O demana-li a Claude que ho corregisca ell."></textarea>
+            <div class="fila entre"><span class="boto-sec">Adjunta fitxers</span><button type="button" class="boto">Envia a Claude</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pantalla">
+    <h3>Costat a costat, amb el LaTeX i un bloc canviat</h3>
+    <p>Tot el LaTeX de la classe en un sol text; les línies <code>%%%% B41.tex %%%%</code> marquen on comença cada bloc. Has canviat el Corol·lari 1.34 per Teorema, com a Wuolah, i encara no ho has desat: el PDF de la dreta és l'anterior.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/classe/estructures-algebraiques/2026-10-05/resultat/costat</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Barra lateral plegada">
+          <span class="logo-mini">L</span>
+          <span class="plega" aria-hidden="true">»</span>
+          <span class="inicial blau">+</span>
+          <span class="inicial">AII</span>
+          <span class="inicial actiu">EA</span>
+        </nav>
+        <div class="principal">
+          <div class="capcalera">
+            <div><span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups · 05/10/2026</span><h2>Classe de teoria</h2></div>
+            <div class="pestanyes"><span>Materials</span><span>Progrés</span><span class="actiu">Resultat</span></div>
+          </div>
+          <div class="fila entre">
+            <div class="seg"><button type="button">PDF sencer</button><button type="button" class="on">Costat a costat</button></div>
+            <a class="enllac" href="#t-pantalles">Obre el PDF en una pestanya ↗</a>
+          </div>
+          <div class="dividida">
+            <section class="panell" aria-label="LaTeX">
+              <div class="panell-cap">
+                <div class="seg"><button type="button">Apunts</button><button type="button" class="on">LaTeX</button></div>
+                <div class="fila">
+                  <span class="estat-editor">Sense desar: B41.tex</span>
+                  <button type="button" class="boto-sec">Descarta</button>
+                  <button type="button" class="boto">Desa i compila</button>
+                </div>
+              </div>
+              <div class="panell-cos editor-unic">
+                <textarea aria-label="El LaTeX de la classe" spellcheck="false">%%%% B39.tex %%%%
+\begin{exemple}\label{B39}%
+\origen{Apunts 05/10, p.\,2.}%
+Siga $\sigma\in\Sigma_7$\noteta{N19}{He llegit $\Sigma_7$; podria ser $\Sigma_9$. Amb $\Sigma_7$ el tipus quadra (P1).}, $\sigma=(1,3)(2,4)(5,6,7)$. Aleshores $\operatorname{tipus}(\sigma)=(2,2,3)$.
+
+Si $\sigma'=(1,3)(2,4)(5,6,7)(8,9)$, aleshores $\operatorname{tipus}(\sigma')=(2,2,2,3)$.
+\end{exemple}
+%%%% B40.tex %%%%
+\begin{observacio}\label{B40}%
+\origen{Wuolah T2, Prop.\,2.4\,1), p.\,2.\\ Apunts 05/10, p.\,2.}%
+Suposem $c=(x_1,\dots,x_r)$ un cicle de longitud $r$. \textcolor{lemapend}{\textbf{Pendent:} la nota dels apunts acaba ací.}
+\end{observacio}
+%%%% B41.tex %%%%
+\begin{teorema}\label{B41}%
+\origen{Wuolah T2, Teor.\,2.10, p.\,4.\\ Apunts 05/10, p.\,2.}%
+Siga $\sigma\in\Sigma_n$ amb $\operatorname{tipus}(\sigma)=(\underbrace{l_1,\dots,l_1}_{r_1},\dots,\underbrace{l_t,\dots,l_t}_{r_t})$. Aleshores $o(\sigma)={}$\correccio{$\operatorname{mcm}(l_1,\dots,l_t)$}.
+\end{teorema}
+\emph{Als apunts:} $\operatorname{mcm}(m_1,\dots,m_t)$, però el tipus $(m_1,\dots,m_t)$ està ratllat i reescrit amb les $l_i$.
+%%%% B42.tex %%%%
+\begin{proof}\label{B42}%
+\origen{Wuolah T2, dem. Teor.\,2.10, p.\,4--5.\\ Apunts 05/10, p.\,2.}%
+Pel teorema anterior podem escriure
+\[
+  \sigma=(c_{1,1}\circ\cdots\circ c_{1,r_1})\circ(c_{2,1}\circ\cdots\circ c_{2,r_2})\circ\cdots\circ(c_{t,1}\circ\cdots\circ c_{t,r_t}),
+\]
+amb els $c_{i,j}$ disjunts 2 a 2 i $c_{i,j}$ de longitud $l_i$. Donat $n\in\mathbb N$, com que els cicles disjunts commuten (Proposició~\ref{B32}),
+\[
+  \sigma^n=(c_{1,1}\circ\cdots\circ c_{1,r_1})^n\circ\cdots\circ(c_{t,1}\circ\cdots\circ c_{t,r_t})^n.
+\]</textarea>
+              </div>
+            </section>
+            <section class="panell" aria-label="PDF definitiu">
+              <div class="panell-cos">
+                <div class="visor">
+                  <div class="visor-barra"><span>tema.pdf</span><span>9 / 10</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div>
+                  <div class="visor-pagines">
+                    <img src="img/pdf-09.png" alt="Pàgina 9 del PDF">
+                    <img src="img/pdf-10.png" alt="Pàgina 10 del PDF">
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Part per part ================= -->
+<section class="seccio" aria-labelledby="t-parts">
+  <header>
+    <h2 id="t-parts">Part per part</h2>
+    <p>Per a cada part: què veus, què pots fer, per a què serveix i què caldria canviar a LEMA perquè funcione.</p>
+  </header>
+
+  <div class="parts">
+
+    <article class="part" aria-labelledby="p1">
+      <div class="part-cap"><span class="part-num">1</span><h3 id="p1">L'interruptor «PDF sencer / Costat a costat»</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> A «Resultat», damunt de tot, un interruptor. «PDF sencer» és el que hi ha ara: el PDF, l'informe i la llista de fitxers. «Costat a costat» és la pantalla dividida.</p>
+          <p><b>Per a què serveix.</b> Tens les dues maneres de mirar el resultat en el mateix lloc. Llegir el PDF i l'informe, o revisar-lo amb els apunts davant.</p>
+          <p><b>Detall.</b> L'adreça de la pàgina canvia (<code>…/resultat/costat</code>). Si recarregues la pàgina, es queda en «Costat a costat».</p>
+          <p class="cal"><b>Què cal.</b> Res especial: és la pantalla de «Resultat» amb una vista més.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="pestanyes"><span>Materials</span><span>Progrés</span><span class="actiu">Resultat</span></div>
+          <div class="seg" style="align-self: flex-start"><button type="button">PDF sencer</button><button type="button" class="on">Costat a costat</button></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p2">
+      <div class="part-cap"><span class="part-num">2</span><h3 id="p2">Els apunts, a l'esquerra</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> Totes les fotos de la classe, senceres, una davall de l'altra, en l'ordre de «Materials». Davall de cada una, el seu número.</p>
+          <p><b>Què pots fer.</b> Baixar amb la roda del ratolí. Si cliques una foto, s'obri en gran en una pestanya nova, per ampliar-la. Si un dels apunts és un PDF, es veu dins del requadre amb el visor del navegador.</p>
+          <p class="cal"><b>Què cal.</b> Res: les fotos ja són a la carpeta de la classe.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="panell">
+            <div class="panell-cap"><div class="seg"><button type="button" class="on">Apunts</button><button type="button">LaTeX</button></div><span class="peu">2 fotos</span></div>
+            <div class="panell-cos"><div class="fotos"><figure><img src="img/apunts-p1.jpg" alt="Pàgina 1 dels apunts"><figcaption>Foto 1</figcaption></figure></div></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p3">
+      <div class="part-cap"><span class="part-num">3</span><h3 id="p3">El PDF definitiu, a la dreta</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> El mateix PDF que a «PDF sencer», amb el visor que porta el navegador.</p>
+          <p><b>Què pots fer.</b> Baixar, saltar de pàgina, ampliar i buscar text amb Ctrl+F, com en qualsevol PDF.</p>
+          <p><b>Si la classe és dins del document del tema,</b> el PDF és el del tema sencer, i la classe és a les pàgines que diu l'informe. La del 05/10 té el seu document a banda, de 10 pàgines.</p>
+          <p class="cal"><b>Què cal.</b> Res: és el PDF que ja ensenya «Resultat».</p>
+        </div>
+        <div class="part-mostra">
+          <div class="panell"><div class="panell-cos"><div class="visor"><div class="visor-barra"><span>tema.pdf</span><span>9 / 10</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div><div class="visor-pagines"><img src="img/pdf-09.png" alt="Pàgina 9 del PDF"></div></div></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p4">
+      <div class="part-cap"><span class="part-num">4</span><h3 id="p4">Cada costat es mou sol</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què vol dir.</b> Les fotos i el PDF tenen cada un la seua barra. Si baixes per un, l'altre es queda on era. El tros que vols comparar el busques tu als dos costats.</p>
+          <p><b>Per què així.</b> És el més simple, i Claude no ha de fer res de nou. L'alternativa, que els dos costats saltaren sols al mateix bloc, demanava que Claude apuntara on és cada bloc dins de cada foto. Era el mock-up anterior, i queda apuntada per a més endavant.</p>
+          <p class="cal"><b>Què cal.</b> Res.</p>
+        </div>
+        <div class="alternatives">
+          <figure class="alt">
+            <figcaption><span class="triat">Triat</span><strong>Cada costat lliure</strong><span>Dues barres, una per costat.</span></figcaption>
+          </figure>
+          <figure class="alt">
+            <figcaption><strong>Per blocs</strong><span>Per a més endavant: tries un bloc i els dos costats hi van.</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p5">
+      <div class="part-cap"><span class="part-num">5</span><h3 id="p5">El LaTeX, a l'esquerra</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> Si canvies l'esquerra a «LaTeX», en lloc de les fotos ix tot el LaTeX de la classe en un sol text, de dalt a baix, com un <code>.tex</code> normal.</p>
+          <p><b>Les línies <code>%%%% B41.tex %%%%</code>.</b> Per dins, cada bloc és un fitxer a part (<code>B01.tex</code>, <code>B02.tex</code>…), perquè cada classe puga afegir els seus blocs al tema sense tocar els de les altres. Estes línies marquen on comença cada fitxer. Quan deses, la web parteix el text per elles i desa cada tros al seu fitxer. Per a LaTeX són comentaris: no ixen al PDF.</p>
+          <p><b>Què pots fer.</b> Escriure, seleccionar i buscar per tot el text, com en qualsevol editor. Dalt diu quins fitxers tens sense desar (p. ex. «Sense desar: B41.tex»).</p>
+          <p><b>Quins blocs ixen.</b> Només els d'esta classe. Si la classe és dins del document d'un tema, no veus els de les altres classes. Tampoc ix <code>tema.tex</code>, que només és la llista dels blocs en ordre, ni la plantilla, que és comuna per a tots els temes.</p>
+          <p class="cal"><b>Què cal.</b> La web ha de poder ajuntar els blocs en un text, partir-lo en desar i escriure els fitxers. Ara només els pot llegir.</p>
+        </div>
+        <div class="part-mostra">
+          <textarea class="mostra-text" aria-label="Exemple del LaTeX en un sol text" spellcheck="false">%%%% B40.tex %%%%
+\begin{observacio}\label{B40}%
+Suposem $c=(x_1,\dots,x_r)$ un cicle de longitud $r$. …
+\end{observacio}
+%%%% B41.tex %%%%
+\begin{teorema}\label{B41}%
+Siga $\sigma\in\Sigma_n$ amb …
+\end{teorema}</textarea>
+          <p class="peu">Dos blocs seguits. El B41 diu «teorema» en lloc de «corollari»: és el canvi sense desar.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p6">
+      <div class="part-cap"><span class="part-num">6</span><h3 id="p6">«Desa i compila» i «Descarta»</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>«Desa i compila».</b> Desa els blocs que has canviat i torna a fer el PDF. Tarda uns segons, i mentrestant el botó diu «Compilant…». Quan acaba, el PDF de la dreta es torna a carregar amb el canvi.</p>
+          <p><b>Si LaTeX dona error</b> (una clau sense tancar, una ordre mal escrita…), ix un avís roig amb el fitxer, la línia i el missatge de LaTeX. El PDF de la dreta es queda com estava, i el teu canvi es queda desat, perquè el pugues arreglar i tornar a compilar.</p>
+          <p><b>Si esborres o canvies una línia <code>%%%% … %%%%</code></b>, la web no sap on va cada tros i no desa res. Ix un avís que diu quina falta, perquè la tornes a posar o cliques «Descarta».</p>
+          <p><b>«Descarta».</b> Desfà els canvis que encara no has desat i torna al que hi ha als fitxers.</p>
+          <p><b>Si te'n vas amb canvis sense desar</b>, la web t'avisa abans, perquè no els perdes sense voler.</p>
+          <p class="cal"><b>Què cal.</b> Que la web puga compilar el document. Ja ho fa quan esborres una classe d'un tema: fa servir <code>compila.py</code> i, si falla, torna a posar el PDF d'abans.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="avis verd"><div><b>Compilat: 10 pàgines.</b><span>El PDF de la dreta ja té el canvi.</span></div></div>
+          <div class="avis roig"><div><b>No s'ha pogut compilar.</b><span>Error a <code>blocs/B41.tex</code>, línia 3: Missing $ inserted.</span><span>El PDF és l'anterior. El teu canvi està desat: arregla'l i torna a compilar.</span></div></div>
+          <div class="avis taronja"><div><b>No s'ha desat res.</b><span>Falta la línia <code>%%%% B41.tex %%%%</code>: torna-la a posar on començava el bloc, o clica «Descarta».</span></div></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p7">
+      <div class="part-cap"><span class="part-num">7</span><h3 id="p7">Claude i els teus canvis</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>El que canvia.</b> Fins ara, la decisió 2 de <code>CLAUDE.md</code> deia que tu no edites el document: marques el que està malament i Claude ho corregeix. Ara també el pots editar tu. Per això Claude ha de saber quins blocs has tocat, per no desfer-te'ls sense voler.</p>
+          <p><b>Quan demanes una correcció a Claude</b> amb «Hi ha alguna cosa malament?», la web afegeix al final del teu missatge quins blocs has editat a mà. Claude té la norma de no desfer-los. Si li sembla que hi ha un error, t'ho diu amb una noteta en lloc de canviar-lo.</p>
+          <p><b>Si tornes a passar a net la classe</b> des del principi, Claude torna a escriure tots els blocs i els teus canvis es perden. La web t'ho avisa abans.</p>
+          <p class="cal"><b>Què cal.</b> Canviar la decisió 2 de <code>CLAUDE.md</code>, posar la norma al prompt de la web, i una versió nova de <code>flux.html</code> (v7). La web apunta en un fitxer de la classe quins blocs has editat.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="missatge">
+            <span class="qui">Tu · el missatge que rep Claude</span>
+            <p>Definició 1.31: posa que els cicles de longitud 1 no compten.</p>
+            <p class="afegit">He editat a mà estos blocs des de la web: <code>blocs/B41.tex</code>. No desfaces els meus canvis; si creus que n'hi ha algun d'erroni, digues-m'ho amb una noteta.</p>
+          </div>
+          <div class="dialeg" role="presentation">
+            <p><b>Torna a passar a net</b></p>
+            <p>Has editat a mà 1 bloc d'esta classe (<code>B41.tex</code>). Si la tornes a passar a net, Claude escriurà tots els blocs de nou i perdràs eixos canvis. Continuar?</p>
+            <div class="fila" style="justify-content: flex-end"><button type="button" class="boto-sec">Cancel·la</button><button type="button" class="boto">Continua</button></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p8">
+      <div class="part-cap"><span class="part-num">8</span><h3 id="p8">Mentre Claude treballa</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> Si Claude està passant a net o corregint la classe, el LaTeX es pot llegir però no editar, i «Desa i compila» està desactivat. Un avís blau ho explica.</p>
+          <p><b>Per què.</b> Perquè tu i Claude no escrigueu el mateix fitxer alhora: el canvi d'un esborraria el de l'altre.</p>
+          <p class="cal"><b>Què cal.</b> Res de nou: la web ja sap quan Claude està treballant, i ja bloqueja «Materials» de la mateixa manera.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="avis blau"><div><b>Claude està treballant en esta classe.</b><span>El LaTeX es pot llegir, però el podràs editar quan pare.</span></div></div>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= Decisions ================= -->
+<section class="seccio" aria-labelledby="t-decidir">
+  <header>
+    <h2 id="t-decidir">Què ja has triat i què queda</h2>
+  </header>
+  <ul class="triades">
+    <li><b>On va</b>Dins de «Resultat», amb l'interruptor.</li>
+    <li><b>Esquerra</b>Les fotos senceres, o el LaTeX.</li>
+    <li><b>Dreta</b>El PDF definitiu sencer.</li>
+    <li><b>Com et mous</b>Cada costat lliure.</li>
+    <li><b>El LaTeX</b>Un sol text continu, que edites tu i compiles.</li>
+  </ul>
+  <ol class="decisions">
+    <li><b>Com és l'editor.</b>
+      <ul>
+        <li><b>Senzill (proposta):</b> un quadre de text com el de «Per a Claude», amb lletra de màquina d'escriure. No cal res de fora.</li>
+        <li><b>Amb colors:</b> les ordres de LaTeX en colors, números de línia i parèntesis aparellats. Cal carregar un editor de codi (CodeMirror) d'internet.</li>
+      </ul>
+    </li>
+    <li><b>Què passa amb els teus canvis si tornes a passar a net la classe.</b>
+      <ul>
+        <li><b>Un avís (proposta):</b> la web t'avisa que es perdran, i tu decideixes.</li>
+        <li><b>Un avís i una còpia:</b> a més, la web guarda els blocs que havies editat a <code>dades/paperera/</code>, per si vols recuperar algun canvi.</li>
+      </ul>
+    </li>
+  </ol>
+  <p style="max-width: 780px; color: var(--text-2)">Si no dius res, van les propostes.</p>
+</section>
+
+</div>

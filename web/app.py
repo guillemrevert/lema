@@ -204,6 +204,22 @@ def al_tema(a, dades):
     return None
 
 
+def document_de(a, dades):
+    """El document que ensenya la classe: el PDF (ruta relativa a l'assignatura) i la carpeta dels seus blocs.
+
+    Si els blocs de la classe són al document del tema, és el del tema, tret que l'interruptor
+    estiga apagat i la classe tinga un PDF propi. None si la classe encara no té PDF."""
+    c = dades["id"]
+    carpeta = carpeta_classe(a, c)
+    propis = sorted(p.name for p in carpeta.glob("*.pdf"))
+    tema = al_tema(a, dades)
+    if tema and (dades["fusiona"] or not propis):
+        return {"pdf": f"temes/{tema.name}/tema.pdf", "blocs": tema / "blocs" / c}
+    if propis:
+        return {"pdf": f"classes/{c}/{propis[0]}", "blocs": carpeta / "blocs"}
+    return None
+
+
 def afegeix_event(carpeta, **event):
     (carpeta / "registre").mkdir(exist_ok=True)
     event["ts"] = ara()
@@ -352,18 +368,26 @@ def classe(a: str, c: str):
         fitxers += [(rel / n).as_posix() for n in noms
                     if Path(n).suffix not in SOROLL and n != "classe.json"]
     fitxers.sort()
-    propis = [f for f in fitxers if f.endswith(".pdf") and "/" not in f]
     fitxers = [f"classes/{c}/{f}" for f in fitxers]
-    pdf = f"classes/{c}/{propis[0]}" if propis else None
     tema = al_tema(a, dades)
     if tema:
-        # Els blocs de la classe són al document del tema: el PDF és el del tema, tret que
-        # l'interruptor estiga apagat i la classe tinga un PDF propi.
-        if dades["fusiona"] or not propis:
-            pdf = f"temes/{tema.name}/tema.pdf"
         fitxers += [f"temes/{tema.name}/{n}" for n in ("tema.tex", "tema.pdf") if (tema / n).exists()]
         fitxers += sorted(f"temes/{tema.name}/blocs/{c}/{b.name}" for b in (tema / "blocs" / c).iterdir())
-    return {**dades, "fitxers": fitxers, "pdf": pdf, "events": nombre_events(carpeta)}
+    document = document_de(a, dades)
+    return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
+            "events": nombre_events(carpeta)}
+
+
+@app.get("/api/classes/{a}/{c}/latex")
+def latex(a: str, c: str):
+    """Els blocs del document de la classe, en l'ordre del document (B01, B02…), amb el text de cada un."""
+    document = document_de(a, llig_classe(a, c))
+    if not document or not document["blocs"].is_dir():
+        return {"blocs": []}
+    base = carpeta_assig(a)
+    blocs = sorted(document["blocs"].glob("*.tex"), key=lambda b: ordre_natural(b.name))
+    return {"blocs": [{"fitxer": b.relative_to(base).as_posix(), "nom": b.name,
+                       "text": b.read_text(encoding="utf-8")} for b in blocs]}
 
 
 @app.put("/api/classes/{a}/{c}")

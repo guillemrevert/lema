@@ -1,7 +1,7 @@
 "use strict";
 
 // Rutes: #/ (nova classe), #/assignatura/<assignatura>/<temes|fonts>
-// i #/classe/<assignatura>/<classe>/<materials|progres|resultat>.
+// i #/classe/<assignatura>/<classe>/<materials|progres|resultat>, amb #/…/resultat/costat per a la vista dividida.
 
 const PASSOS = ["Preparació", "Lectura general", "Divisió en blocs", "Per a cada bloc",
   "Punt de control", "Escriure", "Muntatge i PDF"];
@@ -223,8 +223,8 @@ function interruptorTema(nom, actiu, { id, disabled, canvia }) {
 // ---------- Navegació ----------
 
 function ruta() {
-  const [vista, a, c, pestanya] = location.hash.replace(/^#\/?/, "").split("/");
-  return { vista, a, c, pestanya };
+  const [vista, a, c, pestanya, sub] = location.hash.replace(/^#\/?/, "").split("/");
+  return { vista, a, c, pestanya, sub };
 }
 
 function anar(desti) {
@@ -244,7 +244,7 @@ async function pinta() {
     assignatures = await api("/api/assignatures");
     const r = ruta();
     pintaLateral(r);
-    if (r.vista === "classe" && r.a && r.c) await pintaClasse(r.a, r.c, r.pestanya);
+    if (r.vista === "classe" && r.a && r.c) await pintaClasse(r.a, r.c, r.pestanya, r.sub);
     else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c);
     else pintaNova();
   } catch (e) {
@@ -623,15 +623,16 @@ function formFontNova(a, pujada) {
 
 // ---------- Classe ----------
 
-async function pintaClasse(a, c, pestanya) {
+async function pintaClasse(a, c, pestanya, sub) {
   const classe = await api(`/api/classes/${a}/${c}`);
   const assig = assignatures.find((x) => x.id === a);
   if (!pestanya) {
     pestanya = { nova: "materials", acabada: "resultat" }[classe.estat] || "progres";
   }
-  const cos = h("div", { class: "contingut" }, capcalera(classe, assig, pestanya));
+  const costat = pestanya === "resultat" && sub === "costat" && Boolean(classe.pdf);
+  const cos = h("div", { class: "contingut" + (costat ? " ample" : "") }, capcalera(classe, assig, pestanya));
   if (pestanya === "progres") pintaProgres(cos, classe);
-  else if (pestanya === "resultat") await pintaResultat(cos, classe, assig);
+  else if (pestanya === "resultat") await pintaResultat(cos, classe, assig, costat);
   else pintaMaterials(cos, classe, assig);
   principal.replaceChildren(cos);
 }
@@ -1140,7 +1141,7 @@ function caixaResposta(classe, { titol, placeholder, boto }) {
 
 // ---------- Resultat ----------
 
-async function pintaResultat(cos, classe, assig) {
+async function pintaResultat(cos, classe, assig, costat) {
   const a = classe.assignatura;
   const c = classe.id;
   // Les rutes són relatives a l'assignatura: classes/<classe>/… o temes/<tema>/…
@@ -1149,6 +1150,25 @@ async function pintaResultat(cos, classe, assig) {
   const curt = (f) => (f.startsWith(propi) ? f.slice(propi.length) : f);
   const delTema = Boolean(classe.pdf && classe.pdf.startsWith("temes/"));
   const tex = classe.pdf && classe.fitxers.find((f) => f === classe.pdf.replace(/\.pdf$/, ".tex"));
+  const resposta = () => (classe.sessio ? caixaResposta(classe, {
+    titol: "Hi ha alguna cosa malament?", boto: "Envia a Claude",
+    placeholder: "p. ex. Definició 1.2: és r, no n. Teorema 1.4: posa-hi la demostració de la font.",
+  }) : null);
+
+  if (classe.pdf) {
+    const base = `#/classe/${a}/${c}/resultat`;
+    const opcio = (href, nom, actiu) => h("a", { href, class: actiu ? "on" : null, "aria-current": actiu ? "page" : null }, nom);
+    cos.append(h("div", { class: "fila-vista" },
+      h("nav", { class: "seg", "aria-label": "Com es veu el resultat" },
+        opcio(base, "PDF sencer", !costat), opcio(`${base}/costat`, "Costat a costat", costat)),
+      costat ? h("a", { class: "enllac-petit", href: url(classe.pdf), target: "_blank" }, "Obre el PDF en una pestanya") : null));
+  }
+  if (costat) {
+    pintaCostat(cos, classe);
+    const caixa = resposta();
+    if (caixa) cos.append(caixa);
+    return;
+  }
 
   if (classe.pdf) {
     const titol = delTema ? `Document del tema «${nomTema(assig, classe.tema) || classe.tema}»` : curt(classe.pdf);
@@ -1175,10 +1195,7 @@ async function pintaResultat(cos, classe, assig) {
     h("div", { class: "col-principal" },
       informe ? h("section", { class: "targeta", "aria-labelledby": "t-informe" },
         h("h2", { id: "t-informe" }, "Informe"), markdown(informe)) : null,
-      classe.sessio ? caixaResposta(classe, {
-        titol: "Hi ha alguna cosa malament?", boto: "Envia a Claude",
-        placeholder: "p. ex. Definició 1.2: és r, no n. Teorema 1.4: posa-hi la demostració de la font.",
-      }) : null),
+      resposta()),
     h("aside", { class: "col-lateral" },
       h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
         h("h2", { id: "t-fitxers" }, "Fitxers"),
@@ -1187,4 +1204,80 @@ async function pintaResultat(cos, classe, assig) {
       h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
         h("h2", { id: "t-sessio" }, "Sessió"),
         h("dl", { class: "dades" }, h("dt", {}, "Tokens"), h("dd", {}, tokens(classe.tokens)))))));
+}
+
+// ---------- Resultat costat a costat ----------
+
+// Cada bloc és un fitxer, però el LaTeX es veu en un sol text: esta línia diu on comença cada un.
+const marcaBloc = (nom) => `%%%% ${nom} %%%%`;
+
+// Esquerra: les fotos dels apunts o el LaTeX de la classe. Dreta: el PDF. Cada costat té la seua barra.
+function pintaCostat(cos, classe) {
+  const a = classe.assignatura;
+  const c = classe.id;
+  const esquerra = h("div", { class: "panell-cos" });
+  const detall = h("span", { class: "nota-petita" });
+  let actual = null;
+  let latex = null;  // el quadre del LaTeX, una vegada carregat
+  let nBlocs = 0;
+
+  const fotos = h("div", { class: "fotos" }, classe.apunts.map((nom, i) => {
+    const src = urlFitxer(a, "classes", c, "apunts", nom);
+    return h("figure", {},
+      nom.toLowerCase().endsWith(".pdf")
+        ? h("iframe", { class: "foto-pdf", src, title: `Apunts ${i + 1}: ${nom}` })
+        : h("a", { href: src, target: "_blank", title: "Obre la foto en una pestanya nova" },
+          h("img", { src, alt: `Foto ${i + 1} dels apunts`, loading: "lazy" })),
+      h("figcaption", {}, `Foto ${i + 1}`));
+  }));
+
+  const botons = {
+    apunts: h("button", { type: "button", onclick: () => mostra("apunts") }, "Apunts"),
+    latex: h("button", { type: "button", onclick: () => mostra("latex") }, "LaTeX"),
+  };
+
+  async function mostra(que) {
+    actual = que;
+    for (const [nom, boto] of Object.entries(botons)) {
+      boto.classList.toggle("on", nom === que);
+      boto.setAttribute("aria-pressed", nom === que ? "true" : "false");
+    }
+    if (que === "apunts") {
+      const n = classe.apunts.length;
+      detall.textContent = `${n} ${n === 1 ? "foto" : "fotos"}`;
+      esquerra.replaceChildren(fotos);
+      return;
+    }
+    if (!latex) {
+      detall.textContent = "";
+      esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, "Carregant el LaTeX…"));
+      let blocs;
+      try {
+        ({ blocs } = await api(`/api/classes/${a}/${c}/latex`));
+      } catch (e) {
+        if (actual === "latex") esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, e.message));
+        return;
+      }
+      nBlocs = blocs.length;
+      latex = nBlocs
+        ? h("textarea", { class: "latex", readonly: true, spellcheck: "false", "aria-label": "El LaTeX de la classe" })
+        : h("p", { class: "nota-petita buit-panell" }, "Esta classe encara no té blocs.");
+      if (nBlocs) latex.value = blocs.map((b) => `${marcaBloc(b.nom)}\n${b.text.replace(/\n?$/, "\n")}`).join("");
+    }
+    if (actual !== "latex") return;  // mentre carregava, has tornat a les fotos
+    detall.textContent = nBlocs ? `${nBlocs} blocs · de moment, només per llegir` : "";
+    esquerra.replaceChildren(latex);
+  }
+
+  cos.append(h("div", { class: "dividida" },
+    h("section", { class: "panell", "aria-label": "Apunts o LaTeX" },
+      h("div", { class: "panell-cap" },
+        h("div", { class: "seg", role: "group", "aria-label": "Què es veu a l'esquerra" }, botons.apunts, botons.latex),
+        detall),
+      esquerra),
+    h("section", { class: "panell", "aria-label": "PDF definitiu" },
+      // Sense la columna de miniatures del visor i amb la pàgina a l'amplada del panell.
+      h("iframe", { class: "visor-costat", src: `${urlFitxer(a, classe.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`,
+        title: "PDF definitiu" }))));
+  mostra("apunts");
 }

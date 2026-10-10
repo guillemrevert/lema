@@ -70,7 +70,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | E | Carpeta per tema: cada classe afegeix blocs al tema. **Implementada** el 10/10/2026 (fase 1 de [`guies/E-temes.md`](guies/E-temes.md)); falta provar-la passant a net una classe de veritat. El Tema 1 d'Estructures Algebraiques comença amb els 51 blocs de la classe del 30/09 (2a part) | Canvi de dades i de la barra lateral (`millores.md` del 05/10) |
 | F | Esborrar una classe. **Feta** el 10/10/2026 (fase 2 de `guies/E-temes.md`): va a `dades/paperera/` | Res |
 | G | Diverses fonts per classe, amb selecció múltiple (demanat el 06/10). **Feta** | — |
-| H | Apunts i PDF costat a costat: al costat de cada bloc net, la foto d'on surt. Amplia la C | Que Claude escriga a `esquema.yaml` la foto i la zona de cada bloc en un format fix (part de la A) |
+| H | Pantalla dividida a «Resultat»: a l'esquerra, les fotos dels apunts o el LaTeX; a la dreta, el PDF definitiu. **Fase 1 feta** el 10/10/2026 (de [`guies/H-costat-a-costat.md`](guies/H-costat-a-costat.md)): l'interruptor, les fotos, el LaTeX només per llegir i el PDF. Falta la fase 2: editar el LaTeX i compilar | Res. La fase 2 canvia la decisió 2 de `CLAUDE.md` |
 | I | Obrir a Overleaf amb un clic i baixar un `.tex` que compile sol (ara `tema.tex` necessita `blocs/` i la plantilla) | Res |
 | J | Estils de document (clàssic, amb etiquetes, amb caixes) i opcions per assignatura: mida de lletra, marges, índex i numeració | Fer configurable `plantilla-base.tex`. Tanca la decisió oberta de numeració de l'especificació |
 | K | Regles per al que està ratllat, els dibuixos (retall de la foto o TikZ) i les notes al marge dels apunts | Que l'usuari ho decidisca. Canvia `CLAUDE.md` i `flux.html` |
@@ -84,18 +84,14 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 
 H–N, apuntades el 09/10/2026, venen de [MathWrite Notes](https://apps.apple.com/us/app/mathwrite-notes/id6807434387), una app d'iPad que passa a LaTeX el que s'escriu a mà. No hi ha font: és un transcriptor. Se'n van deixar fora les eines d'escriure a la pantalla (llapis, formes, gràfiques).
 
-**Mock-up de la H (10/10/2026), estàtic:** https://claude.ai/artifact/2Hy57Zef8jrywVYJN8DURY. Fa servir les fotos i el PDF de la classe del 05/10. Ensenya la pantalla neta i, davall, la explica en 13 parts (què veus, què pots fer, per a què serveix i què cal), amb les alternatives una al costat de l'altra. Hi ha una primera versió interactiva a la pàgina «H · Costat a costat» del canvas del mock-up.
+**H (10/10/2026):** guia [`guies/H-costat-a-costat.md`](guies/H-costat-a-costat.md), en proposta, i mock-up [`guies/H-mockup.html`](guies/H-mockup.html), publicat a https://claude.ai/artifact/2Hy57Zef8jrywVYJN8DURY (versió 2). L'usuari va triar:
 
-**On es va quedar la H:**
+- l'interruptor «PDF sencer / Costat a costat» dins de «Resultat»;
+- a l'esquerra, les fotos senceres o el LaTeX dels blocs, que pot editar i compilar ell mateix (canvia la decisió 2);
+- a la dreta, el PDF definitiu;
+- cada costat es mou sol.
 
-- L'usuari revisarà el mock-up amb calma. Començarà pel nucli: la foto dels apunts al costat del bloc net (la pàgina del PDF o el LaTeX del bloc). Són les parts 5 i 8, amb la pestanya (part 1) i una manera de triar el bloc (part 3 o 2).
-- Decisions pendents:
-  - Com es veu la foto: zona ressaltada, només el retall, foto sencera o un selector.
-  - Com es veu el bloc net: pàgina del PDF, bloc sol, LaTeX o un selector.
-  - On va la vista: en una pestanya pròpia o dins de «Resultat».
-- La versió més barata és la foto sencera de la pàgina al costat del LaTeX del bloc. El LaTeX ja és a `blocs/`, i Claude només ha d'apuntar en quina foto és cada bloc, sense calcular cap zona.
-- Marcar el bloc damunt de la foto vol que Claude apunte la zona de cada bloc al pas 2, i això porta una v6 de `flux.html`. Marcar-lo al PDF vol que la plantilla apunte on és cada bloc i que el contenidor tinga `pdftoppm`.
-- Amb les decisions, el pas següent és la guia d'implementació (`guies/H-…`, skill `guia-implementacio`).
+La primera versió del mock-up, bloc a bloc i amb 13 parts, també era interactiva a la pàgina «H · Costat a costat» del canvas del mock-up. Les seues peces passen a «Opcions no triades» quan s'aprove la guia.
 
 **G, feta el 07/10/2026:**
 
@@ -123,6 +119,20 @@ Les lletres són les de les parts del mock-up (`guies/E-mockup.html`).
 - **Part 13 B · Els temes en una taula** a la pàgina d'assignatura. Més curta, però no es veuen les classes de cada tema.
 - **Part 14 B · Canviar el nom d'un tema clicant-lo directament**, sense llapis. No se sap que es pot editar fins que s'hi clica.
 - **Part 15 B · Els blocs es queden a la carpeta de cada classe** i el `tema.tex` del tema els apunta amb rutes relatives. No es mou res, però el tema depén de totes les classes i no es pot exportar sol.
+
+### Resultat costat a costat (guia H)
+
+Del primer mock-up de la H, que treballava bloc a bloc. Per a quasi totes cal que Claude escriga `esquema.yaml` amb un format fix (la A).
+
+- **Una pestanya pròpia, «Revisió»,** en lloc de l'interruptor dins de «Resultat».
+- **Moure's per blocs:** una tira amb un botó per bloc, amb el color de la comparació amb la font, i fletxes d'anterior i següent. Cliques un bloc i els dos costats hi salten. Cal que Claude apunte, al pas 2, on és cada bloc dins de cada foto.
+- **El bloc marcat damunt de la foto** (zona ressaltada) o retallat, en lloc de la foto sencera.
+- **Només la pàgina del PDF on és el bloc**, amb el bloc marcat, o el bloc sol retallat del PDF. Cal `pdftoppm` al contenidor i que la plantilla apunte on és cada bloc.
+- **Zoom de la foto** dins del panell. Ara la foto s'obri en gran en una pestanya nova.
+- **Pestanya «Font»:** la pàgina de la font on és el resultat, al costat dels apunts.
+- **Fitxa del bloc** (on és als apunts i a la font, la versió triada i la correcció), **notetes amb un clic**, **comentari per bloc**, **marcar revisat** i una **safata** que envia tot a Claude d'una vegada.
+- **El LaTeX en un requadre per bloc**, en lloc d'un sol text.
+- **El LaTeX només per llegir**, sense poder editar-lo.
 
 ### Motor
 
