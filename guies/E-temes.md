@@ -316,3 +316,10 @@ No canvien.
 5. «Nou tema» des de la pàgina: apareix buit, amb «Encara no hi ha document».
 6. Pestanya «Fonts»: Wuolah amb els quatre PDF; pujar una font de prova i, a Materials d'una classe, vore que ja es pot marcar.
 7. A Materials ja no hi ha el formulari de pujar fonts, només l'enllaç.
+
+---
+
+## Ajustos després de les fases
+
+- **«Per a Claude», davall dels apunts (10/10/2026).** Petició de l'usuari amb una captura: a Materials, la targeta passa de la columna de la dreta (davall de les fonts) a la de l'esquerra (davall dels apunts), on hi havia un buit. La nota també hi cap millor, perquè la columna és més ampla. Canvia `pintaMaterials` a `web/static/app.js`.
+- **Un «null» a la targeta de Fonts (10/10/2026).** Error de la fase 3: quan l'assignatura té fonts, la línia «encara no té cap font» valia `null` i el navegador l'escrivia com a text. Ara `seccioFont` filtra els buits.

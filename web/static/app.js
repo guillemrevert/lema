@@ -671,10 +671,10 @@ function pintaMaterials(cos, classe, assig) {
     fitxaClasse(classe, assig, desa, bloquejat),
     h("div", { class: "materials" },
       h("div", { class: "materials-graella" },
-        seccioApunts(classe, bloquejat),
         h("div", { class: "col-materials" },
-          seccioFont(classe, assig, desa, bloquejat),
-          seccioNota(classe, desa, bloquejat)))),
+          seccioApunts(classe, bloquejat),
+          seccioNota(classe, desa, bloquejat)),
+        seccioFont(classe, assig, desa, bloquejat))),
     barraPassa(classe, assig),
   );
 }
@@ -863,7 +863,8 @@ function seccioFont(classe, assig, desa, bloquejat) {
   }
 
   function pintaSeccio() {
-    seccio.replaceChildren(
+    // Sense filter, un null es pintaria com el text «null».
+    seccio.replaceChildren(...[
       h("div", { class: "cap-seccio" },
         h("h2", { id: "t-font" }, "Fonts"),
         h("p", {}, "D'on es reconstrueix cada bloc. Si en marques més d'una i no coincideixen, Claude en tria una i t'ho diu en una noteta.")),
@@ -873,7 +874,8 @@ function seccioFont(classe, assig, desa, bloquejat) {
       assig.fonts.length ? null : h("p", { class: "detall" },
         "Esta assignatura encara no té cap font. Puja-la a la pàgina de l'assignatura: la podràs triar en totes les classes."),
       h("a", { class: "enllac", href: `#/assignatura/${classe.assignatura}/fonts` },
-        icona("mes", 14, 2.2), "Puja una font nova a l'assignatura"));
+        icona("mes", 14, 2.2), "Puja una font nova a l'assignatura"),
+    ].filter(Boolean));
   }
 
   pintaSeccio();
