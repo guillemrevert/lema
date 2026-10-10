@@ -32,6 +32,8 @@ const principal = document.getElementById("principal");
 let assignatures = [];
 let flux = null;      // EventSource del registre de Claude
 let rellotge = null;  // interval del temps del torn
+let sortida = null;   // la posa «Costat a costat»: diu si el LaTeX té canvis sense desar
+let hashAnterior = location.hash;
 
 if (window.marked) {
   // Els missatges de Claude no poden injectar HTML a la pàgina.
@@ -240,6 +242,8 @@ function tancaFlux() {
 
 async function pinta() {
   tancaFlux();
+  sortida = null;
+  hashAnterior = location.hash;
   try {
     assignatures = await api("/api/assignatures");
     const r = ruta();
@@ -252,7 +256,23 @@ async function pinta() {
   }
 }
 
-window.addEventListener("hashchange", pinta);
+// Si el LaTeX té canvis sense desar, abans d'eixir de la pàgina es pregunta.
+const potsEixir = () => !sortida || !sortida()
+  || confirm("Tens canvis al LaTeX sense desar. Si te'n vas, es perden. Te'n vas igualment?");
+
+window.addEventListener("hashchange", () => {
+  if (!potsEixir()) {
+    history.replaceState(null, "", hashAnterior);  // et quedes on eres, sense tornar a pintar
+    return;
+  }
+  pinta();
+});
+window.addEventListener("beforeunload", (e) => {
+  if (sortida && sortida()) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
 pinta();
 
 // ---------- Lateral ----------
@@ -908,11 +928,17 @@ function barraPassa(classe, assig) {
   else if (!fonts.length) falta = "Falta triar la font.";
   const enMarxa = classe.estat === "en_marxa";
   const repetir = classe.estat !== "nova";
+  // Els blocs editats a mà des de «Costat a costat»: Claude els tornarà a escriure (decisió 2).
+  const editats = (classe.editats || []).map((f) => f.split("/").pop());
+  const avisRepetir = "Començarà una conversa nova i Claude tornarà a fer la classe des del principi."
+    + (editats.length ? `\n\nHas editat a mà ${editats.length === 1 ? "1 bloc" : `${editats.length} blocs`} d'esta classe`
+      + ` (${editats.join(", ")}). Claude escriurà tots els blocs de nou i perdràs eixos canvis.` : "")
+    + "\n\nContinuar?";
 
   const boto = h("button", {
     type: "button", class: "boto gran", disabled: Boolean(falta) || enMarxa,
     onclick: async () => {
-      if (repetir && !confirm("Començarà una conversa nova i Claude tornarà a fer la classe des del principi. Continuar?")) return;
+      if (repetir && !confirm(avisRepetir)) return;
       boto.disabled = true;
       try {
         await api(`/api/classes/${a}/${c}/passa`, { method: "POST" });
@@ -1210,16 +1236,54 @@ async function pintaResultat(cos, classe, assig, costat) {
 
 // Cada bloc és un fitxer, però el LaTeX es veu en un sol text: esta línia diu on comença cada un.
 const marcaBloc = (nom) => `%%%% ${nom} %%%%`;
+const MARCA = /^%%%% (.+) %%%%$/;
 
-// Esquerra: les fotos dels apunts o el LaTeX de la classe. Dreta: el PDF. Cada costat té la seua barra.
+// Cada bloc acaba en un salt de línia, perquè el text es puga ajuntar i tornar a partir igual.
+const ambSalt = (text) => text.replace(/\r\n/g, "\n").replace(/\n?$/, "\n");
+const ajunta = (blocs) => blocs.map((b) => `${marcaBloc(b.nom)}\n${b.text}`).join("");
+
+// El text de cada bloc, en l'ordre dels blocs, o un error si falta, sobra o s'ha mogut alguna línia de marca.
+function parteix(text, blocs) {
+  const trossos = [];
+  for (const linia of ambSalt(text).split("\n").slice(0, -1)) {
+    const m = linia.match(MARCA);
+    if (m) trossos.push({ nom: m[1], linies: [] });
+    else if (trossos.length) trossos.at(-1).linies.push(linia);
+    else if (linia.trim()) {
+      return { error: `Hi ha text abans de la línia ${marcaBloc(blocs[0].nom)}: mou-lo dins d'un bloc o esborra'l.` };
+    }
+  }
+  const noms = trossos.map((t) => t.nom);
+  const falta = blocs.find((b) => !noms.includes(b.nom));
+  if (falta) {
+    return { error: `Falta la línia ${marcaBloc(falta.nom)}: torna-la a posar on començava el bloc, o clica «Descarta».` };
+  }
+  const sobra = noms.find((n, i) => !blocs.some((b) => b.nom === n) || noms.indexOf(n) !== i);
+  if (sobra) return { error: `La línia ${marcaBloc(sobra)} no és de cap bloc o està repetida: esborra-la, o clica «Descarta».` };
+  if (noms.some((n, i) => n !== blocs[i].nom)) {
+    return { error: "Les línies %%%% … %%%% no estan en l'ordre d'abans, i els blocs no es poden moure d'ací: clica «Descarta»." };
+  }
+  return { textos: trossos.map((t) => t.linies.map((l) => `${l}\n`).join("")) };
+}
+
+// Esquerra: les fotos dels apunts o el LaTeX de la classe, que es pot editar i compilar (decisió 2).
+// Dreta: el PDF. Cada costat té la seua barra.
 function pintaCostat(cos, classe) {
   const a = classe.assignatura;
   const c = classe.id;
+  const enMarxa = classe.estat === "en_marxa";
   const esquerra = h("div", { class: "panell-cos" });
   const detall = h("span", { class: "nota-petita" });
+  const avisos = h("div", { class: "avisos-panell", "aria-live": "polite" });
   let actual = null;
+  let blocs = null;  // [{fitxer, nom, text}], com estan als fitxers
   let latex = null;  // el quadre del LaTeX, una vegada carregat
-  let nBlocs = 0;
+  let compilant = false;
+
+  const pdf = h("iframe", { class: "visor-costat", title: "PDF definitiu" });
+  // Sense la columna de miniatures del visor i amb la pàgina a l'amplada del panell.
+  const recarregaPdf = () => { pdf.src = `${urlFitxer(a, classe.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`; };
+  recarregaPdf();
 
   const fotos = h("div", { class: "fotos" }, classe.apunts.map((nom, i) => {
     const src = urlFitxer(a, "classes", c, "apunts", nom);
@@ -1235,6 +1299,72 @@ function pintaCostat(cos, classe) {
     apunts: h("button", { type: "button", onclick: () => mostra("apunts") }, "Apunts"),
     latex: h("button", { type: "button", onclick: () => mostra("latex") }, "LaTeX"),
   };
+  const descarta = h("button", { type: "button", class: "boto-sec", disabled: true,
+    onclick: () => { latex.value = ajunta(blocs); avisos.replaceChildren(); actualitza(); } }, "Descarta");
+  const desa = h("button", { type: "button", class: "boto", disabled: true, onclick: () => desaICompila() }, "Desa i compila");
+  const accions = h("div", { class: "accions-latex", hidden: true }, descarta, desa);
+
+  function avis(color, titol, ...linies) {
+    avisos.replaceChildren(h("div", { class: `avis ${color}`, role: color === "roig" ? "alert" : "status" },
+      h("div", {}, h("strong", {}, titol), linies.filter(Boolean).map((l) => h("span", { class: "pre" }, l)))));
+  }
+
+  // Els blocs canviats respecte als fitxers; null si el text no es pot partir (s'ha tocat una línia de marca).
+  function canviats() {
+    if (!latex || !blocs?.length) return [];
+    const r = parteix(latex.value, blocs);
+    return r.error ? null : blocs.filter((b, i) => r.textos[i] !== b.text).map((b) => b.nom);
+  }
+
+  function actualitza() {
+    if (actual !== "latex" || !blocs?.length) return;
+    const noms = canviats();
+    const pendent = noms === null || noms.length > 0;
+    descarta.disabled = !pendent || compilant;
+    desa.disabled = !pendent || compilant || enMarxa;
+    detall.textContent = noms === null ? "Sense desar: s'ha tocat una línia %%%%"
+      : noms.length ? `Sense desar: ${noms.join(", ")}` : `${blocs.length} blocs`;
+    detall.classList.toggle("sense-desar", pendent);
+  }
+
+  // Si es deixa la pàgina amb canvis sense desar, la navegació ho pregunta abans (vegeu potsEixir).
+  sortida = () => {
+    const noms = canviats();
+    return noms === null || noms.length > 0;
+  };
+
+  async function desaICompila() {
+    const r = parteix(latex.value, blocs);
+    if (r.error) {
+      avis("taronja", "No s'ha desat res.", r.error);
+      return;
+    }
+    const canvis = blocs.map((b, i) => ({ fitxer: b.fitxer, text: r.textos[i] })).filter((x, i) => x.text !== blocs[i].text);
+    if (!canvis.length) return;
+    compilant = true;
+    desa.textContent = "Compilant…";
+    avisos.replaceChildren();
+    actualitza();
+    try {
+      const res = await api(`/api/classes/${a}/${c}/latex`, ambJson("POST", { canvis }));
+      // Els fitxers ja tenen el text nou, haja compilat o no.
+      for (const x of canvis) blocs.find((b) => b.fitxer === x.fitxer).text = x.text;
+      if (res.ok) {
+        const n = res.pagines;
+        avis("blau", n ? `Compilat: ${n} ${n === 1 ? "pàgina" : "pàgines"}.` : "Compilat.",
+          "El PDF de la dreta ja té el canvi.", res.missatge);
+        recarregaPdf();
+      } else {
+        avis("roig", "No s'ha pogut compilar.", res.missatge,
+          "El PDF és l'anterior. El teu canvi està desat: arregla'l i torna a compilar.");
+      }
+    } catch (e) {
+      avis("roig", "No s'ha desat.", e.message);
+    }
+    compilant = false;
+    desa.textContent = "Desa i compila";
+    actualitza();
+  }
 
   async function mostra(que) {
     actual = que;
@@ -1242,42 +1372,50 @@ function pintaCostat(cos, classe) {
       boto.classList.toggle("on", nom === que);
       boto.setAttribute("aria-pressed", nom === que ? "true" : "false");
     }
+    accions.hidden = true;
+    avisos.hidden = que !== "latex";
     if (que === "apunts") {
       const n = classe.apunts.length;
       detall.textContent = `${n} ${n === 1 ? "foto" : "fotos"}`;
+      detall.classList.remove("sense-desar");
       esquerra.replaceChildren(fotos);
       return;
     }
     if (!latex) {
       detall.textContent = "";
       esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, "Carregant el LaTeX…"));
-      let blocs;
       try {
         ({ blocs } = await api(`/api/classes/${a}/${c}/latex`));
       } catch (e) {
         if (actual === "latex") esquerra.replaceChildren(h("p", { class: "nota-petita buit-panell" }, e.message));
         return;
       }
-      nBlocs = blocs.length;
-      latex = nBlocs
-        ? h("textarea", { class: "latex", readonly: true, spellcheck: "false", "aria-label": "El LaTeX de la classe" })
-        : h("p", { class: "nota-petita buit-panell" }, "Esta classe encara no té blocs.");
-      if (nBlocs) latex.value = blocs.map((b) => `${marcaBloc(b.nom)}\n${b.text.replace(/\n?$/, "\n")}`).join("");
+      blocs = blocs.map((b) => ({ ...b, text: ambSalt(b.text) }));
+      if (blocs.length) {
+        latex = h("textarea", { class: "latex", spellcheck: "false", readonly: enMarxa,
+          "aria-label": "El LaTeX de la classe", oninput: actualitza });
+        latex.value = ajunta(blocs);
+        if (enMarxa) {
+          avis("blau", "Claude està treballant en esta classe.", "El LaTeX es pot llegir, però el podràs editar quan pare.");
+        }
+      } else {
+        latex = h("p", { class: "nota-petita buit-panell" }, "Esta classe encara no té blocs.");
+      }
     }
     if (actual !== "latex") return;  // mentre carregava, has tornat a les fotos
-    detall.textContent = nBlocs ? `${nBlocs} blocs · de moment, només per llegir` : "";
+    accions.hidden = !blocs.length;
     esquerra.replaceChildren(latex);
+    if (blocs.length) actualitza();
+    else detall.textContent = "";
   }
 
   cos.append(h("div", { class: "dividida" },
     h("section", { class: "panell", "aria-label": "Apunts o LaTeX" },
       h("div", { class: "panell-cap" },
         h("div", { class: "seg", role: "group", "aria-label": "Què es veu a l'esquerra" }, botons.apunts, botons.latex),
-        detall),
+        detall, accions),
+      avisos,
       esquerra),
-    h("section", { class: "panell", "aria-label": "PDF definitiu" },
-      // Sense la columna de miniatures del visor i amb la pàgina a l'amplada del panell.
-      h("iframe", { class: "visor-costat", src: `${urlFitxer(a, classe.pdf)}?v=${Date.now()}#navpanes=0&view=FitH`,
-        title: "PDF definitiu" }))));
+    h("section", { class: "panell", "aria-label": "PDF definitiu" }, pdf)));
   mostra("apunts");
 }

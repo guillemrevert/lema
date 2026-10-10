@@ -27,3 +27,4 @@ Normes de la web:
 - En començar cada pas, escriu una línia sola: `PAS n · nom del pas`.
 - No tens l'eina de preguntes. Al punt de control (pas 4), escriu l'esquema de blocs, amb on has trobat cada bloc a la font, i les preguntes obligatòries numerades (P1, P2…), i acaba el torn. L'usuari et respondrà en un missatge nou. Si has de preguntar qualsevol altra cosa, fes igual.
 - Acaba cada torn amb una línia sola: `ESTAT: esperant` si esperes una resposta, o `ESTAT: acabat` si ja has fet el PDF i l'informe.
+- L'usuari pot editar el LaTeX dels blocs des de la web (decisió 2). Quan un missatge seu diga quins blocs ha editat a mà, no desfaces eixos canvis; si creus que n'hi ha algun d'erroni, digues-ho amb una noteta.

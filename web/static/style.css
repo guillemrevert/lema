@@ -451,3 +451,12 @@ dl.dades dd { margin: 0; font-family: var(--mono); }
 }
 .buit-panell { padding: 16px; }
 .visor-costat { flex: 1; width: 100%; border: 0; background: #FFFFFF; }
+/* Editar el LaTeX: botons a la capçalera del panell i avisos davall. */
+.accions-latex { display: flex; gap: 8px; margin-left: auto; }
+.panell-cap .boto, .panell-cap .boto-sec { min-height: 36px; padding: 0 14px; font-size: 14px; }
+.nota-petita.sense-desar { color: var(--blau-text); font-weight: 600; }
+.avisos-panell { padding: 10px 14px 0; }
+.avisos-panell:empty { display: none; }
+.avisos-panell .avis { padding: 10px 14px; font-size: 14px; }
+.avis .pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.panell-cos textarea.latex:read-only { background: var(--fons); }

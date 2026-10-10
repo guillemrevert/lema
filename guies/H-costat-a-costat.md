@@ -1,6 +1,6 @@
 # Guia H · Resultat costat a costat, amb el LaTeX editable
 
-**Estat:** en dues fases. La fase 1 es va aprovar i fer el 10/10/2026. La fase 2 és una proposta, amb dues decisions pendents. Cada fase té el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
+**Estat:** feta el 10/10/2026, en dues fases. Cada una va tindre el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/H-mockup.html`](H-mockup.html), publicat a https://claude.ai/artifact/2Hy57Zef8jrywVYJN8DURY (versió 2). Ensenya dues pantalles netes i, davall, vuit parts explicades. Quan ací es diu «part 6», és la part 6 del mock-up. Les imatges del mock-up són a `guies/img/`, fora de git, perquè són fotos dels teus apunts.
 
@@ -35,7 +35,7 @@
 
 Les altres peces del primer mock-up (notetes amb un clic, comentaris per bloc, safata, marcar revisats) també van a «Opcions no triades».
 
-**Pendents per a la fase 2.** Si no dius res, van les propostes:
+**Per a la fase 2** hi havia dues decisions més. Com que no vas dir res, van anar les propostes (10/10/2026):
 
 1. **Com és l'editor.** **Proposta:** un quadre de text senzill, amb lletra de màquina d'escriure, com el de «Per a Claude». No cal res de fora. **Alternativa:** un editor amb colors (CodeMirror, carregat d'internet), amb números de línia i parèntesis aparellats.
 2. **Què passa amb els teus canvis si tornes a passar a net la classe.** **Proposta:** un avís abans de començar, que diu quins blocs has editat i que es perdran. **Alternativa:** l'avís i, a més, una còpia dels blocs editats a `dades/paperera/`.
@@ -134,7 +134,23 @@ A `localhost:8300`. Com que esta fase només llig, es prova amb les classes de v
 
 ## Fase 2 · Editar el LaTeX
 
-**Estat:** proposta. Té dues decisions pendents (dalt). Espera el teu vist-i-plau quan la fase 1 estiga provada.
+**Estat:** feta el 10/10/2026, amb les propostes de les dues decisions: l'editor senzill, i només l'avís en tornar a passar a net. Provada a `localhost:8300` amb una còpia de la classe del 05/10 (`2026-10-05-prova`), que al final es va esborrar des de la web i és a `dades/paperera/`:
+
+1. **Canviar el B41 a `teorema`:** dalt deia «Sense desar: B41.tex». «Desa i compila» va posar «Compilant…» i després «Compilat: 10 pàgines», i el PDF de la còpia diu «Teorema 1.34». També ix l'avís de `compila.py` de sempre: «2 línies ixen del marge». El document del 05/10 no s'ha tocat.
+2. **Error** (un `$` de menys): ix l'avís roig amb `./blocs/B41.tex`, la línia 3 i el missatge de LaTeX, i el PDF de la dreta no es recarrega. Al disc, el PDF es queda sencer (10 pàgines, l'última versió bona) i el bloc amb l'error queda desat. Torna a compilar bé quan s'arregla.
+3. **Línia `%%%% B40.tex %%%%` esborrada:** dalt diu «Sense desar: s'ha tocat una línia %%%%». En desar, ix l'avís taronja «Falta la línia…» i no s'envia res al servidor.
+4. **«Descarta»:** torna exactament al text dels fitxers.
+5. **Eixir sense desar:** en clicar «Materials», la web pregunta. Si dius que no, et quedes a l'editor amb el canvi; si dius que sí, te'n vas.
+6. **`edicions.json`** diu `B41.tex`. La nota per a Claude porta la ruta del bloc. La classe de veritat no en té cap, així que no porta nota.
+7. **«Torna a passar a net»:** l'avís diu «Has editat a mà 1 bloc d'esta classe (B41.tex)…».
+
+Hi ha tres coses que no s'han pogut provar sense fer treballar Claude:
+
+- el LaTeX només per llegir mentre Claude treballa, i que el servidor no deixe desar;
+- que `edicions.json` se'n vaja a `registre/` en començar «Torna a passar a net»;
+- una classe dins del document d'un tema.
+
+Es comprovaran amb la pròxima classe real.
 
 ### Què notaràs
 

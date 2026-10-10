@@ -407,7 +407,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Notetes numerades al marge (N1, N2…), les mateixes que a l'informe.",
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
         "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>.",
-        "Si la classe s'afegeix al document d'un tema (decisió 9): els blocs van a la carpeta del tema, en una carpeta per classe; al <code>tema.tex</code> del tema només s'hi afegeixen els <code>\\input</code> d'esta classe, en ordre de data; les notetes continuen la numeració del tema; es compila el tema, i l'informe diu a quines pàgines és la classe."
+        "Si la classe s'afegeix al document d'un tema (decisió 9): els blocs van a la carpeta del tema, en una carpeta per classe; al <code>tema.tex</code> del tema només s'hi afegeixen els <code>\\input</code> d'esta classe, en ordre de data; les notetes continuen la numeració del tema; es compila el tema, i l'informe diu a quines pàgines és la classe.",
+        "Si l'usuari edita el LaTeX des de la web (decisió 2), les correccions no desfan els seus canvis; si n'hi ha un d'erroni, es diu amb una noteta."
       ],
       on: "Passos 6 · Decisions 2 i 9"
     }
@@ -425,6 +426,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 7, data: "2026-10-10",
+      titol: "Des de la web, l'usuari pot editar el LaTeX dels blocs i tornar a compilar. Claude no desfà eixos canvis.",
+      passos: {
+        pas6: "La decisió 2 canvia: l'usuari, a més de marcar el que està malament, pot editar ell mateix el LaTeX dels blocs des de «Resultat → Costat a costat». Quan la web diu a Claude quins blocs s'han editat a mà, les correccions no els desfan; si n'hi ha un d'erroni, es diu amb una noteta. Si la classe es torna a passar a net, els blocs s'escriuen de nou i les edicions es perden."
+      }
+    },
     {
       versio: 6, data: "2026-10-10",
       titol: "Des de la web, cada classe pot afegir-se al document del seu tema, que creix classe a classe en lloc de copiar-se sencer a cada classe.",

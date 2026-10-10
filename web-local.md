@@ -41,7 +41,7 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
     notacio.yaml
     fonts/<font>/          font.json, els PDF, el text extret, index.txt i fitxa.yaml
     temes/<tema>/          tema.json, tema.tex, tema.pdf i blocs/<classe>/ de cada classe que s'hi afegeix
-    classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/ i el que escriu Claude
+    classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/, el que escriu Claude i edicions.json
   dades/paperera/<assignatura>/<classe>-<data i hora>/   les classes esborrades, amb els blocs que tenien al tema
   ```
 - **En pujar una font** s'executa [`extreu-font.py`](extreu-font.py), que en trau el text i l'índex.
@@ -50,6 +50,7 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
 - **Punt de control:** Claude s'atura al pas 4, escriu l'esquema i les preguntes obligatòries i acaba el torn. La resposta, amb fitxers adjunts si cal, continua la mateixa conversa. Les correccions després del PDF van igual.
 - **Temes:** cada classe pot tindre un tema (desplegable i «+» a Nova classe i a Materials). Amb l'interruptor «Afegeix al document del tema», Claude escriu els blocs a `temes/<tema>/blocs/<classe>/`, n'afegeix els `\input` al `tema.tex` del tema en ordre de data i compila el tema (decisió 9 de `CLAUDE.md`). L'esquema, l'informe i `millores.md` es queden a la carpeta de la classe, i Resultat ensenya el PDF del tema. Les classes d'abans no tenen tema ni l'interruptor encés, i els seus PDF no canvien.
 - **Compilar:** Claude fa servir [`compila.py`](compila.py) i [`plantilla-base.tex`](plantilla-base.tex), que ara és a l'arrel del repositori.
+- **Resultat costat a costat** (guia H): a l'esquerra, les fotos o tot el LaTeX de la classe en un sol text, amb una línia `%%%% Bnn.tex %%%%` on comença cada bloc; a la dreta, el PDF. El LaTeX es pot editar (decisió 2): «Desa i compila» parteix el text per eixes línies, desa només els blocs canviats i compila el document amb `compila.py`. Si falla, es torna a posar el PDF d'abans. Els blocs editats s'apunten a `edicions.json` de la classe; la web ho diu a Claude al final de cada correcció que li envies, i en «Torna a passar a net» el fitxer se'n va a `registre/` (les edicions es perden, i la web avisa abans).
 
 ## Diferències amb el mock-up
 
@@ -70,7 +71,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | E | Carpeta per tema: cada classe afegeix blocs al tema. **Implementada** el 10/10/2026 (fase 1 de [`guies/E-temes.md`](guies/E-temes.md)); falta provar-la passant a net una classe de veritat. El Tema 1 d'Estructures Algebraiques comença amb els 51 blocs de la classe del 30/09 (2a part) | Canvi de dades i de la barra lateral (`millores.md` del 05/10) |
 | F | Esborrar una classe. **Feta** el 10/10/2026 (fase 2 de `guies/E-temes.md`): va a `dades/paperera/` | Res |
 | G | Diverses fonts per classe, amb selecció múltiple (demanat el 06/10). **Feta** | — |
-| H | Pantalla dividida a «Resultat»: a l'esquerra, les fotos dels apunts o el LaTeX; a la dreta, el PDF definitiu. **Fase 1 feta** el 10/10/2026 (de [`guies/H-costat-a-costat.md`](guies/H-costat-a-costat.md)): l'interruptor, les fotos, el LaTeX només per llegir i el PDF. Falta la fase 2: editar el LaTeX i compilar | Res. La fase 2 canvia la decisió 2 de `CLAUDE.md` |
+| H | Pantalla dividida a «Resultat»: a l'esquerra, les fotos dels apunts o el LaTeX; a la dreta, el PDF definitiu. **Feta** el 10/10/2026 en dues fases ([`guies/H-costat-a-costat.md`](guies/H-costat-a-costat.md)): l'interruptor, les fotos i el PDF; i el LaTeX en un sol text, que es pot editar i compilar | — |
 | I | Obrir a Overleaf amb un clic i baixar un `.tex` que compile sol (ara `tema.tex` necessita `blocs/` i la plantilla) | Res |
 | J | Estils de document (clàssic, amb etiquetes, amb caixes) i opcions per assignatura: mida de lletra, marges, índex i numeració | Fer configurable `plantilla-base.tex`. Tanca la decisió oberta de numeració de l'especificació |
 | K | Regles per al que està ratllat, els dibuixos (retall de la foto o TikZ) i les notes al marge dels apunts | Que l'usuari ho decidisca. Canvia `CLAUDE.md` i `flux.html` |
@@ -133,6 +134,8 @@ Del primer mock-up de la H, que treballava bloc a bloc. Per a quasi totes cal qu
 - **Fitxa del bloc** (on és als apunts i a la font, la versió triada i la correcció), **notetes amb un clic**, **comentari per bloc**, **marcar revisat** i una **safata** que envia tot a Claude d'una vegada.
 - **El LaTeX en un requadre per bloc**, en lloc d'un sol text.
 - **El LaTeX només per llegir**, sense poder editar-lo.
+- **Un editor amb colors** (CodeMirror, carregat d'internet): les ordres de LaTeX en colors, números de línia i parèntesis aparellats. Ara és un quadre de text senzill.
+- **Una còpia dels blocs editats a `dades/paperera/`** en tornar a passar a net una classe. Ara només hi ha l'avís, i `edicions.json` se'n va a `registre/` (diu quins blocs eren, però no el text).
 
 ### Motor
 

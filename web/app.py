@@ -10,7 +10,8 @@ Dades (fora de git):
     notacio.yaml
     fonts/<font>/          font.json, els PDF, el text extret i index.txt
     temes/<tema>/          tema.json, tema.tex, tema.pdf i blocs/<classe>/ de cada classe que s'hi afegeix
-    classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/ i el que escriu Claude
+    classes/<AAAA-MM-DD>/  classe.json, apunts/, adjunts/, registre/, el que escriu Claude i,
+                           si l'usuari edita el LaTeX des de la web, edicions.json
 """
 
 import asyncio
@@ -205,7 +206,8 @@ def al_tema(a, dades):
 
 
 def document_de(a, dades):
-    """El document que ensenya la classe: el PDF (ruta relativa a l'assignatura) i la carpeta dels seus blocs.
+    """El document que ensenya la classe: la seua carpeta, el PDF (ruta relativa a l'assignatura)
+    i la carpeta dels blocs de la classe.
 
     Si els blocs de la classe són al document del tema, és el del tema, tret que l'interruptor
     estiga apagat i la classe tinga un PDF propi. None si la classe encara no té PDF."""
@@ -214,10 +216,42 @@ def document_de(a, dades):
     propis = sorted(p.name for p in carpeta.glob("*.pdf"))
     tema = al_tema(a, dades)
     if tema and (dades["fusiona"] or not propis):
-        return {"pdf": f"temes/{tema.name}/tema.pdf", "blocs": tema / "blocs" / c}
+        return {"carpeta": tema, "pdf": f"temes/{tema.name}/tema.pdf", "blocs": tema / "blocs" / c}
     if propis:
-        return {"pdf": f"classes/{c}/{propis[0]}", "blocs": carpeta / "blocs"}
+        return {"carpeta": carpeta, "pdf": f"classes/{c}/{propis[0]}", "blocs": carpeta / "blocs"}
     return None
+
+
+compilant = set()  # carpetes de documents que la web està compilant
+
+
+async def compila_document(carpeta, pdf):
+    """Compila el document de la carpeta amb compila.py. Si falla, torna a posar el PDF d'abans.
+
+    Torna si ha anat bé i el que diu compila.py, sense la ruta del PDF."""
+    abans = pdf.read_bytes() if pdf.exists() else None
+    proc = await asyncio.to_thread(
+        subprocess.run, [sys.executable, str(ARREL / "compila.py"), str(carpeta)],
+        capture_output=True, text=True, encoding="utf-8")
+    if proc.returncode and abans is not None:
+        pdf.write_bytes(abans)
+    return not proc.returncode, re.sub(r"(pàgin(?:a|es)): \S+\.pdf", r"\1", (proc.stdout + proc.stderr).strip())
+
+
+def edicions(carpeta):
+    """Els blocs que l'usuari ha editat a mà des de la web ({fitxer: data}). Les classes d'abans no en tenen."""
+    ruta = carpeta / "edicions.json"
+    return llig(ruta)["blocs"] if ruta.exists() else {}
+
+
+def nota_edicions(a, c):
+    """El que la web afegeix als missatges per a Claude si l'usuari ha editat blocs a mà (decisió 2)."""
+    blocs = edicions(carpeta_classe(a, c))
+    if not blocs:
+        return ""
+    rutes = ", ".join(f"`dades/assignatures/{a}/{f}`" for f in blocs)
+    return (f"\n\nHe editat a mà estos blocs des de la web: {rutes}. No desfaces els meus canvis; "
+            "si creus que n'hi ha algun d'erroni, digues-m'ho amb una noteta.")
 
 
 def afegeix_event(carpeta, **event):
@@ -375,7 +409,7 @@ def classe(a: str, c: str):
         fitxers += sorted(f"temes/{tema.name}/blocs/{c}/{b.name}" for b in (tema / "blocs" / c).iterdir())
     document = document_de(a, dades)
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
-            "events": nombre_events(carpeta)}
+            "editats": list(edicions(carpeta)), "events": nombre_events(carpeta)}
 
 
 @app.get("/api/classes/{a}/{c}/latex")
@@ -388,6 +422,51 @@ def latex(a: str, c: str):
     blocs = sorted(document["blocs"].glob("*.tex"), key=lambda b: ordre_natural(b.name))
     return {"blocs": [{"fitxer": b.relative_to(base).as_posix(), "nom": b.name,
                        "text": b.read_text(encoding="utf-8")} for b in blocs]}
+
+
+class BlocLatex(BaseModel):
+    fitxer: str  # relatiu a la carpeta de l'assignatura, com el torna GET …/latex
+    text: str
+
+
+class CanvisLatex(BaseModel):
+    canvis: list[BlocLatex]
+
+
+@app.post("/api/classes/{a}/{c}/latex")
+async def desa_latex(a: str, c: str, canvis: CanvisLatex):
+    """Desa els blocs que l'usuari ha editat, ho apunta a edicions.json i torna a compilar el document.
+
+    Si la compilació falla, els blocs es queden desats (per arreglar-los) i el PDF és el d'abans."""
+    if (a, c) in processos:
+        raise HTTPException(409, "Claude està treballant en esta classe: el LaTeX el podràs editar quan pare")
+    document = document_de(a, llig_classe(a, c))
+    if not document:
+        raise HTTPException(400, "Esta classe encara no té document")
+    if not canvis.canvis:
+        raise HTTPException(400, "No hi ha cap canvi")
+    base = carpeta_assig(a)
+    blocs = {b.relative_to(base).as_posix() for b in document["blocs"].glob("*.tex")}
+    for bloc in canvis.canvis:
+        if bloc.fitxer not in blocs:  # només els blocs d'esta classe: res fora
+            raise HTTPException(400, f"{bloc.fitxer} no és un bloc d'esta classe")
+    if document["carpeta"] in compilant:
+        raise HTTPException(409, "Ja s'està compilant: espera que acabe")
+    compilant.add(document["carpeta"])
+    try:
+        for bloc in canvis.canvis:
+            (base / bloc.fitxer).write_text(bloc.text, encoding="utf-8", newline="")
+        carpeta = carpeta_classe(a, c)
+        editats = edicions(carpeta) | {bloc.fitxer: ara() for bloc in canvis.canvis}
+        escriu(carpeta / "edicions.json", {"blocs": dict(sorted(editats.items(), key=lambda e: ordre_natural(e[0])))})
+        ok, sortida = await compila_document(document["carpeta"], base / document["pdf"])
+    finally:
+        compilant.discard(document["carpeta"])
+    # «OK, 10 pàgines» i, davall, els avisos de compila.py (referències, text fora del marge).
+    linies = sortida.splitlines()
+    m = re.match(r"OK, (\d+) pàgin", linies[0]) if ok and linies else None
+    return {"ok": ok, "pagines": int(m.group(1)) if m else None,
+            "missatge": "\n".join(linies[1:]) if m else sortida}
 
 
 @app.put("/api/classes/{a}/{c}")
@@ -423,17 +502,10 @@ async def treu_del_tema(tema, c):
         return None
     linies = tex.read_text(encoding="utf-8").splitlines(keepends=True)
     tex.write_text("".join(l for l in linies if f"blocs/{c}/" not in l), encoding="utf-8", newline="")
-    pdf = tema / "tema.pdf"
-    abans = pdf.read_bytes() if pdf.exists() else None
-    proc = await asyncio.to_thread(
-        subprocess.run, [sys.executable, str(ARREL / "compila.py"), str(tema)],
-        capture_output=True, text=True, encoding="utf-8")
-    if proc.returncode:
-        if abans is not None:
-            pdf.write_bytes(abans)
-        motiu = (proc.stdout + proc.stderr).strip()[-300:]
+    ok, sortida = await compila_document(tema, tema / "tema.pdf")
+    if not ok:
         return (f"Els blocs de la classe ja no són a «{llig(tema / 'tema.json')['nom']}», però el PDF del tema "
-                f"no s'ha pogut refer i encara és el d'abans. {motiu}")
+                f"no s'ha pogut refer i encara és el d'abans. {sortida[-300:]}")
     return None
 
 
@@ -677,7 +749,12 @@ async def passa_a_net(a: str, c: str):
         raise HTTPException(400, "Falta triar la font")
     if dades["fusiona"] and not (carpeta_assig(a) / "temes" / dades["tema"] / "tema.json").exists():
         raise HTTPException(400, "El tema d'esta classe ja no existeix: tria'n un altre a Materials")
-    afegeix_event(carpeta_classe(a, c), t="inici")
+    carpeta = carpeta_classe(a, c)
+    if (carpeta / "edicions.json").exists():
+        # Claude tornarà a escriure tots els blocs: les edicions a mà es perden (la web ho ha avisat).
+        (carpeta / "registre").mkdir(exist_ok=True)
+        (carpeta / "edicions.json").replace(carpeta / "registre" / f"edicions-{datetime.now():%Y%m%d-%H%M%S}.json")
+    afegeix_event(carpeta, t="inici")
     processos[(a, c)] = None  # reservat fins que arranca el procés
     desa_classe(a, c, estat="en_marxa", pas=None, sessio=None)
     en_segon_pla(executa(a, c, prompt_classe(a, dades)))
@@ -705,6 +782,7 @@ async def respon(a: str, c: str, text: str = Form(""),
     if adjunts:
         rutes = ", ".join(f"`dades/assignatures/{a}/classes/{c}/adjunts/{n}`" for n in adjunts)
         missatge += f"\n\nFitxers adjunts: {rutes}"
+    missatge += nota_edicions(a, c)
     afegeix_event(carpeta, t="usuari", text=text.strip(), adjunts=adjunts)
     processos[(a, c)] = None
     desa_classe(a, c, estat="en_marxa")
