@@ -49,7 +49,7 @@ Tenen prioritat sobre l'especificació si hi ha contradicció.
 | # | Decisió | Tria |
 | --- | --- | --- |
 | 1 | Com arriben els apunts | Fotos fetes amb una app d'escanejar (pàgines rectes i amb bon contrast) |
-| 2 | Document final | PDF compilat amb LaTeX, amb aspecte de llibre. L'usuari marca el que està malament perquè Claude ho corregisca, o edita ell mateix el LaTeX dels blocs des de la web («Resultat → Costat a costat»). Claude no desfà mai una edició de l'usuari: si li sembla un error, ho diu amb una noteta. Si la classe es torna a passar a net, els blocs s'escriuen de nou i les edicions es perden (la web avisa abans) |
+| 2 | Document final | PDF compilat amb LaTeX, amb aspecte de llibre. L'usuari marca el que està malament perquè Claude ho corregisca, o edita ell mateix el LaTeX dels blocs. Des de la web, les dues coses es fan a la pàgina del quadern: les correccions, en una conversa de Claude per quadern, i les edicions, a «Costat a costat». Claude no desfà mai una edició de l'usuari: si li sembla un error, ho diu amb una noteta. Si una sessió es torna a passar a net, els seus blocs s'escriuen de nou i les edicions d'eixos blocs es perden (la web avisa abans) |
 | 3 | Idioma | Sempre la llengua dels apunts. El que es trau d'una font en una altra llengua es tradueix. Els noms de teoremes coneguts en una altra llengua van entre parèntesis la primera vegada |
 | 4 | Demostracions no fetes a classe | Si els apunts no en diuen res, no s'afegeixen. Si als apunts posa "falta demo" (o la marca equivalent de l'usuari), es busca a les fonts i s'afegeix en una caixa "No vist a classe, tret de [font], p. X". Si no es troba, es marca "Demostració pendent, no trobada a les fonts" |
 | 5 | Preguntes a l'usuari | Dos tipus (vegeu baix) |

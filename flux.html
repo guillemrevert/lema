@@ -408,7 +408,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
         "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>.",
         "Des de la web, la sessió s'afegeix sempre al document del seu quadern (decisió 9): els blocs van a la carpeta del quadern, en una carpeta per sessió; al <code>quadern.tex</code> només s'hi afegeixen els <code>\\input</code> d'esta sessió, en ordre de data; les etiquetes dels blocs porten davant el nom de la sessió (<code>\\label{2026-10-10-B01}</code>); les notetes continuen la numeració del quadern; es compila el quadern, i l'informe diu a quines pàgines és la sessió.",
-        "Si l'usuari edita el LaTeX des de la web (decisió 2), les correccions no desfan els seus canvis; si n'hi ha un d'erroni, es diu amb una noteta."
+        "Des de la web, les correccions es demanen a la pàgina del quadern, en una conversa de Claude per quadern, i l'usuari també pot editar el LaTeX dels blocs a «Costat a costat» (decisió 2). Les correccions no desfan les seues edicions; si n'hi ha una d'errònia, es diu amb una noteta."
       ],
       on: "Passos 6 · Decisions 2 i 9"
     }
@@ -426,6 +426,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 9, data: "2026-10-11",
+      titol: "Les correccions del document es demanen a la pàgina del quadern, en una conversa de Claude per quadern.",
+      passos: {
+        pas6: "La decisió 2 diu on es fa cada cosa des de la web: les correccions, a la pàgina del quadern, en una conversa de Claude per quadern, i les edicions de l'usuari, a «Costat a costat» del quadern. Si una sessió es torna a passar a net, només es perden les edicions dels seus blocs."
+      }
+    },
     {
       versio: 8, data: "2026-10-10",
       titol: "«Tema» passa a dir-se quadern i «classe», sessió: un quadern pot ser un tema, unes pràctiques o un article. Cada sessió va sempre al document del seu quadern.",
