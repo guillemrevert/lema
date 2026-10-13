@@ -53,7 +53,7 @@ Dades de la primera crida de cada sessió, que és la que llig els materials:
 | 9 | No mirar el PDF compilat com a imatge: Claude es fia de `compila.py` i el PDF el revisa l'usuari | Mitjà | Acordat |
 | 10 | Un dossier de la sessió fet per un programa (rutes, fitxa, perfil, diccionari, materials) i un prompt que no convide a explorar | Uns 8.000–10.000 tokens i 4–6 accions per sessió | Aprovada: [guia](guies/optimitzacio-tokens.md), fase 4 |
 | 11 | `busca-font.py`: l'índex només dels temes de la sessió i el passatge exacte de cada resultat. La cerca per semblança, la idea de partida, va eixir malament en el prototip (vegeu baix) | Uns 5.000 tokens per sessió | Aprovada: guia, fase 3 |
-| 12 | Script per retallar fotos (Pillow) en lloc de compilar un PDF | De 8.000 a uns 500–1.000 tokens per ampliació | Aprovada: guia, fase 2 |
+| 12 | [`retalla.py`](retalla.py): retallar i ampliar una zona de la foto (Pillow) en lloc de compilar un PDF | De 8.000 a uns 200–1.000 tokens per ampliació | Feta el 13/10/2026 (guia, fase 2). Claude encara no la coneix: el prompt la presentarà a la fase 4 |
 | 13 | Carregar només les eines que calen a Claude Code (`--tools "Bash,Read,Write,Edit"` i `--disable-slash-commands`) | Part dels 27.000 tokens de començar, a cada crida | Feta el 13/10/2026 (guia, fase 1). Falta mesurar quant baixa |
 | 14 | Respondre el punt de control abans d'una hora | Evita uns 0,85 $ per sessió | Consell per a l'usuari |
 | 15 | Menys raonament quan s'escriuen els blocs (pas 5) | Fins a la meitat del cost d'escriure | Només si una prova demostra que la qualitat no baixa |

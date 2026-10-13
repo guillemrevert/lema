@@ -1,6 +1,7 @@
 # Guia · Gastar menys tokens en passar una sessió a net
 
-**Estat:** aprovada el 13/10/2026. Fase 1 feta el 13/10/2026, amb les proves sense tokens: `ordre_claude()` dona l'ordre nova per a una sessió i per a una conversa que continua; `claude` accepta les opcions noves (amb el missatge buit es queixa del missatge i para abans de cridar el model; amb una opció inventada, de l'opció); `mesura-sessio.py` dona per a les sessions del 30/09, 05/10 i 07/10 les xifres d'esta guia (1,83 $, 2,74 $ i 2,32 $). Quant baixa el context inicial es veurà en la pròxima sessió o amb l'eina de proves amb agents. Falten les fases 2, 3 i 4.
+**Estat:** aprovada el 13/10/2026. Fase 1 feta el 13/10/2026, amb les proves sense tokens: `ordre_claude()` dona l'ordre nova per a una sessió i per a una conversa que continua; `claude` accepta les opcions noves (amb el missatge buit es queixa del missatge i para abans de cridar el model; amb una opció inventada, de l'opció); `mesura-sessio.py` dona per a les sessions del 30/09, 05/10 i 07/10 les xifres d'esta guia (1,83 $, 2,74 $ i 2,32 $). Quant baixa el context inicial es veurà en la pròxima sessió o amb l'eina de proves amb agents.
+Fase 2 feta el 13/10/2026: Pillow 12.3 al contenidor i `retalla.py`, provat amb una foto de la sessió del 07/10 (una franja del 30 al 45 %: 1.568 × 419 px, uns 876 tokens, i és la zona bona; la foto girada; una zona menuda, ampliada al triple), amb una imatge de prova per al sentit del gir i amb percentatges i girs que no valen. En reconstruir la imatge, Claude Code s'ha actualitzat de la 2.1.288 a la 2.1.296: les opcions de la fase 1 continuen acceptades i la sessió de Claude continua iniciada. Falten les fases 3 i 4.
 
 ## Què i per què
 
@@ -69,9 +70,9 @@ Script nou a l'arrel, `retalla.py`:
 python retalla.py <foto> <esquerra> <dalt> <dreta> <baix> [--gira 90|180|270]
 ```
 
-Els quatre números són percentatges de la foto. Per exemple, `0 30 100 45` és tota l'amplada, de la ratlla del 30 % a la del 45 % de l'altura. `--gira` gira la foto abans de retallar-la, per a les que arriben de costat. Guarda el retall a `/tmp/retalls/` (fora de `dades/`, perquè no s'acumule res) i escriu una línia: on és, la mida i quants tokens costarà llegir-lo, aproximadament (amplada × altura / 750). Si el retall fa més de 1.568 píxels pel costat llarg, el redueix, perquè Claude no en veu més.
+Els quatre números són percentatges de la foto. Per exemple, `0 30 100 45` és tota l'amplada, de la ratlla del 30 % a la del 45 % de l'altura. `--gira` gira la foto abans de retallar-la, per a les que arriben de costat. Guarda el retall a `/tmp/retalls/` (fora de `dades/`, perquè no s'acumule res) i escriu una línia: on és, la mida i quants tokens costarà llegir-lo, aproximadament (amplada × altura / 750). El retall s'amplia o es redueix fins a 1.568 píxels pel costat llarg, la mida que tots els models de Claude veuen sense reduir-la, i com a molt al triple de la mida original: més enllà només es veu més borrós. Ampliar-lo és el que feia el PDF de LaTeX, i ajuda a llegir la lletra menuda. Si la foto du la rotació a banda (EXIF), es gira com la veu qualsevol visor i ho diu.
 
-Claude llig el retall amb `Read`, com una foto. Una franja de 1.200 × 300 píxels costa uns 500 tokens; l'ampliació amb LaTeX en costava uns 8.000.
+Claude llig el retall amb `Read`, com una foto. Una franja de tota l'amplada i un 15 % de l'altura costa uns 900 tokens; l'ampliació amb LaTeX en costava uns 8.000.
 
 Cal Pillow, la biblioteca d'imatges de Python, al contenidor: una línia a `web/requirements.txt` i reconstruir la imatge (`docker compose build` i `docker compose up -d`).
 
