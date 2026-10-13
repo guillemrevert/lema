@@ -202,10 +202,7 @@ A `localhost:8300`:
 - L'informe i la llista de fitxers, que eren a «Resultat», passen a «Progrés».
 - L'ordre del LaTeX del quadern el diuen els `\input` de `quadern.tex`, com deia la guia, i els blocs que no hi són no ixen.
 
-No s'ha pogut provar sense fer treballar Claude:
-
-- que el LaTeX quede bloquejat mentre Claude passa a net una sessió del quadern;
-- que, en tornar a passar a net una sessió, els seus blocs editats se'n vagen al registre.
+Les dues coses que no es podien provar sense fer treballar Claude es van provar el 13/10/2026 (vegeu l'estat de la fase 2 de la guia H): el LaTeX queda bloquejat mentre Claude passa a net una sessió del quadern, i en tornar a passar a net una sessió els seus blocs editats se'n van al registre.
 
 ### Què notaràs
 
@@ -311,10 +308,12 @@ A `localhost:8300`:
 - Les correccions van davall de «Sessions», com al mock-up. Les anteriors es veuen en un quadre amb la seua barra de desplaçament, i en enviar-ne una la pàgina hi baixa.
 - Si un torn no acaba amb `ESTAT: …`, queda com «Esperant-te», igual que a les sessions.
 
-No s'ha provat:
+Les dues coses que quedaven es van provar el 13/10/2026, amb una còpia del Tema 1 (`prova-hq`) i una sessió de prova amb les fotos i els 13 blocs de la del 07/10, les dues ara a `dades/paperera/`:
 
-- una correcció amb fitxers adjunts;
-- demanar una correcció mentre es passa a net una sessió del quadern (passa pel mateix bloqueig, però caldria passar a net una sessió de veritat).
+- **Una correcció mentre es passa a net una sessió del quadern:** al quadern, en lloc del quadre, ix «Claude està passant a net la sessió del 07/10/2026. Li podràs demanar correccions quan acabe», i el servidor també la rebutja.
+- **Una correcció amb una foto adjunta:** «Mira la foto adjunta… Digues-me quin és el primer resultat que hi apareix i a quin bloc del quadern correspon. No canvies res.» La foto es va guardar a `adjunts/` del quadern. Claude la va obrir i va dir de quina pàgina dels apunts era i a quins blocs corresponia, sense canviar res. 44 s i 97.008 tokens.
+
+Passar a net una sessió gasta molt només per arrancar: en els 27 s abans d'aturar-la, Claude ja havia gastat 146.504 tokens.
 
 ### Què notaràs
 

@@ -144,13 +144,13 @@ A `localhost:8300`. Com que esta fase només llig, es prova amb les classes de v
 6. **`edicions.json`** diu `B41.tex`. La nota per a Claude porta la ruta del bloc. La classe de veritat no en té cap, així que no porta nota.
 7. **«Torna a passar a net»:** l'avís diu «Has editat a mà 1 bloc d'esta classe (B41.tex)…».
 
-Hi ha tres coses que no s'han pogut provar sense fer treballar Claude:
+Les tres coses que no es podien provar sense fer treballar Claude es van provar després:
 
-- el LaTeX només per llegir mentre Claude treballa, i que el servidor no deixe desar;
-- que `edicions.json` se'n vaja a `registre/` en començar «Torna a passar a net»;
-- una classe dins del document d'un tema.
-
-Es comprovaran amb la pròxima classe real.
+- **Una sessió dins del document d'un quadern:** la sessió del 07/10, al Tema 1 (vegeu la guia E).
+- **El 13/10/2026**, amb una còpia del Tema 1 (`prova-hq`) i una sessió de prova amb les fotos i els 13 blocs de la del 07/10, les dues ara a `dades/paperera/`. Es va editar el B01 de la sessió, es va clicar «Torna a passar a net» i es va aturar Claude als 27 s, abans que escriguera res:
+  - l'avís deia «Has editat a mà 1 bloc d'esta sessió (B01.tex)…»;
+  - en començar, l'edició va passar a `registre/edicions-….json` de la sessió i `edicions.json` del quadern va desaparéixer, perquè no en quedava cap altra;
+  - mentre Claude treballava, el LaTeX només es podia llegir, amb l'avís «Claude està passant a net la sessió del 07/10/2026», «Desa i compila» estava desactivat i el servidor no deixava desar.
 
 ### Què notaràs
 
