@@ -874,8 +874,9 @@ def ordre_claude(missatge, conversa=None):
         ordre += ["--resume", conversa]
     if os.environ.get("LEMA_MODEL"):
         ordre += ["--model", os.environ["LEMA_MODEL"]]
-    # Sense terminal no pot preguntar amb l'eina: escriu les preguntes i acaba el torn.
-    return ordre + ["--disallowedTools", "AskUserQuestion"]
+    # Només les eines que fa servir i cap ordre ni skill: cada crida comença amb menys tokens
+    # (guies/optimitzacio-tokens.md, fase 1). Sense l'eina de preguntes: escriu les preguntes i acaba el torn.
+    return ordre + ["--tools", "Bash,Read,Write,Edit", "--disable-slash-commands"]
 
 
 # Bloc {document} de prompt.md: on va el document de la sessió (decisió 9).
