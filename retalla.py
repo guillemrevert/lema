@@ -2,11 +2,11 @@
 
 Ús: python retalla.py <foto> <esquerra> <dalt> <dreta> <baix> [--gira 90|180|270]
 
-Els quatre números són percentatges de la foto (de 0 a 100): on comença i on acaba
-la zona, d'esquerra a dreta i de dalt a baix. Per exemple, "0 30 100 45" és tota
-l'amplada, de la ratlla del 30 % a la del 45 % de l'altura. Amb --gira, la foto es
-gira primer, en el sentit de les agulles del rellotge, i els percentatges són de la
-foto ja girada.
+Els quatre números són proporcions de la foto, de 0 a 1, com la «zona» de
+punt-control.json: on comença i on acaba la zona, d'esquerra a dreta i de dalt a
+baix. Per exemple, «0 0.30 1 0.45» és tota l'amplada, de la ratlla del 30 % a la
+del 45 % de l'altura. Amb --gira, la foto es gira primer, en el sentit de les
+agulles del rellotge, i les proporcions són de la foto ja girada.
 
 Guarda el retall a /tmp/retalls/ i escriu on és, la mida i, aproximadament, quants
 tokens costa llegir-lo (amplada × altura / 750). El retall s'amplia o es redueix
@@ -37,8 +37,9 @@ def main():
     p.add_argument("--gira", type=int, choices=sorted(GIRS), default=None)
     a = p.parse_args()
 
-    if not (0 <= a.esquerra < a.dreta <= 100 and 0 <= a.dalt < a.baix <= 100):
-        sys.exit("Els percentatges han d'anar de 0 a 100, amb esquerra < dreta i dalt < baix.")
+    if not (0 <= a.esquerra < a.dreta <= 1 and 0 <= a.dalt < a.baix <= 1):
+        sys.exit("Les proporcions han d'anar de 0 a 1 (com la «zona» de punt-control.json), "
+                 "amb esquerra < dreta i dalt < baix.")
 
     foto = Image.open(a.foto)
     # Les fotos de mòbil poden dur la rotació a banda (EXIF): es gira com la veu qualsevol visor.
@@ -47,8 +48,7 @@ def main():
     if a.gira:
         foto = foto.transpose(GIRS[a.gira])
     w, h = foto.size
-    caixa = (round(w * a.esquerra / 100), round(h * a.dalt / 100),
-             round(w * a.dreta / 100), round(h * a.baix / 100))
+    caixa = (round(w * a.esquerra), round(h * a.dalt), round(w * a.dreta), round(h * a.baix))
     retall = foto.crop(caixa).convert("RGB")
 
     escala = min(COSTAT / max(retall.size), AMPLIACIO_MAX)
@@ -64,7 +64,7 @@ def main():
     print(f"{sortida} · {retall.width}×{retall.height} px (de {caixa[2] - caixa[0]}×{caixa[3] - caixa[1]} px de la foto, "
           f"{escala:.1f}×) · uns {round(retall.width * retall.height / 750)} tokens")
     if girada_exif:
-        print("La foto tenia la rotació a banda (EXIF): els percentatges són de la foto tal com es veu.")
+        print("La foto tenia la rotació a banda (EXIF): les proporcions són de la foto tal com es veu.")
 
 
 if __name__ == "__main__":

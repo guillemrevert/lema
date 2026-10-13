@@ -27,6 +27,7 @@ import re
 import shutil
 import subprocess
 import sys
+import textwrap
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -35,6 +36,7 @@ from pathlib import Path, PurePosixPath
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from PIL import Image
 from pydantic import BaseModel
 from pypdf import PdfReader
 
@@ -901,10 +903,11 @@ def ordre_claude(missatge, conversa=None):
 # Bloc {document} de prompt.md: on va el document de la sessió (decisió 9).
 DOCUMENT_QUADERN = """\
 - **Quadern «{quadern_nom}»**, a `{carpeta_quadern}`. Esta sessió, del {data}, s'afegeix al seu document (decisió 9 de `CLAUDE.md`):
-  - Els blocs d'esta sessió van a `{carpeta_quadern}/blocs/{sessio}/`, numerats B01, B02… Si la carpeta ja té blocs d'una passada anterior d'esta sessió, esborra'ls i lleva'n els `\\input` de `quadern.tex` abans d'escriure'n de nous.
+  - Els blocs d'esta sessió van a `{carpeta_quadern}/blocs/{sessio}/`, numerats B01, B02… {passada}
   - Les etiquetes dels blocs d'esta sessió porten davant el nom de la seua carpeta, perquè no es repetisquen amb les d'altres sessions: `\\label{{sessio}-B01}`, `\\label{{sessio}-B02}`… Per citar blocs d'altres sessions, fes servir l'etiqueta que ja tenen (les de `inicial` són `B01`, `B02`…).
   - `quadern.tex` és a l'arrel de `{carpeta_quadern}`. Si no existeix, crea'l amb el nom del quadern com a títol. Si existeix, no toques els blocs de les altres sessions: afegeix-hi només els `\\input{blocs/{sessio}/Bnn}` d'esta sessió, en ordre de data de sessió. {sessions_quadern}
-  - Les notetes continuen la numeració del quadern: mira quina és l'última als blocs que ja hi ha.
+  - Les notetes continuen la numeració del quadern: {notetes}
+  - {model}
   - Per compilar: `python compila.py {carpeta_quadern}`. `quadern.tex` ha de ser l'únic `.tex` de l'arrel del quadern.
   - A la carpeta de la sessió, `{carpeta}`, van `esquema.yaml`, `informe.md` i `millores.md`. A l'informe, digues a quines pàgines del PDF del quadern és esta sessió."""
 
@@ -917,10 +920,60 @@ def data_llarga(iso):
     return "/".join(reversed(iso.split("-")))
 
 
+# El que Claude anava a buscar en començar, ara dins del missatge (guies/optimitzacio-tokens.md, fase 4).
+NOTETA = re.compile(r"\\noteta\{N(\d+)\}")
+
+
+def mida_foto(ruta):
+    """« (899×1599 px)», com la veu un visor (amb la rotació EXIF), o "" si no és una imatge (un PDF)."""
+    try:
+        with Image.open(ruta) as im:
+            w, h = im.size
+            if im.getexif().get(0x0112) in (5, 6, 7, 8):  # la rotació a banda la gira 90°
+                w, h = h, w
+    except (OSError, ValueError):
+        return ""
+    return f" ({w}×{h} px)"
+
+
+def marques_plantilla():
+    """Els entorns i les marques de plantilla-base.tex, perquè Claude no l'haja d'obrir."""
+    tex = (ARREL / "plantilla-base.tex").read_text(encoding="utf-8")
+    entorns = [f"`{e}`" for e in re.findall(r"\\newtheorem\{(\w+)\}", tex)] + ["`proof`"]
+    marques = [f"`\\{nom}" + "{…}" * int(n or 0) + "`"
+               for nom, n in re.findall(r"\\newcommand\{\\(\w+)\}(?:\[(\d)\])?", tex)]
+    return f"els entorns {', '.join(entorns)} i les marques {', '.join(marques)}"
+
+
+def blocs_del_quadern_per_a_claude(carpeta_q, sessio):
+    """Quants blocs té ja esta sessió al quadern (d'una passada anterior), l'última noteta dels altres i un bloc
+    de model: de la sessió més recent, el més curt amb \\noteta i \\origen. Llig els blocs alhora (guia X)."""
+    fitxers = [Path(arrel) / nom for arrel, _, noms in os.walk(carpeta_q / "blocs") for nom in noms if nom.endswith(".tex")]
+    textos = dict(resultats(alhora(lambda r: (r, r.read_text(encoding="utf-8")), fitxers)))
+    propis = sum(1 for r in textos if r.parent.name == sessio)
+    altres = {r: t for r, t in textos.items() if r.parent.name != sessio}
+    ultima = max((int(n) for t in altres.values() for n in NOTETA.findall(t)), default=0)
+    if not altres:
+        return propis, ultima, None
+    recent = max({r.parent.name for r in altres}, key=lambda c: (c != "inicial", c))
+    model = min((r for r in altres if r.parent.name == recent),
+                key=lambda r: ("\\noteta" not in altres[r], "\\origen" not in altres[r], len(altres[r])))
+    return propis, ultima, model.relative_to(ARREL).as_posix()
+
+
 def document_sessio(a, dades, valors):
-    """El bloc {document} del prompt: el quadern de la sessió i les sessions que ja hi són."""
+    """El bloc {document} del prompt: el quadern de la sessió, les sessions que ja hi són, si esta ja hi té blocs,
+    l'última noteta i un bloc de model."""
     q = dades["quadern"]
     fitxa = carpeta_assig(a) / "quaderns" / q / "quadern.json"
+    propis, ultima, model = blocs_del_quadern_per_a_claude(fitxa.parent, dades["id"])
+    passada = (f"Ja n'hi ha {propis} d'una passada anterior d'esta sessió: esborra'ls i lleva'n els `\\input` de "
+               "`quadern.tex` abans d'escriure'n de nous." if propis else "Encara no n'hi ha cap.")
+    notetes = (f"l'última dels blocs que ja hi ha és la N{ultima}, així que la primera d'esta sessió és la N{ultima + 1}."
+               if ultima else "encara no n'hi ha cap, així que la primera d'esta sessió és la N1.")
+    marques = marques_plantilla()
+    model = (f"Escriu els blocs com els que ja hi ha; de model, `{model}`. La plantilla té {marques}." if model
+             else f"El quadern encara no té cap bloc. La plantilla té {marques}.")
     altres = []
     for carpeta in sorted(p for p in (fitxa.parent / "blocs").glob("*") if p.is_dir()):
         if carpeta.name == dades["id"]:
@@ -935,25 +988,40 @@ def document_sessio(a, dades, valors):
                 if altres else "Encara no n'hi ha cap altra: el quadern comença amb esta sessió.")
     return omple(DOCUMENT_QUADERN, {**valors, "quadern_nom": llig(fitxa)["nom"],
                                     "carpeta_quadern": f"dades/assignatures/{a}/quaderns/{q}",
-                                    "data": data_llarga(dades["data"]), "sessions_quadern": sessions})
+                                    "data": data_llarga(dades["data"]), "sessions_quadern": sessions,
+                                    "passada": passada, "notetes": notetes, "model": model})
+
+
+def font_per_a_claude(a, f, base):
+    """La línia d'una font al prompt: què és i d'on surt, els PDF, els temes de la sessió i la fitxa, si ja en té."""
+    carpeta = carpeta_assig(a) / "fonts" / f["id"]
+    info = llig(carpeta / "font.json")
+    que = "; ".join(x for x in (info.get("que_es"), info.get("origen")) if x)
+    pdfs = ", ".join(f"`{p['nom']}`" for p in info.get("pdfs", []))
+    temes = ", ".join(f"`{t}`" for t in f["temes"]) or "no ho sap; mira l'índex"
+    linia = (f"  - {info['nom']}" + (f" ({que})" if que else "") + f": `{base}/fonts/{f['id']}`. PDF: {pdfs}. "
+             f"{'Temes' if len(f['temes']) > 1 else 'Tema'} de la font on és la sessió: {temes}.")
+    try:
+        fitxa = (carpeta / "fitxa.yaml").read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return linia + " Encara no té fitxa."
+    return linia + "\n    Ja té fitxa (`fitxa.yaml`):\n\n    ```yaml\n" + textwrap.indent(fitxa, "    ") + "\n    ```\n"
 
 
 def prompt_sessio(a, dades):
     base = f"dades/assignatures/{a}"
     carpeta = f"{base}/sessions/{dades['id']}"
-    fonts = []
-    for f in dades["fonts"]:
-        nom = llig(carpeta_assig(a) / "fonts" / f["id"] / "font.json")["nom"]
-        temes = ", ".join(f"`{t}`" for t in f["temes"]) or "no ho sap; mira l'índex"
-        fonts.append(f"  - {nom}: `{base}/fonts/{f['id']}`. "
-                     f"{'Temes' if len(f['temes']) > 1 else 'Tema'} de la font on és la sessió: {temes}.")
+    fonts = [font_per_a_claude(a, f, base) for f in dades["fonts"]]
+    # La mida de cada foto, alhora (guia X): Claude ja no ha de mirar si hi ha eines d'imatge.
+    mides = [m.result() for m in alhora(mida_foto, [carpeta_sessio(a, dades["id"]) / "apunts" / n
+                                                    for n in dades["apunts"]])]
     valors = {
         "assignatura": ASSIGNATURES[a],
         "carpeta": carpeta,
         "carpeta_assig": base,
         "fonts": "\n".join(fonts),
-        "apunts": "\n".join(f"  {i}. `{carpeta}/apunts/{n}`"
-                            for i, n in enumerate(dades["apunts"], 1)),
+        "apunts": "\n".join(f"  {i}. `{carpeta}/apunts/{n}`{mida}"
+                            for i, (n, mida) in enumerate(zip(dades["apunts"], mides), 1)),
         "nota": dades["nota"].strip() or "cap",
         # De la carpeta del quadern a l'arrel del repositori hi ha cinc nivells.
         "plantilla": "../../../../../plantilla-base",

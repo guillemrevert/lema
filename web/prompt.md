@@ -1,14 +1,16 @@
 Passa a net la sessió de `{carpeta}` seguint el flux de `CLAUDE.md`, del pas 0 al 6.
 
-Treballes des de la web local (`web-local.md`), així que els materials no són a `prova-1/` sinó ací:
+Tot el que necessites és en este missatge: no cal llegir `web-local.md`, l'especificació, `compila.py`, el registre ni altres sessions, ni explorar `dades/`. Les carpetes del pas 0 ja existeixen; del pas 0 només queda la fitxa de la font, si encara no en té. Els materials no són a `prova-1/` sinó ací:
 
 - **Assignatura:** {assignatura}. Carpeta: `{carpeta_assig}`.
 - **Apunts**, en este ordre:
 {apunts}
+
+  Per mirar de prop una zona d'una foto: `python retalla.py <foto> <esquerra> <dalt> <dreta> <baix> [--gira 90|180|270]`, amb la zona en proporcions de 0 a 1 (com la `zona` de `punt-control.json`). Et diu on ha deixat el retall, ampliat, i el llegeixes amb `Read`. Fes-ho només quan hi haja un dubte real: cada retall costa uns centenars de tokens.
 - **Fonts:**
 {fonts}
 
-  Què és i d'on surt cada una, al `font.json` de la seua carpeta. El text de cada PDF ja està extret, i `busca-font.py` te n'ensenya només el que cal:
+  El text de cada PDF ja està extret, i `busca-font.py` te n'ensenya només el que cal:
 
   - `python busca-font.py <carpeta de la font> --index <PDF>…`: l'índex (una línia per cada definició, teorema, lema… amb la pàgina), només dels temes de la sessió. Si no se sap el tema, sense cap PDF: l'índex sencer.
   - `python busca-font.py <carpeta de la font> "Teorema 2.19" "Lema 2.17" …`: el passatge de cada resultat, amb la demostració i la pàgina. Demana'ls tots en una sola ordre.
@@ -22,11 +24,28 @@ Treballes des de la web local (`web-local.md`), així que els materials no són 
 On va cada cosa:
 
 {document}
-- La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix, reutilitza-la: l'usuari la pot haver editada des de la web. Si no quadra amb el `font.json` (què és, d'on surt o la llista de PDF), mana el `font.json`: corregeix la fitxa.
+- La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix (la tens dalt), reutilitza-la: l'usuari la pot haver editada des de la web. Si no quadra amb el que diu dalt de la font (què és, d'on surt o els PDF), mana això: corregeix la fitxa.
 - El diccionari de notació, a `{carpeta_assig}/notacio.yaml`. Si ja existeix, consulta'l i amplia'l.
 - El perfil de lletra, a `dades/perfil-lletra.md`. Si ja existeix, consulta'l en la lectura i amplia'l amb les respostes.
 - La plantilla és `plantilla-base.tex`, a l'arrel del repositori: `quadern.tex` la carrega amb `\input{{plantilla}}`. No la modifiques; si cal canviar-la, apunta-ho a `millores.md`.
 - Fora de `dades/` no pots escriure: el repositori està muntat només de lectura.
+
+Format de `esquema.yaml` (un bloc d'exemple; posa-hi tots els blocs, en ordre):
+
+```yaml
+# Esquema de blocs · {assignatura} · sessió {sessio}
+estat: escrit
+blocs:
+  - id: B01
+    tipus: teorema        # definicio, teorema, proposicio, lema, corollari, demostracio, exemple, observacio, notacio o exercici
+    titol: Descomposició en cicles disjunts
+    origen_apunts: {pagina: p18, zona: «Tª»}
+    font: {ref: "T2 Teorema 2.6", pagina: 3}   # null si no hi és
+    comparacio: equivalent  # equivalent, diferent_valid, apunts_falsos, dubtos o no_a_la_font
+    detall: "Què canvia respecte a la font, si cal."
+    decisio: font           # font, apunts, o una frase curta
+    notetes: [N39]
+```
 
 Normes de la web:
 
