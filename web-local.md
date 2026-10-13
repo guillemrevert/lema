@@ -209,6 +209,16 @@ El 13/10/2026 l'usuari va triar `web/CLAUDE.md`, que només veuen les sessions q
 - **Moure-hi «Com treballar amb l'usuari»:** les sessions que no toquen `web/` (`flux.html`, la plantilla, les guies) no el veurien.
 - **Que cada sessió ho guarde a la seua memòria:** la memòria no viatja amb el repositori.
 
+### Instruccions de disseny (`disseny/disseny.md`)
+
+El 13/10/2026 l'usuari va triar que les instruccions partiren de la guia de marca, que l'eina continuara dient-se LEMA i que s'aplicaren a la web, als mock-ups i a les pàgines publicades (`guies/disseny-instruccions.md`). No es van triar:
+
+- **Partir de la web d'ara:** els seus colors (blau `#1F4FB8`, fons gris clar) i les seues lletres, i afegir-hi només la mascota.
+- **Dir-se «Apunts de ciència i enginyeria»,** com a la guia de marca, o deixar el nom per a més endavant.
+- **Aplicar-les també al PDF:** colors o mascota als apunts passats a net. El PDF continua amb el seu aspecte de llibre.
+- **Adaptar la web dins de la mateixa guia,** en lloc d'una guia pròpia amb mock-up.
+- **Triar ja una lletra nova** en lloc de les de la web d'ara.
+
 ### Motor
 
 - **API d'Anthropic.** Clau d'API i pagament per token. Dona més control: un model barat per als passos mecànics i prompt caching. És l'etapa 5 de l'especificació.

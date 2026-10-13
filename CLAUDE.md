@@ -147,5 +147,6 @@ La valoració final la fa l'usuari revisant el PDF.
 - Si hi ha diverses maneres de fer una cosa, preguntar quina prefereix abans de fer-la.
 - Abans d'implementar qualsevol canvi a l'eina, una guia d'implementació i esperar el vist-i-plau (skill `guia-implementacio`).
 - Hi ha diverses sessions treballant alhora. Abans de tocar cap fitxer, apuntar a [`hey.md`](hey.md) què es fa i quins fitxers es toquen, i no editar els que ja són d'una altra sessió. En fer el commit, llevar l'entrada.
+- Tot el que és visual (la web local, els mock-ups i les pàgines publicades) segueix [`disseny/disseny.md`](disseny/disseny.md). El PDF no: manté l'aspecte de llibre (decisió 2).
 - Fer el mínim que funcione; res de sobreenginyeria.
 - Ser sincer amb els resultats, també si la prova ix malament.

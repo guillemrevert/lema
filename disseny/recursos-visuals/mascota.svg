@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 860" width="700" height="860" id="mussol" role="img" aria-label="Mussol, la mascota d'Apunts">
-  <!-- Mussol, mascota d'Apunts. Vectoritzat a partir de Â«Guia de marca Apunts amb mussol mascote.pngÂ».
-       Cada part tÃ© un id i el seu punt de gir ja posat (transform-origin), per animar-la amb CSS
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 860" width="700" height="860" id="mussol" role="img" aria-label="Mussol, la mascota de LEMA">
+  <!-- Mussol, mascota de LEMA. Vectoritzat a partir de guia-de-marca.png.
+       Cada part té un id i el seu punt de gir ja posat (transform-origin), per animar-la amb CSS
        quan l'SVG va dins de l'HTML:
          #ombra                      l'ombra del terra
          #figura                     tot el mussol menys l'ombra (salts, botets)
@@ -12,7 +12,7 @@
                #nina-esquerra, #nina-dreta   iris, nina i brillantor (moure-les per mirar; queden dins l'ull)
              #celles, #bec
            #ala                      l'ala (saludar; gira per l'espatla)
-       Vegeu mascota-demo.html per a exemples d'animaciÃ³. -->
+       Vegeu mascota-demo.html per a exemples d'animació. -->
   <defs>
     <radialGradient id="grad-iris" cx="0.5" cy="0.62" r="0.55">
       <stop offset="0.55" stop-color="#F6AE5C"/><stop offset="1" stop-color="#E2862C"/>

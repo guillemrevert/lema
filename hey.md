@@ -22,4 +22,4 @@ Hi ha fitxers que toca quasi tothom: `web/app.py`, `web/static/app.js`, `web/sta
 
 ## Canvis sense commit i sense entrada
 
-Quan es va crear este fitxer, el 13/10/2026, hi havia canvis sense desar en `optimitzacio.md`. La sessió que els tinga, que s'apunte a «En marxa». Les dues imatges PNG de `recursos/` (guia de marca i mascota) són de l'usuari.
+Quan es va crear este fitxer, el 13/10/2026, hi havia canvis sense desar en `optimitzacio.md`. La sessió que els tinga, que s'apunte a «En marxa».
