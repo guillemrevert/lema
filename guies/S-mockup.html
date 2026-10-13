@@ -1,0 +1,437 @@
+<title>De qui són els apunts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap">
+<style>
+/* Mock-up estàtic de la S: de qui són els apunts, i textos que no donen per fet que l'usuari és alumne.
+   Dalt, dues pantalles netes dins d'un marc de navegador; davall, l'explicació part per part.
+   Estil B, «Nit d'estudi» (guia Y): els mateixos colors i lletres que web/static/style.css. Només tema clar,
+   com la web. El mussol de la barra és el de la web (guies/img/, fora de git). */
+:root {
+  color-scheme: light;
+  --pagina: #E9DFD2;
+  --fons: #F7EFE6;
+  --superficie: #FFFFFF;
+  --crema: #F7EFE6;
+  --crema-fosc: #EFE4D6;
+  --crema-vora: #E3D6C6;
+  --gris: #E8EBF2;
+  --tinta: #1E2A44;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora-forta: #D2D7E1;
+  --linia: #EDEFF4;
+  --taronja: #F4A261;
+  --taronja-clar: #FDF1E4;
+  --taronja-text: #8F4207;
+  --nit-text: #F7EFE6;
+  --nit-suau: #B8C0D2;
+  --nit-fons: rgba(247, 239, 230, 0.1);
+  --nit-fons-fort: rgba(247, 239, 230, 0.16);
+  --nit-degradat: linear-gradient(180deg, #1E2A44 0%, #21305A 62%, #2B3D69 100%);
+  --ombra: 0 1px 2px rgba(30, 42, 68, 0.06), 0 8px 24px rgba(30, 42, 68, 0.07);
+  --radi: 18px;
+  --titol: 'Outfit', system-ui, sans-serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--pagina); color: var(--tinta); font: 15px/1.55 var(--sans); padding-block: 32px 80px; padding-inline: 16px; margin: 0; }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--tinta); }
+code { font: 0.9em var(--mono); background: var(--crema-fosc); padding: 1px 5px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+
+/* ---------- Document ---------- */
+.doc { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+.intro { display: flex; flex-direction: column; gap: 14px; max-width: 780px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suau); }
+.intro h1 { font: 700 46px/1.05 var(--titol); letter-spacing: -0.015em; text-wrap: balance; }
+.intro p { font-size: 17px; }
+.seccio { display: flex; flex-direction: column; gap: 20px; }
+.seccio > header { display: flex; flex-direction: column; gap: 6px; max-width: 780px; }
+.seccio h2 { font: 600 32px/1.15 var(--titol); text-wrap: balance; }
+.seccio > header p { font-size: 16px; }
+.pantalla { display: flex; flex-direction: column; gap: 10px; }
+.pantalla > h3 { font: 600 21px/1.2 var(--titol); }
+.pantalla > p { max-width: 780px; }
+
+/* ---------- Marc del navegador ---------- */
+.marc { border-radius: 14px; overflow: hidden; background: var(--fons); box-shadow: 0 14px 36px rgba(30, 42, 68, 0.16); }
+.marc-barra { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #DDD3C6; min-width: 0; }
+.marc-barra i { width: 11px; height: 11px; border-radius: 50%; background: #C4B8A8; flex: none; }
+.marc-barra .url { margin-left: 10px; flex: 1; min-width: 0; padding: 4px 12px; border-radius: 999px; background: var(--fons); font: 12px var(--mono); color: var(--suau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- La web de LEMA ---------- */
+.app { display: flex; flex-wrap: wrap; font-size: 15px; line-height: 1.5; min-height: 560px; }
+.lateral { flex: 1 1 250px; max-width: 100%; color: var(--nit-text); background: var(--nit-degradat); padding: 24px 16px; display: flex; flex-direction: column; gap: 24px; }
+.logo { display: flex; align-items: center; gap: 6px; margin-left: -16px; }
+.logo img { width: 74px; height: auto; display: block; }
+.logo-nom { font: 700 26px/1 var(--titol); letter-spacing: 0.04em; display: block; }
+.logo-sub { font-size: 11px; color: var(--nit-suau); line-height: 1.3; display: block; margin-top: 4px; }
+.nova { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 999px; background: var(--taronja); color: var(--tinta); font-weight: 600; }
+.nova.actiu { box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.3); }
+.grup { display: flex; flex-direction: column; gap: 4px; }
+.grup > h4 { padding: 0 6px; font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nit-suau); margin-bottom: 4px; }
+.quadern-nav { padding: 6px 8px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.sessions-nav { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 4px 16px; padding-left: 8px; border-left: 1px solid rgba(247, 239, 230, 0.18); }
+.sessio-nav { display: flex; flex-direction: column; padding: 8px 10px; border-radius: 12px; }
+.sessio-nav.actiu { background: var(--nit-fons-fort); }
+.sessio-nav b { font-size: 14px; font-weight: 600; }
+.sessio-nav span { font-size: 12.5px; color: var(--nit-suau); display: flex; align-items: center; gap: 6px; }
+.sessio-nav span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--nit-text); }
+.nou-quadern { padding: 4px 8px; font-size: 13.5px; color: var(--taronja); font-weight: 500; }
+
+.principal { flex: 999 1 560px; min-width: 0; padding: 32px clamp(16px, 3vw, 44px) 40px; display: flex; flex-direction: column; gap: 24px; }
+.principal h1 { font: 600 34px/1.12 var(--titol); letter-spacing: -0.015em; }
+.subtitol { color: var(--suau); max-width: 70ch; }
+.capcalera { display: flex; flex-direction: column; gap: 16px; }
+.capcalera .detall { font-size: 14px; color: var(--suau); }
+.titol-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.pastilla-origen { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--tinta); color: var(--nit-text); font-size: 13.5px; font-weight: 600; }
+.pastilla-origen::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--taronja); }
+.pestanyes { display: inline-flex; align-self: flex-start; gap: 2px; padding: 4px; border-radius: 999px; background: var(--gris); }
+.pestanyes span { padding: 7px 16px; border-radius: 999px; color: var(--suau); font-size: 14px; font-weight: 500; }
+.pestanyes .actiu { background: var(--tinta); color: var(--nit-text); font-weight: 600; }
+.targeta { background: var(--superficie); border-radius: var(--radi); box-shadow: var(--ombra); padding: 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.targeta h3 { font: 600 20px/1.25 var(--titol); }
+.camps { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 18px; }
+.camp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.camp > span, .camp > b { font-weight: 600; font-size: 14px; }
+.camp > em { font-style: normal; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.control { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--crema-vora); border-radius: 12px; background: var(--crema); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.control.buit { color: var(--suau); }
+.control.focus { border-color: var(--tinta); box-shadow: 0 0 0 1px var(--tinta); background: var(--superficie); }
+.mes { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--crema); font-size: 20px; }
+.amb-mes { display: flex; gap: 8px; min-width: 0; }
+.amb-mes .control { flex: 1; }
+.valor { min-height: 44px; display: flex; align-items: center; }
+.separa { border-top: 1px solid var(--linia); }
+
+/* El camp nou: «De qui són els apunts?» */
+.origen { display: flex; flex-direction: column; gap: 10px; }
+.origen-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.tria { display: inline-flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--gris); }
+.tria span { padding: 8px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--suau); }
+.tria .on { background: var(--tinta); color: var(--nit-text); font-weight: 600; }
+.origen-fila .control { flex: 1 1 220px; max-width: 340px; }
+.suggeriments { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.suggeriments > span:first-child { font-size: 13px; color: var(--suau); margin-right: 2px; }
+.sug { display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--vora-forta); background: var(--crema); font-size: 13px; }
+.sug.usat { border-style: dashed; }
+.sug.on { background: var(--tinta); border-color: var(--tinta); color: var(--nit-text); }
+.ajuda { font-size: 13px; color: var(--suau); }
+.peu-form { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.boto { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 22px; border-radius: 999px; background: var(--tinta); color: var(--nit-text); font-weight: 600; }
+.avis { display: flex; gap: 12px; align-items: center; padding: 16px 20px; border-radius: var(--radi); background: var(--gris); }
+.avis b { display: block; }
+
+/* ---------- Guia part per part ---------- */
+.parts { display: flex; flex-direction: column; gap: 20px; }
+.part { background: var(--superficie); border-radius: var(--radi); box-shadow: var(--ombra); padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+.part-cap { display: flex; align-items: center; gap: 14px; }
+.part-num { width: 34px; height: 34px; border-radius: 50%; background: var(--tinta); color: var(--nit-text); display: inline-flex; align-items: center; justify-content: center; font: 600 15px var(--mono); flex: none; }
+.part-cap h3 { font: 600 25px/1.2 var(--titol); text-wrap: balance; }
+.part-text { display: flex; flex-direction: column; gap: 12px; max-width: 72ch; }
+.part-text ul { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+.cal { padding: 12px 16px; background: var(--crema); border-radius: 12px; font-size: 14px; }
+.alternatives { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; align-items: start; }
+.alt { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 18px; border-radius: 14px; background: var(--crema); }
+.alt strong { font-size: 16px; }
+.alt > span { font-size: 14px; }
+.reco { align-self: flex-start; padding: 2px 10px; border-radius: 999px; background: var(--tinta); color: var(--nit-text); font-size: 12px; font-weight: 600; }
+.mostra { background: var(--superficie); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; min-width: 0; }
+.mostra .mini-nav { background: var(--nit-degradat); color: var(--nit-text); border-radius: 10px; padding: 10px 12px; }
+.mostra .mini-nav b { display: block; font-size: 13.5px; }
+.mostra .mini-nav span { font-size: 12px; color: var(--nit-suau); }
+.taula-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-top: 1px solid var(--linia); }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); border-top: 0; }
+td.abans { color: var(--suau); text-decoration: line-through; text-decoration-color: rgba(90, 96, 107, 0.5); }
+.fitxers { font: 13px/1.7 var(--mono); background: var(--crema); border-radius: 12px; padding: 12px 14px; white-space: pre; overflow-x: auto; margin: 0; }
+.decisions { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 860px; font-size: 16px; }
+.decisions li::marker { font-weight: 600; }
+.ja { display: flex; flex-direction: column; gap: 6px; max-width: 860px; }
+.ja li { font-size: 15px; }
+
+@media (max-width: 640px) {
+  .intro h1 { font-size: 36px; }
+  .principal h1 { font-size: 28px; }
+  .part { padding: 20px; }
+}
+</style>
+
+<div class="doc">
+
+<!-- ================= Introducció ================= -->
+<header class="intro">
+  <span class="eyebrow">LEMA · web local · mock-up de la S</span>
+  <h1>De qui són els apunts</h1>
+  <p>Ara la web dona per fet que els apunts són teus i que tu ets alumne. Però no sempre: el 30/09 eren fotos de la pissarra, el 07/10 els apunts eren d'un altre alumne, i qui fa servir LEMA també pot ser un professor.</p>
+  <p>La proposta: en cada sessió dius de qui són els apunts, <b>«Propis»</b> o <b>«Altres»</b>, amb un text lliure («Pissarra», «Alumne», «Marta»…). Claude porta un perfil de lletra per a cada un, perquè no es mesclen, i el document continua amb la teua notació. A més, la web i les instruccions deixen de dir «alumne» i «font del professor».</p>
+  <p>És un mock-up: no funciona res, només ensenya com seria.</p>
+</header>
+
+<!-- ================= Pantalles ================= -->
+<section class="seccio" aria-labelledby="t-pantalles">
+  <header>
+    <h2 id="t-pantalles">Les pantalles</h2>
+    <p>On es tria (Nova sessió, i també Materials) i on es veu després (la capçalera de la sessió).</p>
+  </header>
+
+  <!-- Pantalla 1 -->
+  <div class="pantalla">
+    <h3>1 · Nova sessió</h3>
+    <p>Has triat «Altres» i comences a escriure. Davall, els suggeriments: els tres de sempre i els noms que ja has fet servir.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Barra lateral (mock-up)">
+          <div class="logo"><img src="img/s-logo.svg" alt=""><span><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de<br>Manuscrits Acadèmics</span></span></div>
+          <span class="nova actiu">+ Nova sessió</span>
+          <div class="grup">
+            <h4>Estructures algebraiques</h4>
+            <span class="quadern-nav">Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <div class="sessions-nav">
+              <span class="sessio-nav"><b>Sessió del 07/10</b><span>Acabada</span></span>
+              <span class="sessio-nav"><b>Classe de teoria</b><span>Acabada</span></span>
+              <span class="sessio-nav"><b>Sessió del 30/09</b><span>Acabada</span></span>
+            </div>
+            <span class="nou-quadern">+ Nou quadern</span>
+          </div>
+        </nav>
+        <div class="principal">
+          <div class="capcalera">
+            <h1>Nova sessió</h1>
+            <p class="subtitol">Una sessió és cada vegada que afegeixes apunts a un quadern: una classe, una pràctica… Tria l'assignatura, el quadern i el dia, i en crear-la ací mateix hi puges les fotos i tries la font.</p>
+          </div>
+          <div class="targeta">
+            <div class="camps">
+              <div class="camp"><span>Assignatura</span><div class="control">Estructures Algebraiques ▾</div></div>
+              <div class="camp"><span>Quadern</span><div class="amb-mes"><div class="control">Tema 1. Grups. Subgrups… ▾</div><span class="mes">+</span></div></div>
+              <div class="camp"><span>Dia de la sessió</span><div class="control">14/10/2026</div></div>
+              <div class="camp"><span>Títol <span style="font-weight:400;color:var(--suau)">(opcional)</span></span><div class="control buit">p. ex. Cicles i transposicions</div></div>
+            </div>
+            <div class="separa"></div>
+            <div class="origen">
+              <span style="font-weight:600;font-size:14px">De qui són els apunts?</span>
+              <div class="origen-fila">
+                <span class="tria" aria-hidden="true"><span>Propis</span><span class="on">Altres</span></span>
+                <div class="control focus">Pis|</div>
+              </div>
+              <div class="suggeriments"><span>Suggeriments:</span><span class="sug on">Pissarra</span><span class="sug">Alumne</span><span class="sug">Professor</span><span class="sug usat">Marta</span></div>
+              <p class="ajuda">Claude llegirà la lletra amb el perfil de «Pissarra», a part del teu, i hi apuntarà el que aprenga. El document es fa amb la teua notació.</p>
+            </div>
+            <div class="peu-form"><span class="ajuda">Els blocs de la sessió s'afegiran al document del quadern.</span><span class="boto">Crea la sessió</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 2 -->
+  <div class="pantalla">
+    <h3>2 · La sessió</h3>
+    <p>La sessió del 30/09, amb les fotos de la pissarra. Al costat del títol, de qui són. A Materials ho pots canviar.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/sessio/estructures-algebraiques/2026-09-30-2/materials</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Barra lateral (mock-up)">
+          <div class="logo"><img src="img/s-logo.svg" alt=""><span><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de<br>Manuscrits Acadèmics</span></span></div>
+          <span class="nova">+ Nova sessió</span>
+          <div class="grup">
+            <h4>Estructures algebraiques</h4>
+            <span class="quadern-nav">Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <div class="sessions-nav">
+              <span class="sessio-nav"><b>Sessió del 07/10</b><span>Acabada</span></span>
+              <span class="sessio-nav"><b>Classe de teoria</b><span>Acabada</span></span>
+              <span class="sessio-nav actiu"><b>Sessió del 30/09</b><span>Acabada</span></span>
+            </div>
+            <span class="nou-quadern">+ Nou quadern</span>
+          </div>
+        </nav>
+        <div class="principal">
+          <div class="capcalera">
+            <div>
+              <span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+              <div class="titol-fila"><h1>Sessió del 30/09/2026</h1><span class="pastilla-origen">Apunts: Pissarra</span></div>
+            </div>
+            <div class="pestanyes" aria-hidden="true"><span class="actiu">Materials</span><span>Progrés</span></div>
+          </div>
+          <div class="avis"><span>✓</span><div><b>Esta sessió ja és al quadern.</b><span>Els seus blocs són al document «Tema 1. Grups. Subgrups. Homomorfismes de grups».</span></div></div>
+          <div class="targeta">
+            <div class="camps">
+              <div class="camp"><em>Assignatura</em><div class="valor">Estructures Algebraiques</div></div>
+              <div class="camp"><span>Quadern</span><div class="amb-mes"><div class="control">Tema 1. Grups. Subgrups… ▾</div><span class="mes">+</span></div></div>
+              <div class="camp"><em>Dia de la sessió</em><div class="valor">30/09/2026</div></div>
+              <div class="camp"><span>Títol <span style="font-weight:400;color:var(--suau)">(opcional)</span></span><div class="control buit">p. ex. Cicles i transposicions</div></div>
+            </div>
+            <div class="separa"></div>
+            <div class="origen">
+              <span style="font-weight:600;font-size:14px">De qui són els apunts?</span>
+              <div class="origen-fila">
+                <span class="tria" aria-hidden="true"><span>Propis</span><span class="on">Altres</span></span>
+                <div class="control">Pissarra</div>
+              </div>
+              <p class="ajuda">Si el canvies, s'aplica la pròxima vegada que passes la sessió a net.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Parts ================= -->
+<section class="seccio" aria-labelledby="t-parts">
+  <header>
+    <h2 id="t-parts">Part per part</h2>
+    <p>Què veus, què pots fer, per a què serveix i què cal. Quan hi ha més d'una manera de fer-ho, les opcions van una al costat de l'altra; la marcada és la proposta.</p>
+  </header>
+
+  <div class="parts">
+
+    <!-- Part 1 -->
+    <article class="part" aria-labelledby="p1">
+      <div class="part-cap"><span class="part-num">1</span><h3 id="p1">«De qui són els apunts?»</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> A Nova sessió i a Materials, davall dels camps d'ara, dues opcions: <b>«Propis»</b>, que és la que ix d'entrada, i <b>«Altres»</b>. Si tries «Altres», al costat ix un camp de text lliure.</p>
+        <p><b>Què hi poses.</b> El que vulgues: «Pissarra», «Alumne», «Professor», «Marta», «Apunts de Wuolah»… És el nom amb què Claude guardarà eixa lletra (part 3).</p>
+        <p><b>Per a què.</b> Que Claude sàpia de qui és la lletra que llig. Ara ho dona per fet i, quan no són teus, cal dir-ho a la nota de la sessió o respondre-ho al punt de control (la P4 del 07/10).</p>
+        <p class="cal"><b>Ja decidit</b> (13/10/2026): «Propis» o «Altres» amb text lliure. Si ets professor, «Propis» són els teus apunts de classe, i «Altres» poden ser els d'un alumne.</p>
+      </div>
+    </article>
+
+    <!-- Part 2 -->
+    <article class="part" aria-labelledby="p2">
+      <div class="part-cap"><span class="part-num">2</span><h3 id="p2">Els suggeriments</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Davall del camp, uns botons per no haver d'escriure: «Pissarra», «Alumne» i «Professor», i després, amb la vora puntejada, els que ja has fet servir en altres sessions («Marta»). Si en cliques un, s'escriu al camp.</p>
+        <p><b>Per què els que ja has fet servir.</b> Perquè la Marta siga sempre «Marta» i no, un dia, «marta» i un altre «Marta (alumna)»: cada nom diferent seria un perfil de lletra diferent.</p>
+        <p class="cal"><b>Compte amb «Alumne» sol:</b> si l'uses per a alumnes diferents, tots compartiran el mateix perfil de lletra. Si saps de qui són, millor el nom.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>Els de sempre i els ja usats</strong><span>«Pissarra», «Alumne», «Professor» i els noms de les teues sessions.</span></figure>
+        <figure class="alt"><strong>Només els ja usats</strong><span>Al principi no n'hi ha cap; després, els que hages escrit.</span></figure>
+        <figure class="alt"><strong>Cap suggeriment</strong><span>Només el camp de text.</span></figure>
+      </div>
+    </article>
+
+    <!-- Part 3 -->
+    <article class="part" aria-labelledby="p3">
+      <div class="part-cap"><span class="part-num">3</span><h3 id="p3">On es veu de qui són</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Si no són propis, una pastilla al costat del títol de la sessió: «Apunts: Pissarra». Si són propis, res: és el normal.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>Al costat del títol</strong><span>Es veu en entrar a la sessió, i no ocupa res a la barra lateral.</span>
+          <div class="mostra"><div class="titol-fila"><b style="font:600 18px var(--titol)">Sessió del 30/09/2026</b><span class="pastilla-origen">Apunts: Pissarra</span></div></div>
+        </figure>
+        <figure class="alt"><strong>A la línia de dalt</strong><span>Amb l'assignatura i el quadern, més discret.</span>
+          <div class="mostra"><span style="color:var(--suau)">Estructures Algebraiques · Tema 1 · Apunts: Pissarra</span></div>
+        </figure>
+        <figure class="alt"><strong>També a la barra lateral</strong><span>Se sap sense entrar-hi, però cada sessió ocupa una línia més.</span>
+          <div class="mostra"><div class="mini-nav"><b>Sessió del 30/09</b><span>Acabada · Pissarra</span></div></div>
+        </figure>
+      </div>
+    </article>
+
+    <!-- Part 4 -->
+    <article class="part" aria-labelledby="p4">
+      <div class="part-cap"><span class="part-num">4</span><h3 id="p4">Un perfil de lletra per a cada origen</h3></div>
+      <div class="part-text">
+        <p><b>Com ho fa Claude.</b> Llig la lletra amb el perfil de qui ha escrit els apunts, i només amplia eixe. El teu no el toca si els apunts no són teus.</p>
+      </div>
+<pre class="fitxers">dades/perfil-lletra.md                 els teus apunts (com ara)
+dades/perfils-lletra/pissarra.md       «Pissarra»
+dades/perfils-lletra/marta.md          «Marta»</pre>
+      <div class="part-text">
+        <p class="cal"><b>Ja decidit</b> (13/10/2026): un perfil per a cada origen, perquè no es mesclen i Claude aprenga cada lletra.</p>
+        <p><b>Què fem amb el perfil d'ara.</b> Ja barreja tres lletres en seccions a part: la teua, la de la pissarra del 30/09 i la de l'alumne del 07/10.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>Separar-lo</strong><span>La secció de la pissarra passa a «Pissarra», i la d'«Altres alumnes», a «Alumne». Les sessions del 30/09 (2a part) i del 07/10 queden marcades així. La resta es queda com el teu.</span></figure>
+        <figure class="alt"><strong>Deixar-lo com està</strong><span>El que ja hi ha es queda al teu perfil. Els perfils nous comencen buits.</span></figure>
+      </div>
+    </article>
+
+    <!-- Part 5 -->
+    <article class="part" aria-labelledby="p5">
+      <div class="part-cap"><span class="part-num">5</span><h3 id="p5">La notació</h3></div>
+      <div class="part-text">
+        <p class="cal"><b>Ja decidit</b> (13/10/2026): el document es fa sempre amb la teua notació (decisió 8), siguen de qui siguen els apunts. Si la Marta escriu un símbol diferent, al quadern hi va el teu.</p>
+        <p><b>I el diccionari de notació</b> (com escrius tu cada concepte) només s'amplia amb els apunts propis. Uns apunts que no són teus no hi afigen res, perquè no és la teua manera d'escriure.</p>
+        <p><b>Què falta decidir:</b> si en uns apunts d'altres hi ha un concepte que el teu diccionari encara no té, quin símbol s'escriu.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>El dels apunts</strong><span>El que va escriure la Marta, sense apuntar-lo al teu diccionari. Una noteta ho diu, perquè el pugues canviar.</span></figure>
+        <figure class="alt"><strong>El de la font</strong><span>Com quan un símbol només apareix a la font (decisió 8).</span></figure>
+      </div>
+    </article>
+
+    <!-- Part 6 -->
+    <article class="part" aria-labelledby="p6">
+      <div class="part-cap"><span class="part-num">6</span><h3 id="p6">Textos que no donen per fet que ets alumne</h3></div>
+      <div class="part-text">
+        <p>La font és el material de referència: uns apunts de qui siga, unes diapositives o un llibre. Ni la font ha de ser del professor ni tu has de ser alumne.</p>
+      </div>
+      <div class="taula-scroll">
+        <table>
+          <thead><tr><th>On</th><th>Ara</th><th>Passaria a</th></tr></thead>
+          <tbody>
+            <tr><td>Web · «Com va», pas 1</td><td class="abans">…tria la font: apunts del professor, diapositives, un llibre o apunts d'un altre alumne.</td><td>…tria la font: uns apunts, unes diapositives o un llibre.</td></tr>
+            <tr><td>Web · Font nova</td><td class="abans">PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.</td><td>Uns apunts, unes diapositives o un capítol d'un llibre, en PDF.</td></tr>
+            <tr><td>Web · Font nova, exemples</td><td class="abans">p. ex. Professor · p. ex. Apunts del professor, temes 1 a 4</td><td>p. ex. Apunts de classe · p. ex. Apunts dels temes 1 a 4</td></tr>
+            <tr><td>Web · Nota per a Claude, exemple</td><td class="abans">…El professor va canviar una hipòtesi a propòsit.</td><td>…A classe es va canviar una hipòtesi a propòsit.</td></tr>
+            <tr><td><code>CLAUDE.md</code> · Context i Flux (3 vegades)</td><td class="abans">les fonts del professor · la font del professor</td><td>les fonts · la font</td></tr>
+            <tr><td><code>CLAUDE.md</code> · Materials d'entrada</td><td class="abans">un material del professor (…) o apunts d'un altre alumne</td><td>un material de referència: uns apunts, unes diapositives o el capítol del llibre que se segueix</td></tr>
+            <tr><td><code>flux.html</code></td><td class="abans">Les mateixes frases</td><td>Les mateixes, i una versió nova</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="part-text">
+        <p class="nota" style="font-size:14px;color:var(--suau)">La decisió 6 («la primera prova es va fer amb els apunts de Wuolah d'un alumne de l'any passat») es queda: explica una cosa que va passar.</p>
+      </div>
+    </article>
+
+    <!-- Part 7 -->
+    <article class="part" aria-labelledby="p7">
+      <div class="part-cap"><span class="part-num">7</span><h3 id="p7">Què canvia per dins</h3></div>
+      <div class="part-text">
+        <ul>
+          <li><b><code>sessio.json</code></b> guarda <code>"origen"</code>: res si són propis, o el text («Pissarra»). Les sessions d'abans no en tenen: són propis.</li>
+          <li><b>El prompt</b> de la sessió diu de qui són i quin perfil de lletra ha de fer servir.</li>
+          <li><b><code>CLAUDE.md</code></b>: els passos 1 i 4 (quin perfil de lletra es llig i s'amplia), el 3 (el diccionari, només amb apunts propis), la decisió 8 i els textos de la part 6. <b><code>flux.html</code></b>, amb una versió nova.</li>
+        </ul>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= Decisions ================= -->
+<section class="seccio" aria-labelledby="t-decisions">
+  <header>
+    <h2 id="t-decisions">Què has de decidir</h2>
+    <p>Si no dius res d'alguna, es queda la proposta.</p>
+  </header>
+  <ol class="decisions">
+    <li><b>Els suggeriments</b> (part 2): <span>els de sempre i els ja usats (proposta), només els ja usats, o cap.</span></li>
+    <li><b>On es veu de qui són</b> (part 3): <span>al costat del títol (proposta), a la línia de dalt, o també a la barra lateral.</span></li>
+    <li><b>El perfil de lletra d'ara</b> (part 4): <span>separar-lo per origen (proposta), o deixar-lo com està.</span></li>
+    <li><b>Un concepte que el teu diccionari no té</b> (part 5): <span>el símbol dels apunts, amb noteta (proposta), o el de la font.</span></li>
+  </ol>
+  <header style="margin-top:12px">
+    <h2 style="font-size:24px">Ja decidit</h2>
+  </header>
+  <ul class="ja">
+    <li>«Propis» o «Altres» amb text lliure, a Nova sessió i a Materials.</li>
+    <li>Un perfil de lletra per a cada origen.</li>
+    <li>El document, sempre amb la teua notació.</li>
+    <li>Fora «alumne» i «font del professor» de la web i de les instruccions.</li>
+  </ul>
+</section>
+
+</div>
