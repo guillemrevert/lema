@@ -48,7 +48,8 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
   ```
 
   Fins al 10/10/2026 es deien `temes/` (`tema.json`, `tema.tex`, `tema.pdf`) i `classes/` (`classe.json`). En `sessio.json`, la conversa de Claude es diu `conversa` (abans `sessio`). La web ho va canviar sola en arrancar (`migra_dades` a `web/app.py`; guia Q, fase 1).
-- **En pujar una font** s'executa [`extreu-font.py`](extreu-font.py), que en trau el text i l'índex.
+- **En pujar una font** s'executa [`extreu-font.py`](extreu-font.py), que en trau el text i l'índex. Cap font es pot dir «Nova», perquè `nova` és una paraula de les adreces de la web.
+- **Les fonts de l'assignatura** (guia W, fase 1): a la barra lateral, la icona dels llibres al costat del nom de cada assignatura porta a la pestanya «Fonts» (`#/assignatura/<assignatura>/fonts`). Dalt hi ha una fila amb les fonts i «Nova font» (`…/fonts/nova`, el formulari per pujar-ne una). Davall, la font triada (`…/fonts/<font>`): els PDF a l'esquerra, el que tens triat al visor del navegador (`…/fonts/<font>/<pdf>`) i la fitxa (`font.json` i `fitxa.yaml`). Sense font a l'adreça, ix l'última que has mirat en eixa assignatura (es recorda al navegador) o la primera. Canviar de PDF només canvia el visor i l'adreça, sense tornar a demanar les dades, perquè `/api/assignatures` tarda uns segons.
 - **«Passa a net»** obri una conversa nova de Claude Code per a cada sessió (mesura 1 d'[`optimitzacio.md`](optimitzacio.md)), en mode no interactiu i amb el prompt de [`web/prompt.md`](web/prompt.md). Diu on és cada cosa i demana a Claude dues marques: `PAS n` en començar cada pas i `ESTAT: esperant` o `ESTAT: acabat` en acabar cada torn.
 - **Registre:** el servidor resumeix el que fa Claude a `registre/events.jsonl` (text, eines, passos, tokens) i la web ho llig en directe. La sortida sencera de Claude queda al costat, a `registre/claude-*.jsonl`.
 - **Punt de control:** Claude s'atura al pas 4, escriu l'esquema i les preguntes obligatòries i acaba el torn. La resposta, amb fitxers adjunts si cal, continua la mateixa conversa. Les correccions després del PDF van igual.
@@ -93,6 +94,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | T | Ordenar les fotos en pujar-les. Les de WhatsApp arriben en ordre invers (30/09 i 07/10): la web les podria ordenar per l'hora del nom del fitxer. Ara es reordenen arrossegant-les a Materials. `millores.md` del 07/10 | Res |
 | U | Avisar de pàgines a mitges: si una foto acaba a mitja frase, que la web (o Claude, a la lectura general) pregunte si falta alguna pàgina. `millores.md` del 07/10 | Decidir qui ho detecta: la web no llig les fotos |
 | V | `pdftoppm` (poppler-utils) al `Dockerfile`, perquè Claude puga mirar el PDF compilat com a imatge per revisar-lo. `millores.md` del 07/10 | `docker compose build` |
+| W | Fonts per assignatura: una icona al costat del nom de cada assignatura, a la barra lateral, obri directament la pestanya «Fonts». Allí es tria la font, es llig el PDF dins de la web i s'edita (fitxa, afegir o llevar PDF, esborrar-la). Demanat el 13/10/2026: la web no tenia cap manera de revisar les fonts. Mock-up: [`guies/W-mockup.html`](guies/W-mockup.html), publicat a https://claude.ai/artifact/Y1SRibQb7CyQkBHgC8z9Si (versió 2), amb cinc decisions al final: l'usuari va triar totes les propostes. Guia [`guies/W-fonts.md`](guies/W-fonts.md), en dues fases. **Fase 1 (llegir) feta** el 13/10/2026: la icona a la barra, la fila de fonts, la llista de PDF, el visor i la fitxa. Falta la fase 2 (editar) | Res |
 
 **Mock-up de la E, la O i la P (10/10/2026), estàtic:** https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum (el fitxer és `guies/E-mockup.html`). Quatre pantalles netes (nova classe; la classe creada amb els materials; pàgina d'assignatura; barra lateral plegada) i setze parts explicades amb les alternatives una al costat de l'altra. La guia `guies/E-temes.md` té la taula de decisions i quatre preguntes pendents (si la creu de la captura és esborrar la classe, si el Tema 1 comença amb el document que ja hi ha, si el formulari de pujar fonts se'n va a l'assignatura, i barra lateral amb una o dues línies per classe).
 
@@ -161,6 +163,22 @@ Les lletres són les parts del mock-up (`guies/Q-mockup.html`). Es va triar la p
 - **Part 8 · Deixar les còpies del 05/10 i del 30/09** a la carpeta de cada sessió, sense ensenyar-les.
 - **Part 1 · Quaderns sense assignatura**, per a pràctiques o articles que no són de cap assignatura.
 - **Part 9 · Només els textos de la web**, sense canviar els noms de les carpetes i dels fitxers.
+
+### Fonts per assignatura (W)
+
+Quan es va demanar la W (13/10/2026), l'usuari va triar llegir el PDF dins de la web i editar la font. Va deixar per a més endavant:
+
+- **Veure què n'ha tret LEMA:** l'índex de la font (cada resultat amb la seua pàgina) i la fitxa, per comprovar que l'ha llegida bé abans de passar a net.
+- **Veure on s'ha usat:** les sessions que l'han triada i quins blocs se n'han tret.
+- **Una secció «Fonts» a la barra lateral** (versió 1 del mock-up), davall dels quaderns, amb una línia per font que porta a una pàgina pròpia de la font. L'usuari la va canviar per una icona al costat del nom de l'assignatura, que obri la pestanya «Fonts».
+
+Del mock-up (versió 2), les alternatives que no es van triar:
+
+- **Part 1 · La icona:** un llibre obert, o el mateix llibre que els quaderns. Es va triar uns llibres en un prestatge, perquè no es confonga amb els quaderns.
+- **Part 2 · Primer la llista de fonts**, en targetes, i en clicar-ne una, la font. Per canviar de font cal tornar arrere.
+- **Part 3 · Els PDF en pestanyes** damunt del visor, o en un desplegable, en lloc de la llista a l'esquerra.
+- **Part 4 · Només els tres camps** de la fitxa (la de Claude es veu però no es toca), o **un camp per a cada cosa** de la fitxa de Claude (notació, fiabilitat…) en lloc del text.
+- **Part 6 · Esborrar una font només si cap sessió pendent la fa servir**, en lloc de sempre, a la paperera.
 
 ### Motor
 

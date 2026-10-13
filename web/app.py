@@ -315,7 +315,8 @@ def assignatures():
         sessions = []
         for fitxa in sorted((base / "sessions").glob("*/sessio.json"), reverse=True):
             d = llig_sessio(a, fitxa.parent.name)
-            sessions.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "quadern")})
+            # fonts: la pestanya «Fonts» diu en quantes sessions s'ha triat cada una (guia W).
+            sessions.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "quadern", "fonts")})
         fonts = [info_font(f.parent) for f in sorted((base / "fonts").glob("*/font.json"))]
         quaderns = sorted((info_quadern(f.parent) for f in (base / "quaderns").glob("*/quadern.json")),
                           key=lambda q: ordre_natural(q["nom"]))
@@ -360,6 +361,8 @@ async def puja_font(a: str, nom: str = Form(...), que_es: str = Form(...),
     id_font = slug(nom)
     if not id_font:
         raise HTTPException(400, "La font necessita un nom")
+    if id_font == "nova":  # #/assignatura/<a>/fonts/nova és el formulari per pujar-ne una
+        raise HTTPException(400, "Este nom no es pot fer servir: tria'n un altre")
     carpeta = carpeta_assig(a) / "fonts" / id_font
     if carpeta.exists():
         raise HTTPException(409, f"Ja hi ha una font que es diu «{nom}»")

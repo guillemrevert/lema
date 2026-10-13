@@ -1,6 +1,7 @@
 "use strict";
 
-// Rutes: #/ (nova sessió), #/assignatura/<assignatura>/<quaderns|fonts> (…/quaderns/nou: amb el formulari obert),
+// Rutes: #/ (nova sessió), #/assignatura/<assignatura>/<quaderns|fonts> (…/quaderns/nou: amb el formulari obert;
+// …/fonts/<font>/<pdf>: eixa font i eixe PDF al visor; …/fonts/nova: el formulari per pujar-ne una),
 // #/quadern/<assignatura>/<quadern> (…/costat: la vista dividida) i #/sessio/<assignatura>/<sessió>/<materials|progres>.
 
 const PASSOS = ["Preparació", "Lectura general", "Divisió en blocs", "Per a cada bloc",
@@ -26,6 +27,8 @@ const ICONES = {
   avall: '<path d="M6 9l6 6 6-6"/>',
   llapis: '<path d="M4 20h4L18.5 9.5l-4-4L4 16z"/><path d="M13 7l4 4"/>',
   llibre: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  // Les fonts de l'assignatura: llibres en un prestatge, perquè no es confonguen amb els quaderns (guia W).
+  prestatge: '<path d="M3 4h4v16H3z"/><path d="M7 7h4v13H7z"/><path d="M13.2 7.6l3.8-1 3.6 13-3.8 1z"/><path d="M3 8h4"/><path d="M7 16h4"/>',
 };
 
 const lateral = document.getElementById("lateral");
@@ -95,6 +98,8 @@ function urlFitxer(a, ...parts) {
 const dataLlarga = (iso) => iso.split("-").reverse().join("/");
 const dataCurta = (iso) => iso.split("-").reverse().slice(0, 2).join("/");
 const nomSessio = (c) => c.titol || `Sessió del ${dataCurta(c.data)}`;
+// «de» amb apòstrof davant de vocal o hac: «Fonts d'Anàlisi II», «Fonts de Física».
+const de = (nom) => (/^h?[aeiouàèéíïòóúü]/i.test(nom) ? `d'${nom}` : `de ${nom}`);
 const hora = (ts) => new Date(ts).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" });
 const tokens = (n) => (n || 0).toLocaleString("ca-ES");
 
@@ -257,7 +262,7 @@ async function pinta() {
     pintaLateral(r);
     if (r.vista === "sessio" && r.a && r.c) await pintaSessio(r.a, r.c, r.pestanya, r.sub);
     else if (r.vista === "quadern" && r.a && r.c) await pintaQuadern(r.a, r.c, r.pestanya === "costat");
-    else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c, r.pestanya === "nou");
+    else if (r.vista === "assignatura" && r.a) pintaAssignatura(r.a, r.c, r.pestanya, r.sub);
     else pintaNova();
   } catch (e) {
     principal.replaceChildren(h("div", { class: "avis roig" }, icona("avis", 22), h("div", {}, e.message)));
@@ -357,11 +362,16 @@ function pintaLateral(r) {
       icona("mes", 16, 2.2), "Nova sessió"),
     assignatures.map((as) => {
       const plegat = plegats.has(as.id);
-      const actiu = r.vista === "assignatura" && r.a === as.id;
+      const fonts = r.vista === "assignatura" && r.a === as.id && r.c === "fonts";
+      const actiu = r.vista === "assignatura" && r.a === as.id && !fonts;
       return h("div", { class: "grup" },
         h("div", { class: "cap-grup" },
           h("h2", {}, h("a", { href: `#/assignatura/${as.id}/quaderns`, class: actiu ? "actiu" : null,
             "aria-current": actiu ? "page" : null }, as.nom)),
+          // La icona porta directament a la pestanya «Fonts» de l'assignatura (guia W).
+          h("a", { href: `#/assignatura/${as.id}/fonts`, class: "fonts-grup" + (fonts ? " actiu" : ""),
+            title: `Fonts ${de(as.nom)}`, "aria-label": `Fonts ${de(as.nom)}`, "aria-current": fonts ? "page" : null },
+          icona("prestatge", 17)),
           h("button", { type: "button", class: "plega-grup", "data-grup": as.id, "aria-expanded": plegat ? "false" : "true",
             "aria-label": `${plegat ? "Desplega" : "Plega"} ${as.nom}`, title: plegat ? "Desplega" : "Plega",
             onclick: () => plegaGrup(as.id) }, icona(plegat ? "dreta" : "avall", 14, 2))),
@@ -455,7 +465,8 @@ function fitxaNova() {
 
 // ---------- Assignatura ----------
 
-function pintaAssignatura(a, pestanya, obreNou) {
+// sub: «nou» a Quaderns (el formulari obert) o la font a Fonts; pdf: el PDF de la font que va al visor.
+function pintaAssignatura(a, pestanya, sub, pdf) {
   const as = assignatures.find((x) => x.id === a);
   if (!as) throw new Error("No existeix esta assignatura.");
   pestanya = pestanya === "fonts" ? "fonts" : "quaderns";
@@ -472,10 +483,10 @@ function pintaAssignatura(a, pestanya, obreNou) {
           class: id === pestanya ? "actiu" : null, "aria-current": id === pestanya ? "page" : null }, nom)))),
     nou);
   if (pestanya === "quaderns") pintaQuaderns(cos, as);
-  else pintaFonts(cos, as);
+  else pintaFonts(cos, as, sub, pdf);
   principal.replaceChildren(cos);
   // «Nou quadern» de la barra lateral: el formulari ja obert.
-  if (nou && obreNou) {
+  if (nou && sub === "nou") {
     nou.hidden = false;
     nou.querySelector("input").focus();
   }
@@ -593,33 +604,107 @@ function targetaQuadern(as, t) {
       : h("p", { class: "nota-petita" }, "Encara no hi ha cap sessió en este quadern."));
 }
 
-function pintaFonts(cos, as) {
-  if (!as.fonts.length) {
-    cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
-      h("strong", {}, "Encara no hi ha cap font"),
-      h("span", {}, "Puja'n una ací baix. Després la triaràs a Materials de cada sessió."))));
+// La pestanya «Fonts» (guia W): una fila amb les fonts de l'assignatura i, davall, la triada, amb els seus PDF,
+// el visor i la fitxa. Sense font a l'adreça, l'última que s'ha mirat en esta assignatura o la primera.
+// idFont «nova», o cap font a l'assignatura: el formulari per pujar-ne una.
+function pintaFonts(cos, as, idFont, nomPdf) {
+  const base = `#/assignatura/${as.id}/fonts`;
+  const clau = `lema-font-${as.id}`;
+  if (!idFont) idFont = as.fonts.some((f) => f.id === llegeix(clau)) ? llegeix(clau) : as.fonts[0]?.id;
+  const font = as.fonts.find((f) => f.id === idFont);
+  if (idFont && idFont !== "nova" && !font) throw new Error("No existeix esta font.");
+
+  if (as.fonts.length) {
+    cos.append(h("nav", { class: "tria-fonts", "aria-label": "Fonts de l'assignatura" },
+      as.fonts.map((f) => h("a", { href: `${base}/${f.id}`, class: "xip-font" + (f === font ? " on" : ""),
+        "aria-current": f === font ? "page" : null }, f.nom)),
+      h("a", { href: `${base}/nova`, class: "xip-font mes" + (font ? "" : " on"), "aria-current": font ? null : "page" },
+        icona("mes", 14, 2.2), "Nova font")));
   }
-  for (const f of as.fonts) {
-    const pagines = f.pdfs.reduce((s, p) => s + p.pagines, 0);
-    cos.append(h("section", { class: "targeta", "aria-label": f.nom },
-      h("div", { class: "quadern-cap" }, h("h2", {}, f.nom),
-        h("span", { class: "detall" }, [f.que_es, f.origen].filter(Boolean).join(" · "))),
-      h("ul", { class: "pdfs" }, f.pdfs.map((p) => h("li", {},
-        h("a", { class: "nom", href: urlFitxer(as.id, "fonts", f.id, p.nom), target: "_blank" }, p.nom),
-        p.amb_text
-          ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
-          : h("span", { class: "detall avis-text" }, "sense text: es llegirà com a imatge")))),
-      h("p", { class: "nota-petita" },
-        `${f.pdfs.length} PDF · ${pagines} pàgines · índex de ${f.entrades} entrades. Es tria a Materials de cada sessió.`)));
+
+  if (!font) {
+    if (!as.fonts.length) {
+      cos.append(h("div", { class: "avis gris" }, icona("avis", 22), h("div", {},
+        h("strong", {}, "Encara no hi ha cap font"),
+        h("span", {}, "Puja'n una ací baix. Després la triaràs a Materials de cada sessió."))));
+    }
+    cos.append(h("section", { class: "targeta", "aria-labelledby": "t-font-nova" },
+      h("div", { class: "cap-seccio" },
+        h("h2", { id: "t-font-nova" }, "Puja una font nova"),
+        h("p", {}, "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.")),
+      formFontNova(as.id, (nova) => {
+        avisa(`S'ha pujat «${nova.nom}». Ja la pots triar a Materials de cada sessió.`);
+        anar(`${base}/${nova.id}`);
+      })));
+    return;
   }
-  cos.append(h("section", { class: "targeta", "aria-labelledby": "t-font-nova" },
-    h("div", { class: "cap-seccio" },
-      h("h2", { id: "t-font-nova" }, "Puja una font nova"),
-      h("p", {}, "PDF del professor, diapositives, un capítol del llibre o apunts d'un altre alumne.")),
-    formFontNova(as.id, (font) => {
-      avisa(`S'ha pujat «${font.nom}». Ja la pots triar a Materials de cada sessió.`);
-      pinta();
-    })));
+
+  recorda(clau, font.id);
+  let nom = null;
+  try { nom = nomPdf && decodeURIComponent(nomPdf); } catch { /* adreça mal escrita: el primer PDF */ }
+  const pdf = font.pdfs.find((p) => p.nom === nom) || font.pdfs[0];
+  const pagines = font.pdfs.reduce((s, p) => s + p.pagines, 0);
+  const triada = as.sessions.filter((c) => (c.fonts || []).some((t) => t.id === font.id)).length;
+  cos.append(h("div", { class: "font-cap" },
+    h("h2", {}, font.nom),
+    font.que_es || font.origen ? h("span", { class: "que" }, [font.que_es, font.origen].filter(Boolean).join(" · ")) : null,
+    h("span", { class: "detall" }, [`${font.pdfs.length} PDF`, `${pagines} pàgines`,
+      triada ? `triada en ${triada} ${triada === 1 ? "sessió" : "sessions"}` : "encara no s'ha triat en cap sessió"].join(" · "))));
+
+  // Els PDF, amb el nom curt («Tema 1»); el sencer, en passar-hi per damunt i a la barra del visor.
+  // Canviar de PDF només canvia el visor i l'adreça: tornar a pintar la pàgina demana /api/assignatures,
+  // que tarda uns segons. El botó d'arrere sí que torna a pintar (hashchange).
+  const noms = nomsCurts(font.pdfs.map((p) => p.nom));
+  const visor = h("iframe", { class: "visor-font" });
+  const obri = (p) => {
+    visor.src = `${urlFitxer(as.id, "fonts", font.id, p.nom)}#navpanes=0&view=FitH`;
+    visor.title = `${font.nom}: ${p.nom}`;
+  };
+  const enllacos = font.pdfs.map((p, i) => h("a", { href: `${base}/${font.id}/${encodeURIComponent(p.nom)}`, title: p.nom,
+    class: "pdf-font" + (p === pdf ? " actiu" : ""), "aria-current": p === pdf ? "true" : null,
+    onclick: (e) => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;  // en una pestanya nova, com un enllaç
+      e.preventDefault();
+      if (e.currentTarget.classList.contains("actiu")) return;
+      history.pushState(null, "", e.currentTarget.getAttribute("href"));
+      hashAnterior = location.hash;
+      for (const a of enllacos) {
+        a.classList.toggle("actiu", a === e.currentTarget);
+        if (a === e.currentTarget) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      }
+      obri(p);
+    } },
+  h("strong", {}, noms[i]),
+  p.amb_text
+    ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
+    : h("span", { class: "detall avis-text" }, `${p.pagines} p. · sense text: es llegirà com a imatge`)));
+  if (pdf) obri(pdf);
+  cos.append(h("div", { class: "font-cos" },
+    h("section", { class: "pdfs-font", "aria-labelledby": "t-pdfs" },
+      h("h3", { id: "t-pdfs" }, "PDF"),
+      h("ul", {}, enllacos.map((a) => h("li", {}, a)))),
+    pdf ? visor : null));
+
+  // La fitxa: la de l'usuari (font.json) i la que fa Claude (fitxa.yaml), si ja n'hi ha.
+  const fitxaClaude = h("p", { class: "detall" }, "Carregant…");
+  cos.append(h("section", { class: "targeta compacta fitxa-font", "aria-labelledby": "t-fitxa" },
+    h("h3", { id: "t-fitxa" }, "Fitxa"),
+    h("dl", { class: "fitxa" },
+      h("dt", {}, "Nom curt"), h("dd", {}, font.nom),
+      h("dt", {}, "Què és"), h("dd", {}, font.que_es || "—"),
+      h("dt", {}, "D'on surt"), h("dd", {}, font.origen || "—")),
+    h("div", { class: "cap-fitxa-claude" }, h("strong", {}, "Fitxa per a Claude"),
+      h("span", { class: "nota-petita" }, "La fa Claude la primera vegada que passa a net una sessió amb esta font, i després la reutilitza.")),
+    fitxaClaude));
+  fetch(urlFitxer(as.id, "fonts", font.id, "fitxa.yaml"))
+    .then(async (r) => {
+      if (!r.ok) throw new Error();
+      fitxaClaude.replaceWith(h("pre", { class: "fitxa-claude" }, await r.text()));
+    })
+    .catch(() => {
+      fitxaClaude.textContent = "Claude la farà la primera vegada que passe a net una sessió amb esta font.";
+    });
 }
 
 // Formulari per pujar una font a l'assignatura. pujada(font) es crida quan ja s'ha extret el text.
@@ -932,7 +1017,7 @@ function seccioFont(sessio, assig, desa, bloquejat) {
         "Marca els PDF on és la sessió. Si no en marques cap, Claude mira l'índex.") : null,
       assig.fonts.length ? null : h("p", { class: "detall" },
         "Esta assignatura encara no té cap font. Puja-la a la pàgina de l'assignatura: la podràs triar en totes les sessions."),
-      h("a", { class: "enllac", href: `#/assignatura/${sessio.assignatura}/fonts` },
+      h("a", { class: "enllac", href: `#/assignatura/${sessio.assignatura}/fonts/nova` },
         icona("mes", 14, 2.2), "Puja una font nova a l'assignatura"),
     ].filter(Boolean));
   }

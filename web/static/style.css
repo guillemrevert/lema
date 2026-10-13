@@ -493,3 +493,61 @@ dl.dades dd { margin: 0; font-family: var(--mono); }
 }
 .fotos > .cap-sessio:first-child, .fotos > p + .cap-sessio { border-top: 0; padding-top: 0; }
 .cap-sessio a { font-size: 13px; }
+
+/* ---------- Fonts de l'assignatura (guia W) ---------- */
+/* La icona de la barra lateral, entre el nom de l'assignatura i la fletxa de plegar. */
+.cap-grup h2 { flex: 1; min-width: 0; }
+.fonts-grup {
+  width: 28px; height: 28px; flex: none; display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 6px; color: var(--suau);
+}
+.fonts-grup:hover { background: #E4E3DC; color: var(--tinta); }
+.fonts-grup.actiu { background: var(--superficie); border-color: var(--vora); color: var(--blau); }
+/* La fila de fonts de la pestanya. */
+.tria-fonts { display: flex; flex-wrap: wrap; gap: 8px; }
+.xip-font {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--vora-forta); background: var(--superficie); color: #3A404B; font-size: 14px; font-weight: 500;
+  text-decoration: none;
+}
+.xip-font:hover { border-color: var(--blau); color: var(--blau); }
+.xip-font.mes { border-style: dashed; color: var(--blau); }
+.xip-font.on, .xip-font.on:hover { border-style: solid; border-color: #C9D5F0; background: var(--blau-clar); color: var(--blau-text); font-weight: 600; }
+.font-cap { display: flex; flex-direction: column; gap: 4px; }
+.font-cap h2 { font: 600 28px/1.15 var(--serif); overflow-wrap: anywhere; }
+.font-cap .que { color: #3A404B; }
+/* Els PDF a l'esquerra i el visor a la dreta; si no hi caben, la llista va damunt. */
+.font-cos { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.pdfs-font { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.pdfs-font h3 { padding: 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.pdfs-font ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pdf-font {
+  display: flex; flex-direction: column; gap: 1px; padding: 10px 12px; border-radius: 8px; border: 1px solid transparent;
+  color: var(--tinta); text-decoration: none;
+}
+.pdf-font:hover { background: #EFEEE8; color: var(--tinta); }
+.pdf-font strong { font-weight: 500; overflow-wrap: anywhere; }
+.pdf-font .detall { font-size: 13px; }
+.pdf-font.actiu { background: var(--blau-clar); border-color: #C9D5F0; }
+.pdf-font.actiu strong { color: var(--blau-text); font-weight: 600; }
+.visor-font {
+  flex: 999 1 460px; min-width: 0; height: max(520px, calc(100vh - 220px));
+  border: 1px solid var(--vora); border-radius: 8px; background: #FFFFFF;
+}
+/* La fitxa: la de l'usuari i, davall, la de Claude tal com està escrita. */
+.fitxa-font h3 { font: 600 22px/1.2 var(--serif); }
+dl.fitxa { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 20px; }
+dl.fitxa dt { font-size: 14px; font-weight: 600; color: var(--suau); }
+dl.fitxa dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.cap-fitxa-claude {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px;
+  padding-top: 12px; border-top: 1px solid var(--linia);
+}
+.fitxa-claude {
+  margin: 0; padding: 12px 14px; border: 1px solid var(--linia); border-radius: 8px; background: var(--fons);
+  font: 13px/1.6 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  dl.fitxa { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  dl.fitxa dd { margin-bottom: 8px; }
+}

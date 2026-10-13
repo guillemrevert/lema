@@ -1,0 +1,560 @@
+<title>Fonts de cada assignatura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Mock-up estàtic de la W (versió 2): una icona de llibres al costat de cada assignatura, a la barra lateral,
+   que obri la pestanya «Fonts» de l'assignatura. A la pestanya es llig el PDF i s'edita la font.
+   Dalt, dues pantalles netes dins d'un marc de navegador; davall, la guia part per part.
+   Només tema clar, com la web de LEMA (mateixos colors i lletres que web/static/style.css).
+   Les imatges són a guies/img/, fora de git: dues pàgines del PDF del Tema 1 de Wuolah. */
+:root {
+  color-scheme: light;
+  --pagina: #E7E5DD;
+  --fons: #F7F6F2;
+  --lateral: #EFEEE8;
+  --sup: #FFFFFF;
+  --tinta: #1B1E24;
+  --text-2: #3A404B;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora: #DEDCD4;
+  --vora-forta: #CFCDC4;
+  --linia: #ECEBE5;
+  --blau: #1F4FB8;
+  --blau-clar: #E8EEFA;
+  --blau-fons: #F6F8FD;
+  --blau-text: #1A43A0;
+  --blau-vora: #C9D5F0;
+  --roig: #B42318;
+  --roig-clar: #FBE9E7;
+  --roig-vora: #F1C7C1;
+  --visor: #525659;
+  --visor-barra: #323639;
+  --visor-text: #E8EAED;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--pagina); color: var(--tinta); font: 15px/1.55 var(--sans); padding-block: 32px 80px; padding-inline: 16px; }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--blau); }
+button, input, textarea { font: inherit; }
+code { font: 0.9em var(--mono); background: var(--lateral); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+
+/* ---------- Document ---------- */
+.doc { max-width: 1320px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+.intro { display: flex; flex-direction: column; gap: 14px; max-width: 780px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suau); }
+.intro h1 { font: 600 46px/1.05 var(--serif); text-wrap: balance; }
+.intro p { font-size: 17px; color: var(--text-2); }
+.seccio { display: flex; flex-direction: column; gap: 20px; }
+.seccio > header { display: flex; flex-direction: column; gap: 6px; max-width: 780px; }
+.seccio h2 { font: 600 32px/1.15 var(--serif); text-wrap: balance; }
+.seccio > header p { color: var(--text-2); font-size: 16px; }
+.pantalla { display: flex; flex-direction: column; gap: 10px; }
+.pantalla > h3 { font: 600 20px/1.2 var(--serif); }
+.pantalla > p { color: var(--text-2); max-width: 780px; }
+
+/* ---------- Marc del navegador ---------- */
+.marc { border: 1px solid var(--vora-forta); border-radius: 12px; overflow: hidden; background: var(--fons); box-shadow: 0 12px 32px rgba(27, 30, 36, 0.12); }
+.marc-barra { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--lateral); border-bottom: 1px solid var(--vora); min-width: 0; }
+.marc-barra i { width: 11px; height: 11px; border-radius: 50%; background: var(--vora-forta); flex: none; }
+.marc-barra .url { margin-left: 10px; flex: 1; min-width: 0; padding: 4px 12px; border-radius: 6px; background: var(--sup); font: 12px var(--mono); color: var(--suau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- La web de LEMA ---------- */
+.app { display: flex; flex-wrap: wrap; font-size: 15px; line-height: 1.5; }
+.lateral { flex: 1 1 240px; max-width: 100%; background: var(--lateral); border-right: 1px solid var(--vora); padding: 26px 16px; display: flex; flex-direction: column; gap: 22px; }
+.logo { display: flex; flex-direction: column; gap: 2px; padding: 0 6px; }
+.logo-nom { font: 600 30px/1 var(--serif); letter-spacing: 0.04em; }
+.logo-sub { font-size: 12px; color: var(--suau); line-height: 1.35; }
+.boto-nova { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); font-weight: 600; font-size: 14px; }
+.grup { display: flex; flex-direction: column; gap: 4px; }
+.cap-grup { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding-left: 6px; margin-bottom: 4px; }
+.cap-grup h3 { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.cap-grup .botons { display: flex; align-items: center; gap: 2px; flex: none; }
+.ico { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--suau); cursor: pointer; padding: 0; }
+.ico.actiu { background: var(--sup); border-color: var(--vora); color: var(--blau); }
+.quadern-nav { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 8px; border: 1px solid transparent; font-weight: 600; font-size: 14px; line-height: 1.35; color: var(--tinta); }
+.quadern-nav svg { flex: none; margin-top: 1px; color: var(--suau); }
+.sessions-nav { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px 18px; padding-left: 10px; border-left: 1px solid var(--vora-forta); }
+.sessio-nav { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 8px; border: 1px solid transparent; }
+.sessio-nom { font-size: 13.5px; font-weight: 500; }
+.estat { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--suau); }
+.estat::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--apagat); }
+.estat.fet::before { background: var(--blau); }
+.nou { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 13.5px; color: var(--blau); font-weight: 500; }
+.etiqueta-nav { padding: 10px 10px 2px; font-size: 12px; font-weight: 600; color: var(--suau); }
+.buit { padding: 0 10px; font-size: 13.5px; color: var(--suau); }
+
+.principal { flex: 999 1 560px; min-width: 0; padding: 30px clamp(16px, 2.4vw, 32px) 40px; display: flex; flex-direction: column; gap: 20px; }
+.capcalera { display: flex; flex-direction: column; gap: 14px; }
+.capcalera .detall { font-size: 14px; color: var(--suau); }
+.capcalera h2 { font: 600 34px/1.1 var(--serif); text-wrap: balance; }
+.pestanyes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--vora); }
+.pestanyes span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--suau); font-size: 14px; }
+.pestanyes .actiu { margin-bottom: -1px; border-bottom: 2px solid var(--blau); color: var(--tinta); font-weight: 600; }
+
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.entre { justify-content: space-between; }
+.peu { font-size: 13px; color: var(--suau); }
+.boto { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--blau); color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.boto.roig { background: var(--roig); }
+.boto-sec { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); color: var(--tinta); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.boto-sec.perill { color: var(--roig); }
+.targeta { background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.targeta h3 { font: 600 21px/1.2 var(--serif); }
+
+/* Tria de la font dins de la pestanya */
+.xips { display: flex; flex-wrap: wrap; gap: 8px; }
+.xip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--vora-forta); background: var(--sup); font-size: 14px; font-weight: 500; color: var(--text-2); }
+.xip.on { background: var(--blau-clar); border-color: var(--blau-vora); color: var(--blau-text); font-weight: 600; }
+.xip.mes { border-style: dashed; color: var(--blau); }
+.font-cap { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.font-cap > div:first-child { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.font-cap h3 { font: 600 26px/1.15 var(--serif); }
+.font-cap .que { font-size: 15px; color: var(--text-2); }
+.font-cap .xifres { font-size: 13.5px; color: var(--suau); }
+
+/* Llista de PDF a l'esquerra, visor a la dreta */
+.font-cos { display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch; }
+.pdfs { flex: 1 1 230px; max-width: 100%; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pdfs h4 { font: 600 13px var(--sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); padding: 0 4px; }
+.pdfs ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pdf { display: flex; align-items: flex-start; gap: 8px; padding: 10px 10px 10px 12px; border-radius: 8px; border: 1px solid transparent; }
+.pdf .nom { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.pdf .nom b { font-weight: 500; font-size: 14px; overflow-wrap: anywhere; }
+.pdf .nom span { font-size: 12.5px; color: var(--suau); }
+.pdf.actiu { background: var(--blau-clar); border-color: var(--blau-vora); }
+.pdf.actiu .nom b { color: var(--blau-text); font-weight: 600; }
+.lleva { flex: none; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: transparent; color: var(--apagat); cursor: pointer; }
+.afegeix { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1.5px dashed var(--vora-forta); border-radius: 10px; color: var(--text-2); font-size: 13.5px; line-height: 1.35; }
+.afegeix svg { flex: none; color: var(--blau); }
+.afegeix b { color: var(--blau); font-weight: 600; display: block; }
+
+/* Visor del PDF del navegador */
+.visor { flex: 999 1 460px; min-width: 0; display: flex; flex-direction: column; background: var(--visor); border-radius: 10px; overflow: hidden; height: 600px; }
+.visor-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--visor-barra); color: var(--visor-text); font-size: 13px; min-width: 0; }
+.visor-barra span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visor-barra span { flex: none; }
+.visor-pagines { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; }
+.visor-pagines img { display: block; width: 100%; max-width: 520px; height: auto; background: #FFFFFF; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+
+/* Fitxa */
+.fitxa { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 20px; margin: 0; }
+.fitxa dt { font-size: 14px; font-weight: 600; color: var(--suau); }
+.fitxa dd { margin: 0; min-width: 0; }
+.plegable { border-top: 1px solid var(--linia); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.plegable > .fila { font-weight: 600; font-size: 14px; }
+.yaml { margin: 0; padding: 12px 14px; font: 12.5px/1.65 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--fons); border: 1px solid var(--linia); border-radius: 8px; color: var(--text-2); }
+
+/* Formulari */
+.camps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.camp { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.camp > span { font-weight: 600; font-size: 14px; }
+.camp input, .camp textarea { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--vora-forta); border-radius: 8px; background: var(--sup); color: var(--tinta); font-size: 15px; }
+.camp textarea.yaml-edita { min-height: 300px; font: 12.5px/1.65 var(--mono); resize: vertical; }
+.nota { font-size: 13.5px; color: var(--suau); }
+
+/* Avisos i confirmacions */
+.confirma { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--roig-vora); background: var(--roig-clar); color: var(--tinta); }
+.confirma b { font-weight: 600; }
+.confirma ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: var(--text-2); }
+.pdf.confirmant { background: var(--roig-clar); border-color: var(--roig-vora); flex-wrap: wrap; }
+.pdf.confirmant .fila { width: 100%; }
+
+/* ---------- Guia part per part ---------- */
+.parts { display: flex; flex-direction: column; gap: 20px; }
+.part { background: var(--sup); border: 1px solid var(--vora); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 20px; }
+.part-cap { display: flex; align-items: center; gap: 14px; }
+.part-num { width: 34px; height: 34px; border-radius: 50%; background: var(--tinta); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font: 600 15px var(--mono); flex: none; }
+.part-cap h3 { font: 600 25px/1.2 var(--serif); text-wrap: balance; }
+.part-cos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.part-cos.sol { grid-template-columns: minmax(0, 1fr); }
+.part-text { display: flex; flex-direction: column; gap: 12px; max-width: 68ch; }
+.part-text p b { font-weight: 600; }
+.part-text ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.cal { padding: 12px 16px; background: var(--fons); border-radius: 10px; font-size: 14px; color: var(--text-2); }
+.cal b { color: var(--tinta); }
+.part-mostra { background: var(--lateral); border: 1px solid var(--linia); border-radius: 12px; padding: 18px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.part-mostra.clara { background: var(--fons); gap: 12px; }
+.alternatives { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; align-items: start; }
+.alt { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--linia); border-radius: 12px; background: var(--fons); }
+.alt strong { font-size: 16px; }
+.alt > span { font-size: 14px; color: var(--text-2); }
+.reco { align-self: flex-start; padding: 1px 9px; border-radius: 999px; background: var(--blau-clar); color: var(--blau-text); font-size: 12px; font-weight: 600; }
+.mini { background: var(--lateral); border: 1px solid var(--linia); border-radius: 8px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
+
+/* Esquemes petits de les alternatives */
+.esq { display: flex; gap: 8px; height: 150px; padding: 10px; background: var(--sup); border: 1px solid var(--linia); border-radius: 8px; }
+.esq.columna { flex-direction: column; }
+.esq .ll { width: 34%; display: flex; flex-direction: column; gap: 5px; }
+.esq .ll i, .esq .pt i { display: block; height: 18px; border-radius: 4px; background: var(--fons); border: 1px solid var(--linia); font: normal 10.5px/16px var(--sans); color: var(--suau); padding: 0 6px; white-space: nowrap; overflow: hidden; }
+.esq .ll i.on, .esq .pt i.on { background: var(--blau-clar); border-color: var(--blau-vora); color: var(--blau-text); font-weight: 600; }
+.esq .pt { display: flex; gap: 4px; }
+.esq .pt i { flex: 1; }
+.esq .vs { flex: 1; border-radius: 5px; background: var(--visor); display: flex; justify-content: center; padding-top: 10px; min-height: 0; }
+.esq .vs b { width: 52%; background: #FFFFFF; border-radius: 2px; }
+.esq .sel { align-self: flex-start; height: 22px; padding: 0 8px; border: 1px solid var(--vora-forta); border-radius: 5px; font: 11px/20px var(--sans); color: var(--tinta); background: var(--sup); }
+.esq .targ { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.esq .targ i { display: flex; flex-direction: column; justify-content: center; gap: 2px; flex: 1; border-radius: 5px; border: 1px solid var(--linia); background: var(--fons); font: normal 11px/1.2 var(--sans); color: var(--tinta); padding: 0 8px; }
+.esq .targ i small { color: var(--suau); font-size: 10px; }
+
+.decisions { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 860px; font-size: 16px; }
+.decisions li::marker { font-weight: 600; }
+.decisions span { color: var(--text-2); }
+.fora { max-width: 860px; font-size: 15px; color: var(--text-2); }
+
+@media (max-width: 860px) {
+  .part-cos { grid-template-columns: minmax(0, 1fr); }
+  .visor { height: 480px; }
+}
+@media (max-width: 640px) {
+  .intro h1 { font-size: 36px; }
+  .capcalera h2 { font-size: 28px; }
+  .part { padding: 18px; }
+  .fitxa { grid-template-columns: minmax(0, 1fr); gap: 2px 0; }
+  .fitxa dd { margin-bottom: 8px; }
+}
+</style>
+
+<!-- Icones: el llibre dels quaderns, la proposta (llibres en un prestatge) i el llibre obert. -->
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <symbol id="i-quadern" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></symbol>
+  <symbol id="i-prestatge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h4v16H3z"/><path d="M7 7h4v13H7z"/><path d="M13.2 7.6l3.8-1 3.6 13-3.8 1z"/><path d="M3 8h4"/><path d="M7 16h4"/></symbol>
+  <symbol id="i-obert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z"/><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z"/></symbol>
+  <symbol id="i-avall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></symbol>
+</svg>
+
+<div class="doc">
+
+<!-- ================= Introducció ================= -->
+<header class="intro">
+  <span class="eyebrow">LEMA · web local · mock-up de la W · versió 2</span>
+  <h1>Les fonts de cada assignatura</h1>
+  <p>Ara les fonts són a la pestanya «Fonts» de la pàgina de l'assignatura. Per arribar-hi has de clicar el nom de l'assignatura i després la pestanya. Els PDF s'obrin en una pestanya nova del navegador, i quan una font ja està pujada no se'n pot canviar res.</p>
+  <p>La proposta: al costat del nom de cada assignatura, a la barra lateral, <b>una icona de llibres</b>. La cliques i et porta directament a la pestanya «Fonts». Allí tries la font, <b>llegeixes els PDF sense eixir de la web</b> i l'edites: la fitxa, afegir o llevar PDF, o esborrar-la.</p>
+  <p>La versió 1 posava una secció «Fonts» a la barra, amb una línia per font. L'has canviada per la icona.</p>
+  <p>És un mock-up: no funciona res, només ensenya com seria. Fa servir la font de Wuolah d'Estructures Algebraiques.</p>
+</header>
+
+<!-- ================= Pantalles ================= -->
+<section class="seccio" aria-labelledby="t-pantalles">
+  <header>
+    <h2 id="t-pantalles">Les pantalles</h2>
+    <p>Dues pantalles: la pestanya «Fonts» oberta des de la icona, i la mateixa pestanya mentre edites la fitxa. Davall s'explica cada part.</p>
+  </header>
+
+  <!-- Pantalla 1 -->
+  <div class="pantalla">
+    <h3>1 · La pestanya «Fonts», oberta des de la icona</h3>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/assignatura/estructures-algebraiques/fonts/wuolah</span></div>
+      <div class="app">
+        <nav class="lateral" aria-label="Assignatures, quaderns i sessions">
+          <div class="logo"><span class="logo-nom">LEMA</span><span class="logo-sub">Lector i Editor de Manuscrits Acadèmics</span></div>
+          <span class="boto-nova">+ Nova sessió</span>
+
+          <div class="grup">
+            <div class="cap-grup"><h3>Anàlisi II</h3>
+              <span class="botons"><button type="button" class="ico" title="Fonts d'Anàlisi II" aria-label="Fonts d'Anàlisi II"><svg width="17" height="17"><use href="#i-prestatge"/></svg></button><button type="button" class="ico" title="Plega" aria-label="Plega Anàlisi II"><svg width="14" height="14"><use href="#i-avall"/></svg></button></span></div>
+            <p class="buit">Encara no hi ha quaderns.</p>
+            <span class="nou">+ Nou quadern</span>
+          </div>
+
+          <div class="grup">
+            <div class="cap-grup"><h3>Estructures Algebraiques</h3>
+              <span class="botons"><button type="button" class="ico actiu" title="Fonts d'Estructures Algebraiques" aria-label="Fonts d'Estructures Algebraiques" aria-current="page"><svg width="17" height="17"><use href="#i-prestatge"/></svg></button><button type="button" class="ico" title="Plega" aria-label="Plega Estructures Algebraiques"><svg width="14" height="14"><use href="#i-avall"/></svg></button></span></div>
+            <span class="quadern-nav"><svg width="16" height="16"><use href="#i-quadern"/></svg>Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <div class="sessions-nav">
+              <span class="sessio-nav"><span class="sessio-nom">Sessió del 10/10</span><span class="estat">Sense començar</span></span>
+              <span class="sessio-nav"><span class="sessio-nom">Sessió del 07/10</span><span class="estat fet">Acabada</span></span>
+              <span class="sessio-nav"><span class="sessio-nom">Classe de teoria</span><span class="estat fet">Acabada</span></span>
+              <span class="sessio-nav"><span class="sessio-nom">Sessió del 30/09</span><span class="estat fet">Acabada</span></span>
+            </div>
+            <span class="nou">+ Nou quadern</span>
+            <span class="etiqueta-nav">Sense quadern</span>
+            <span class="sessio-nav"><span class="sessio-nom">Sessió del 30/09</span><span class="estat">Sense començar</span></span>
+          </div>
+        </nav>
+
+        <div class="principal">
+          <div class="capcalera">
+            <div><span class="detall">Assignatura</span><h2>Estructures Algebraiques</h2></div>
+            <div class="pestanyes"><span>Quaderns</span><span class="actiu">Fonts</span></div>
+          </div>
+
+          <div class="xips" aria-label="Fonts de l'assignatura"><span class="xip on">Wuolah</span><span class="xip mes">+ Nova font</span></div>
+
+          <div class="font-cap">
+            <div>
+              <h3>Wuolah</h3>
+              <span class="que">Apunts d'un alumne de l'any passat · Wuolah, curs 2025-26</span>
+              <span class="xifres">4 PDF · 57 pàgines · triada en 5 sessions</span>
+            </div>
+            <div class="fila"><span class="boto-sec">Edita la fitxa</span><span class="boto-sec perill">Esborra la font</span></div>
+          </div>
+
+          <div class="font-cos">
+            <section class="pdfs" aria-label="PDF de la font">
+              <h4>PDF</h4>
+              <ul>
+                <li class="pdf actiu"><span class="nom"><b>wuolah-premium-Tema-1-EA.pdf</b><span>23 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF" title="Lleva este PDF">✕</button></li>
+                <li class="pdf"><span class="nom"><b>wuolah-premium-Tema-2-EA.pdf</b><span>10 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF" title="Lleva este PDF">✕</button></li>
+                <li class="pdf"><span class="nom"><b>wuolah-premium-Tema-3-EA.pdf</b><span>13 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF" title="Lleva este PDF">✕</button></li>
+                <li class="pdf"><span class="nom"><b>wuolah-premium-Tema-4-EA.pdf</b><span>11 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF" title="Lleva este PDF">✕</button></li>
+              </ul>
+              <div class="afegeix"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><span><b>Afegeix PDF</b>o arrossega'ls ací</span></div>
+            </section>
+            <div class="visor" aria-label="Visor del PDF">
+              <div class="visor-barra"><span>wuolah-premium-Tema-1-EA.pdf</span><span>1 / 23</span><span>−&nbsp;&nbsp;100%&nbsp;&nbsp;+</span></div>
+              <div class="visor-pagines"><img src="img/w-font-02.png" alt="Primera pàgina del Tema 1 de Wuolah: índex i definició de grup"><img src="img/w-font-03.png" alt="Segona pàgina del Tema 1 de Wuolah"></div>
+            </div>
+          </div>
+
+          <section class="targeta" aria-labelledby="m1-fitxa">
+            <div class="fila entre"><h3 id="m1-fitxa">Fitxa</h3><span class="boto-sec">Edita la fitxa</span></div>
+            <dl class="fitxa">
+              <dt>Nom curt</dt><dd>Wuolah</dd>
+              <dt>Què és</dt><dd>Apunts d'un alumne de l'any passat</dd>
+              <dt>D'on surt</dt><dd>Wuolah, curs 2025-26</dd>
+            </dl>
+            <div class="plegable">
+              <div class="fila entre"><span>Fitxa per a Claude</span><span class="peu">La va fer Claude en passar a net la primera sessió amb esta font</span></div>
+              <pre class="yaml">us: enunciats i demostracions; completar el que falte entre classes
+notacio: "Producte de permutacions en l'ordre contrari al dels apunts: στ = τ∘σ (primer σ). Grup simètric S_Ω = S_n, amb Ω = {1,…,n}."
+pagines: Es cita el número imprés al peu de cada pàgina; la portada de Wuolah no compta.
+fiabilitat: mitjana   # apunts d'alumne; al Tema 2 hi ha errates</pre>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 2 -->
+  <div class="pantalla">
+    <h3>2 · Editant la fitxa</h3>
+    <p>«Edita la fitxa» converteix la targeta en un formulari. Dalt, el que vas escriure en pujar la font; davall, la fitxa que fa servir Claude, com a text.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/assignatura/estructures-algebraiques/fonts/wuolah</span></div>
+      <div class="app">
+        <div class="principal">
+          <form class="targeta" onsubmit="return false" aria-labelledby="m2-fitxa">
+            <h3 id="m2-fitxa">Fitxa</h3>
+            <div class="camps">
+              <label class="camp" for="m2-nom"><span>Nom curt</span><input id="m2-nom" type="text" value="Wuolah"></label>
+              <label class="camp" for="m2-que"><span>Què és</span><input id="m2-que" type="text" value="Apunts d'un alumne de l'any passat"></label>
+              <label class="camp" for="m2-don"><span>D'on surt</span><input id="m2-don" type="text" value="Wuolah, curs 2025-26"></label>
+            </div>
+            <label class="camp" for="m2-yaml"><span>Fitxa per a Claude</span>
+<textarea id="m2-yaml" class="yaml-edita">nom: wuolah
+que_es: Apunts d'Estructures Algebraiques d'un alumne de l'any passat, passats a LaTeX i publicats a Wuolah. Quatre temes en PDF.
+origen: "Wuolah, curs 2025-26 (Marc Monferrer Ulldemolins). El professor era un altre: l'ordre dels temes no coincideix, però l'usuari creu que les demostracions són les mateixes."
+fitxers:
+  - wuolah-premium-Tema-1-EA.pdf   # Grups, subgrups i homomorfismes
+  - wuolah-premium-Tema-2-EA.pdf   # Grups simètric i alternats
+  - wuolah-premium-Tema-3-EA.pdf   # Accions de grups. Teoremes de Sylow
+  - wuolah-premium-Tema-4-EA.pdf   # Anells, subanells, ideals. Homomorfismes
+us: enunciats i demostracions; completar el que falte entre classes (nota de l'usuari, 05/10/2026)
+notacio: "Producte de permutacions en l'ordre contrari al dels apunts: στ = τ∘σ (primer σ). Grup simètric S_Ω = S_n, amb Ω = {1,…,n}."
+pagines: Es cita el número imprés al peu de cada pàgina (el de index.txt sense [pdf]); la portada de Wuolah no compta.
+prioritat: 1          # única font
+fiabilitat: mitjana   # apunts d'alumne; al Tema 2 hi ha errates (vegeu prova-1/millores.md)</textarea></label>
+            <p class="nota">Claude la llig cada vegada que passa a net una sessió amb esta font. Si el que diu ací no quadra amb els tres camps de dalt, manen els de dalt.</p>
+            <div class="fila"><button type="button" class="boto">Desa</button><button type="button" class="boto-sec">Cancel·la</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Part per part ================= -->
+<section class="seccio" aria-labelledby="t-parts">
+  <header>
+    <h2 id="t-parts">Part per part</h2>
+    <p>Per a cada part: què veus, per a què serveix i què caldria canviar a LEMA. Quan hi ha diverses maneres de fer-la, les tens al final de la part, amb la proposta marcada.</p>
+  </header>
+
+  <div class="parts">
+
+    <article class="part" aria-labelledby="p1">
+      <div class="part-cap"><span class="part-num">1</span><h3 id="p1">La icona de les fonts, al costat de l'assignatura</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> A la barra lateral, a la dreta del nom de cada assignatura, una icona de llibres, abans de la fletxa per plegar. Quan estàs a la pestanya «Fonts» d'eixa assignatura, la icona es veu blava i amb fons blanc.</p>
+          <p><b>Què pots fer.</b> Clicar la icona per anar directament a la pestanya «Fonts». El nom de l'assignatura continua portant a la pestanya «Quaderns», com ara.</p>
+          <p><b>El problema del llibre.</b> Els quaderns ja porten una icona de llibre a la barra. Si les fonts porten el mateix llibre, a colp d'ull no saps què és cada cosa. Per això la proposta és un llibre diferent: uns llibres en un prestatge.</p>
+          <p><b>Barra plegada.</b> La tira d'inicials es queda igual: cada inicial porta a la pàgina de l'assignatura.</p>
+          <p class="cal"><b>Què cal.</b> Un botó més a la capçalera de cada assignatura de la barra lateral (<code>pintaLateral</code>, a <code>app.js</code>) i una icona nova.</p>
+        </div>
+        <div class="part-mostra">
+          <div class="cap-grup"><h3>Estructures Algebraiques</h3>
+            <span class="botons"><button type="button" class="ico actiu" aria-label="Fonts d'Estructures Algebraiques"><svg width="17" height="17"><use href="#i-prestatge"/></svg></button><button type="button" class="ico" aria-label="Plega"><svg width="14" height="14"><use href="#i-avall"/></svg></button></span></div>
+          <span class="quadern-nav"><svg width="16" height="16"><use href="#i-quadern"/></svg>Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Llibres en un prestatge</strong>
+          <div class="mini"><div class="cap-grup"><h3>Estructures Alg…</h3><span class="botons"><span class="ico"><svg width="17" height="17"><use href="#i-prestatge"/></svg></span><span class="ico"><svg width="14" height="14"><use href="#i-avall"/></svg></span></span></div><span class="quadern-nav"><svg width="16" height="16"><use href="#i-quadern"/></svg>Tema 1. Grups…</span></div>
+          <span>Diversos llibres: la biblioteca de l'assignatura. No es confon amb el llibre dels quaderns.</span></div>
+        <div class="alt"><strong>Un llibre obert</strong>
+          <div class="mini"><div class="cap-grup"><h3>Estructures Alg…</h3><span class="botons"><span class="ico"><svg width="17" height="17"><use href="#i-obert"/></svg></span><span class="ico"><svg width="14" height="14"><use href="#i-avall"/></svg></span></span></div><span class="quadern-nav"><svg width="16" height="16"><use href="#i-quadern"/></svg>Tema 1. Grups…</span></div>
+          <span>Un llibre per llegir. Es distingeix, però en xicotet s'assembla al dels quaderns.</span></div>
+        <div class="alt"><strong>El mateix llibre que els quaderns</strong>
+          <div class="mini"><div class="cap-grup"><h3>Estructures Alg…</h3><span class="botons"><span class="ico"><svg width="17" height="17"><use href="#i-quadern"/></svg></span><span class="ico"><svg width="14" height="14"><use href="#i-avall"/></svg></span></span></div><span class="quadern-nav"><svg width="16" height="16"><use href="#i-quadern"/></svg>Tema 1. Grups…</span></div>
+          <span>Com dius, un llibre. Però és el mateix dibuix que cada quadern de davall.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p2">
+      <div class="part-cap"><span class="part-num">2</span><h3 id="p2">La pestanya «Fonts»: triar la font</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què veus.</b> Davall de les pestanyes, una fila de botons arredonits, un per font, i «+ Nova font» al final. La font triada es veu blava, i davall tens tota la font (pantalla 1):</p>
+          <ul>
+            <li>el nom, què és i d'on surt; quants PDF i pàgines té i en quantes sessions l'has triada;</li>
+            <li>«Edita la fitxa» i «Esborra la font»;</li>
+            <li>els PDF i el visor (part 3);</li>
+            <li>la fitxa (part 4).</li>
+          </ul>
+          <p><b>Quina ix primer.</b> En obrir la pestanya, la primera font, o l'última que vas mirar en eixa assignatura. Si només n'hi ha una, com ara, ja la tens oberta.</p>
+          <p class="cal"><b>Què cal.</b> Canviar <code>pintaFonts</code> i l'adreça de la pestanya, que porta la font triada (<code>#/assignatura/&lt;a&gt;/fonts/&lt;font&gt;</code>). La llista de fonts ja arriba a la web amb les assignatures.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Botons a dalt i la font davall</strong>
+          <div class="esq columna" aria-hidden="true"><div class="pt"><i class="on">Wuolah</i><i>Professor</i><i>+ Nova font</i></div><div class="vs"><b></b></div></div>
+          <span>Canvies de font amb un clic i sempre veus el PDF. Si tens deu fonts, la fila fa dues línies.</span></div>
+        <div class="alt"><strong>Primer la llista, després la font</strong>
+          <div class="esq columna" aria-hidden="true"><div class="targ"><i>Wuolah<small>Apunts d'un alumne · 4 PDF</small></i><i>Professor<small>Diapositives · 6 PDF</small></i></div></div>
+          <span>Una targeta per font, com ara. Cliques una i entres en ella; per canviar de font, tornes arrere.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p3">
+      <div class="part-cap"><span class="part-num">3</span><h3 id="p3">Llegir els PDF</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què veus.</b> A l'esquerra, els PDF de la font, cada un amb les seues pàgines. A la dreta, el que tens triat, en el visor del navegador.</p>
+          <p><b>Llegir.</b> És el mateix visor que el del quadern: passes pàgines, fas zoom i cerques amb Ctrl+F, perquè els PDF tenen text. Quan cliques un altre PDF de la llista, el visor canvia sense eixir de la pàgina.</p>
+          <p><b>Al mòbil</b>, la llista va damunt del visor.</p>
+          <p class="cal"><b>Què cal.</b> El visor és el mateix <code>iframe</code> del quadern, amb l'adreça del PDF que ja serveix <code>/api/fitxer/…</code>. No cal res nou al servidor per llegir.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Llista a l'esquerra</strong>
+          <div class="esq" aria-hidden="true"><div class="ll"><i class="on">Tema-1-EA.pdf</i><i>Tema-2-EA.pdf</i><i>Tema-3-EA.pdf</i><i>Tema-4-EA.pdf</i><i>+ Afegeix PDF</i></div><div class="vs"><b></b></div></div>
+          <span>Es veuen tots els PDF alhora, amb les pàgines de cada un i la ✕ per llevar-lo. Va bé amb 4 PDF i amb 15.</span></div>
+        <div class="alt"><strong>Pestanyes damunt del visor</strong>
+          <div class="esq columna" aria-hidden="true"><div class="pt"><i class="on">Tema 1</i><i>Tema 2</i><i>Tema 3</i><i>Tema 4</i></div><div class="vs"><b></b></div></div>
+          <span>El visor és més ample. Però ja hi ha una fila de botons per a les fonts (part 2), i serien dues files seguides.</span></div>
+        <div class="alt"><strong>Un desplegable</strong>
+          <div class="esq columna" aria-hidden="true"><span class="sel">wuolah-premium-Tema-1-EA.pdf ▾</span><div class="vs"><b></b></div></div>
+          <span>Ocupa el mínim, però no veus quins PDF hi ha sense obrir-lo.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p4">
+      <div class="part-cap"><span class="part-num">4</span><h3 id="p4">La fitxa: veure-la i editar-la</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què hi ha.</b> Cada font té dues fitxes:</p>
+          <ul>
+            <li><b>la teua</b>: el nom curt, què és i d'on surt, que escrius en pujar-la (<code>font.json</code>);</li>
+            <li><b>la de Claude</b>: la fa ell la primera vegada que passa a net una sessió amb esta font, i hi apunta per a què serveix, la notació, com cita les pàgines i si és fiable (<code>fitxa.yaml</code>). Després la reutilitza.</li>
+          </ul>
+          <p><b>Què veus.</b> Davall del visor, els tres camps teus i la fitxa de Claude com a text. Si encara no n'hi ha (una font que no s'ha fet servir mai), ix «Claude la farà la primera vegada que passe a net una sessió amb esta font».</p>
+          <p><b>Editar.</b> «Edita la fitxa» converteix la targeta en un formulari (pantalla 2). Canviar el nom només canvia el que veus: la carpeta es queda igual, com amb els quaderns, perquè les sessions que ja la tenen triada no la perden.</p>
+          <p><b>Si no quadren.</b> Si canvies «Què és» i la fitxa de Claude diu una altra cosa, manen els teus camps. Ho diu una nota davall del text, i també el prompt de Claude.</p>
+          <p class="cal"><b>Què cal.</b> Una ruta per desar la fitxa (<code>PUT /api/assignatures/&lt;a&gt;/fonts/&lt;font&gt;</code>), que escriu els tres camps a <code>font.json</code> i el text a <code>fitxa.yaml</code>. Una línia al prompt de passar a net: si <code>font.json</code> i <code>fitxa.yaml</code> no quadren, mana <code>font.json</code>.</p>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Els tres camps i la fitxa de Claude com a text</strong><span>Pots canviar-ho tot, també la notació i la fiabilitat. El text de Claude és YAML: cal respectar els dos punts i les cometes.</span></div>
+        <div class="alt"><strong>Només els tres camps</strong><span>La fitxa de Claude es veu però no es toca. Més senzill, però no pots corregir la notació ni la fiabilitat que hi ha apuntat.</span></div>
+        <div class="alt"><strong>Un camp per a cada cosa</strong><span>Notació, fiabilitat, per a què serveix… en camps separats, sense YAML. Més còmode, però es perden els comentaris del fitxer i cal saber quines claus hi haurà sempre.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p5">
+      <div class="part-cap"><span class="part-num">5</span><h3 id="p5">Afegir i llevar PDF</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Afegir.</b> «Afegeix PDF», davall de la llista, o arrossegar-los ací. En pujar-los, LEMA en trau el text i torna a fer l'índex de la font, com quan la vas pujar. Tarda uns segons.</p>
+          <p><b>Llevar.</b> La ✕ de cada PDF. La línia es posa roja i et pregunta abans. El PDF i el seu text van a la paperera, i l'índex es torna a fer.</p>
+          <p><b>Les sessions.</b> Si una sessió tenia marcat eixe PDF a Materials, el perd. A les sessions acabades no els fa res; a les que encara no has passat a net, comprova-ho abans.</p>
+          <p class="cal"><b>Què cal.</b> Dues rutes al servidor (afegir i llevar PDF), que tornen a executar <code>extreu-font.py</code> i tornen a comptar les pàgines de <code>font.json</code>. Ara es compten una sola vegada, en pujar la font.</p>
+        </div>
+        <div class="part-mostra clara">
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px">
+            <li class="pdf"><span class="nom"><b>wuolah-premium-Tema-1-EA.pdf</b><span>23 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF">✕</button></li>
+            <li class="pdf confirmant"><span class="nom"><b>wuolah-premium-Tema-2-EA.pdf</b><span>Va a la paperera. La sessió del 07/10 el té marcat.</span></span>
+              <span class="fila"><button type="button" class="boto roig">Lleva'l</button><button type="button" class="boto-sec">Cancel·la</button></span></li>
+            <li class="pdf"><span class="nom"><b>wuolah-premium-Tema-3-EA.pdf</b><span>13 p. · text extret</span></span><button type="button" class="lleva" aria-label="Lleva este PDF">✕</button></li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p6">
+      <div class="part-cap"><span class="part-num">6</span><h3 id="p6">Esborrar la font</h3></div>
+      <div class="part-cos">
+        <div class="part-text">
+          <p><b>Què veus.</b> «Esborra la font» obri un avís roig damunt de la font, amb les sessions que l'han triada, i els botons «Esborra-la» i «Cancel·la».</p>
+          <p><b>Què passa.</b> La carpeta de la font va a <code>dades/paperera/</code>, com les sessions esborrades. Els blocs ja escrits no canvien: continuen citant la font. Les sessions que encara no has passat a net la perden, i Materials et dirà que falta triar-ne una.</p>
+          <p class="cal"><b>Què cal.</b> Una ruta per esborrar-la (<code>DELETE …/fonts/&lt;font&gt;</code>) i que la web sàpia quines sessions la tenen triada.</p>
+        </div>
+        <div class="part-mostra clara">
+          <div class="confirma" role="alertdialog" aria-labelledby="p6-avis">
+            <b id="p6-avis">Esborres «Wuolah»?</b>
+            <span>Va a la paperera. L'han triada 5 sessions:</span>
+            <ul>
+              <li>3 acabades: els seus blocs no canvien.</li>
+              <li>2 sense començar (10/10 i 30/09): es queden sense font.</li>
+            </ul>
+            <div class="fila"><button type="button" class="boto roig">Esborra-la</button><button type="button" class="boto-sec">Cancel·la</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="alternatives">
+        <div class="alt"><span class="reco">Proposta</span><strong>Sempre, a la paperera</strong><span>L'avís diu què passarà. Si t'equivoques, es recupera de la paperera a mà.</span></div>
+        <div class="alt"><strong>Només si cap sessió pendent la fa servir</strong><span>Més segur, però primer has de canviar la font de cada sessió sense començar, una per una.</span></div>
+      </div>
+    </article>
+
+    <article class="part" aria-labelledby="p7">
+      <div class="part-cap"><span class="part-num">7</span><h3 id="p7">«+ Nova font»</h3></div>
+      <div class="part-cos sol">
+        <div class="part-text">
+          <p><b>Què veus.</b> L'últim botó de la fila de fonts. El cliques i, en lloc de la font, ix el formulari que ja hi ha ara per pujar-ne una: els PDF, el nom curt, què és i d'on surt. Quan acaba de pujar, la font nova queda triada.</p>
+          <p><b>Des de Materials.</b> L'enllaç «Puja una font nova a l'assignatura» de cada sessió porta ací, amb el formulari obert.</p>
+          <p class="cal"><b>Què cal.</b> Moure el formulari que ja hi ha, i l'adreça <code>#/assignatura/&lt;a&gt;/fonts/nova</code>. La pujada és la mateixa.</p>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= Decisions ================= -->
+<section class="seccio" aria-labelledby="t-decidir">
+  <header>
+    <h2 id="t-decidir">Què has de decidir</h2>
+    <p>Si no dius res, van les propostes. Amb les respostes escric la guia.</p>
+  </header>
+  <ol class="decisions">
+    <li><b>La icona</b> (part 1): <span>llibres en un prestatge (proposta), un llibre obert, o el mateix llibre que els quaderns.</span></li>
+    <li><b>Com tries la font</b> (part 2): <span>botons a dalt i la font davall (proposta), o primer la llista i després la font.</span></li>
+    <li><b>Com tries el PDF</b> (part 3): <span>llista a l'esquerra (proposta), pestanyes damunt del visor, o un desplegable.</span></li>
+    <li><b>Què edites de la fitxa</b> (part 4): <span>els tres camps i la fitxa de Claude com a text (proposta), només els tres camps, o un camp per a cada cosa.</span></li>
+    <li><b>Esborrar una font</b> (part 6): <span>sempre, a la paperera (proposta), o només si cap sessió pendent la fa servir.</span></li>
+  </ol>
+  <p class="fora">Fora d'esta proposta, perquè no les vas triar: veure l'índex que LEMA trau de cada font i saber on s'ha fet servir cada font (quins blocs en surten). Estan apuntades a <code>web-local.md</code>, a «Opcions no triades», amb la secció de fonts a la barra de la versió 1.</p>
+</section>
+
+</div>
