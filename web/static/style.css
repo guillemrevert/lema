@@ -43,9 +43,6 @@ h1, h2, h3 { margin: 0; }
 .principal { flex: 999 1 560px; min-width: 0; padding: 40px clamp(16px, 4vw, 56px) 64px; }
 .contingut { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
 .contingut.estret { max-width: 880px; }
-.columnes { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
-.col-principal { flex: 2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
-.col-lateral { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
 
 /* ---------- Lateral ---------- */
 .logo { text-decoration: none; color: var(--tinta); display: flex; flex-direction: column; gap: 2px; padding: 0 6px; }
@@ -358,6 +355,26 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .feed.caixa { max-height: 60vh; overflow-y: auto; padding-right: 6px; }
 .fila-treballant { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 
+/* «Progrés» (guia B): la targeta de què fa Claude, el seu últim missatge i les seccions plegades. */
+.ara { border: 2px solid #C9D5F0; background: var(--blau-fons); }
+.ara-cap { display: flex; align-items: center; gap: 14px; }
+.ara-cap .gira { width: 22px; height: 22px; border-width: 3px; }
+.ara-cap h2 { text-wrap: balance; }
+.xifres { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; color: var(--suau); }
+.xifres b { font: 600 14px var(--mono); color: var(--tinta); font-variant-numeric: tabular-nums; }
+.seguent { margin: 0; font-size: 15px; }
+details.plegable { background: var(--superficie); border: 1px solid var(--vora); border-radius: 12px; }
+details.plegable > summary {
+  list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+  padding: 14px 20px; border-radius: 12px;
+}
+details.plegable > summary::-webkit-details-marker { display: none; }
+details.plegable > summary::after { content: "Mostra"; margin-left: auto; font-size: 13px; font-weight: 600; color: var(--blau); }
+details.plegable[open] > summary::after { content: "Amaga"; }
+details.plegable > summary:hover { background: var(--fons); }
+.titol-plegable { font-weight: 600; }
+details.plegable > .dins { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
 /* Markdown dels missatges i de l'informe. */
 .md { overflow-wrap: anywhere; min-width: 0; }
 .md > :first-child { margin-top: 0; }
@@ -375,9 +392,6 @@ textarea { padding: 12px; width: 100%; resize: vertical; }
 .md blockquote { margin: 0 0 0.6em; padding-left: 14px; border-left: 3px solid var(--vora); color: var(--suau); }
 
 /* ---------- Sessió, resposta i resultat ---------- */
-dl.dades { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 14px; }
-dl.dades dt { color: var(--suau); }
-dl.dades dd { margin: 0; font-family: var(--mono); }
 .resposta { border: 2px solid var(--blau); }
 .titol-caixa { font: 600 22px/1.2 var(--serif); }
 .visor-pdf { width: 100%; height: 80vh; border: 1px solid var(--vora); border-radius: 8px; background: #FFFFFF; }

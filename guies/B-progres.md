@@ -1,6 +1,6 @@
 # Guia B · «Progrés» nou i punt de control propi
 
-**Estat:** proposta, revisada el 13/10/2026. Espera el teu vist-i-plau. En dues fases, cada una amb la seua prova a `localhost:8300` i el seu commit.
+**Estat:** aprovada el 13/10/2026. En dues fases, cada una amb la seua prova a `localhost:8300` i el seu commit. La fase 1 està feta; la 2, per fer.
 
 **Mock-up:** [`guies/B-mockup.html`](B-mockup.html), publicat a https://claude.ai/artifact/BeCvuYUAN3HTii7to52CgB. Té tres pantalles i, davall, vuit parts explicades. Quan ací es diu «part 4», és la part 4 del mock-up. Les fotos són a `guies/img/`, fora de git.
 
@@ -84,6 +84,30 @@ Quan obris una sessió acabada, entra per «Materials», com ara. «Progrés» �
 
 ## Fase 1 · «Progrés» endreçat
 
+**Estat:** feta el 13/10/2026. Provada a `localhost:8300` sense fer treballar Claude:
+
+- **La sessió del 07/10, acabada:**
+  - dalt, «Esta sessió ja és al quadern» amb «Mira-la al quadern», i «Què diu Claude» amb el seu resum final;
+  - el quadre «Escriu-li a Claude»;
+  - l'informe, el detall («29 accions · 2.496.180 tokens · últim torn: 4 min 34 s») i els fitxers (18), plegats;
+  - en obrir el detall, el registre de sempre;
+  - els passos no ixen, perquè ja ha acabat.
+- **Les sessions del 05/10 i del 30/09 (2a part):** igual, amb el seu resum i el seu informe.
+- **Tres còpies de la del 07/10**, amb el registre tallat a mà i una conversa falsa, ara a la paperera:
+  - **esperant:** l'avís taronja, el missatge del punt de control, «La teua resposta» i «Envia i continua»;
+  - **aturada:** l'avís gris, l'últim missatge i «Escriu-li a Claude»;
+  - **error:** l'avís roig amb el text de l'error, l'últim missatge i el quadre.
+- **La targeta de l'estat**, provada fora de la pàgina, sense Claude: el títol i què ve després en cada pas, de «Claude comença» a «Claude munta el document i compila el PDF», i «Claude et respon» quan és un missatge teu a una sessió acabada.
+- **Regressió:** «Materials», la pàgina del quadern i les correccions del quadern (amb una còpia del quadern de prova que tenia una correcció) funcionen igual, sense errors a la consola. A l'amplària d'un mòbil no hi ha res que isca per un costat.
+
+**Pendent, per a l'eina de proves amb agents:** veure la targeta de l'estat amb Claude treballant, amb el pas, el temps i els tokens que pugen i la pàgina que canvia sola en acabar el torn.
+
+**Canvis respecte al que deia la guia:**
+
+- El servidor també dona la durada de l'últim torn, que abans era a la columna de la dreta. Ara va a la línia plegada del detall.
+- Al pas 5, «què ve després» diu «Després compilarà el quadern», perquè els blocs ja els està escrivint.
+- El canvi del servidor té un commit a part (`1536cb4`), perquè la sessió d'optimització necessitava `web/app.py`.
+
 ### Què notaràs
 
 - **Dalt, l'estat d'ara** (part 2), mentre Claude treballa. És una targeta blava amb:
@@ -114,7 +138,7 @@ Quan obris una sessió acabada, entra per «Materials», com ara. «Progrés» �
   | 2 | divideix els apunts en blocs | ídem |
   | 3 | busca cada bloc a la font | ídem |
   | 4 | apunta les teues respostes | Escriurà els blocs i compilarà el quadern. Ja no t'ha de preguntar res, si no troba cap problema. |
-  | 5 | escriu els blocs | ídem |
+  | 5 | escriu els blocs | Després compilarà el quadern. Ja no t'ha de preguntar res, si no troba cap problema. |
   | 6 | munta el document i compila el PDF | Quan acabe, la sessió serà al quadern «…». |
 
   **Si el torn l'has començat tu amb un missatge** que no és la resposta al punt de control (una correcció des de «Escriu-li a Claude»), posa «Claude et respon» i «Quan acabe, ho tindràs ací».

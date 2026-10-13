@@ -671,8 +671,8 @@ function pintaFonts(cos, as, idFont, nomPdf) {
   lloc);
 
   // Els PDF, amb el nom curt («Tema 1»); el sencer, en passar-hi per damunt i a la barra del visor.
-  // Canviar de PDF només canvia el visor i l'adreça: tornar a pintar la pàgina demana /api/assignatures,
-  // que tarda uns segons. El botó d'arrere sí que torna a pintar (hashchange).
+  // Canviar de PDF només canvia el visor i l'adreça: no cal tornar a pintar la pàgina ni demanar
+  // /api/assignatures (uns 0,1 s des de la guia X). El botó d'arrere sí que torna a pintar (hashchange).
   const noms = nomsCurts(font.pdfs.map((p) => p.nom));
   const visor = h("iframe", { class: "visor-font" });
   let actual = pdf;
@@ -1297,10 +1297,76 @@ function avisEstat(sessio) {
     h("div", {}, h("strong", {}, avis[1]), h("span", {}, avis[2])));
 }
 
+// «Progrés» (guia B): dalt, el que cal saber, que és què fa Claude o, si s'ha aturat, el seu últim missatge i
+// el quadre per respondre. El registre sencer, l'informe i els fitxers, plegats al final.
+
+// Què fa Claude en cada pas i què ve després. null: «Quan acabe, la sessió serà al quadern…».
+const ABANS_DEL_CONTROL = "Després s'aturarà per fer-te, totes juntes, les preguntes que la font no resol.";
+const DESPRES_DEL_CONTROL = "Escriurà els blocs i compilarà el quadern. Ja no t'ha de preguntar res, si no troba cap problema.";
+const FEINA = [
+  ["prepara la carpeta i la fitxa de la font", ABANS_DEL_CONTROL],
+  ["llig els apunts", ABANS_DEL_CONTROL],
+  ["divideix els apunts en blocs", ABANS_DEL_CONTROL],
+  ["busca cada bloc a la font", ABANS_DEL_CONTROL],
+  ["apunta les teues respostes", DESPRES_DEL_CONTROL],
+  ["escriu els blocs", "Després compilarà el quadern. Ja no t'ha de preguntar res, si no troba cap problema."],
+  ["munta el document i compila el PDF", null],
+];
+
+// [què fa, què ve després]. Un missatge teu quan la sessió ja havia acabat (pas 6) no segueix el flux.
+function feinaDeClaude(pas, torn, quadern) {
+  if (torn === "usuari" && pas === 6) return ["Claude et respon", "Quan acabe, ho tindràs ací."];
+  if (pas == null || !FEINA[pas]) return ["Claude comença", "Prepararà la carpeta i llegirà els apunts."];
+  const [fa, despres] = FEINA[pas];
+  return [`Claude ${fa}`, despres || `Quan acabe, la sessió serà al quadern${quadern ? ` «${quadern}»` : ""}.`];
+}
+
+// La targeta blava de dalt mentre Claude treballa. actualitza(pas) la canvia quan Claude passa de pas.
+function targetaEstat(sessio, quadern, { tempsEl, tokensEl, atura }) {
+  const titol = h("h2", { "aria-live": "polite" });
+  const pasEl = h("b", {});
+  const pas = h("span", {}, "Pas ", pasEl, " de 6");
+  const despres = h("p", { class: "seguent" });
+  const actualitza = (n) => {
+    const [fa, ve] = feinaDeClaude(n, sessio.torn?.tipus, quadern);
+    titol.textContent = fa;
+    despres.textContent = ve;
+    pas.hidden = n == null;
+    pasEl.textContent = n ?? "";
+  };
+  actualitza(sessio.pas);
+  return {
+    actualitza,
+    targeta: h("section", { class: "targeta ara", "aria-label": "Què fa Claude ara" },
+      h("div", { class: "ara-cap" }, h("span", { class: "gira", "aria-hidden": "true" }), titol),
+      h("div", { class: "xifres" }, pas, h("span", {}, "Temps ", tempsEl), h("span", {}, "Tokens ", tokensEl)),
+      despres,
+      h("div", {}, atura)),
+  };
+}
+
+// L'avís de dalt quan Claude no treballa: acabada (amb el botó al quadern), esperant, aturada o error.
+function avisDeProgres(sessio, assig) {
+  if (sessio.estat === "acabada") return avisAlQuadern(sessio, assig) || avisEstat(sessio);
+  if (sessio.estat === "error" && sessio.ultim_error) {
+    return h("div", { class: "avis roig", role: "alert" }, icona("avis", 22, 2),
+      h("div", {}, h("strong", {}, "Hi ha hagut un error"), markdown(sessio.ultim_error),
+        h("span", {}, "Pots escriure-li baix perquè ho torne a intentar.")));
+  }
+  return avisEstat(sessio);
+}
+
+// Una secció plegada: el títol i, al costat, un resum curt; dins, el contingut.
+function plegable(titol, resum, ...contingut) {
+  return h("details", { class: "plegable" },
+    h("summary", {}, h("span", { class: "titol-plegable" }, titol), h("span", { class: "detall" }, resum)),
+    h("div", { class: "dins" }, contingut));
+}
+
 async function pintaProgres(cos, sessio) {
   const a = sessio.assignatura;
   const c = sessio.id;
-  // L'informe i els fitxers de la sessió, que abans eren a «Resultat».
+  const assig = assignatures.find((x) => x.id === a);
   const propi = `sessions/${c}/`;
   let informe = null;
   if (sessio.fitxers.includes(`${propi}informe.md`)) {
@@ -1311,54 +1377,65 @@ async function pintaProgres(cos, sessio) {
   const passos = h("ol", { class: "passos", "aria-label": "Passos" });
   pintaPassos(passos, sessio.pas, sessio.estat);
 
-  const treballant = enMarxa ? h("div", { class: "esperant-claude" }, h("span", { class: "gira" }), "Claude hi està treballant…") : null;
-  const tempsEl = h("dd", {}, "—");
-  const tokensEl = h("dd", {}, tokens(sessio.tokens));
+  // El registre es llig encara que estiga plegat: la targeta de dalt en necessita els passos, els tokens i el final.
+  const tempsEl = h("b", {}, "—");
+  const tokensEl = h("b", {}, tokens(sessio.tokens));
+  const accionsEl = h("span", {}, "0 accions");
+  let estat = null;
   const feed = registreClaude({ url: `/api/sessions/${a}/${c}/events`, vistos: sessio.events, enMarxa,
-    tokensAbans: sessio.tokens, tempsEl, tokensEl, passos });
+    tokensAbans: sessio.tokens, tempsEl, tokensEl, passos,
+    compta: (n) => { accionsEl.textContent = `${tokens(n)} ${n === 1 ? "acció" : "accions"}`; },
+    canviaPas: (n) => estat?.actualitza(n) });
 
-  cos.append(
-    passos,
-    avisEstat(sessio),
-    h("div", { class: "columnes" },
-      h("div", { class: "col-principal" },
-        h("section", { class: "targeta", "aria-labelledby": "t-feed" },
-          h("h2", { id: "t-feed" }, "Què fa Claude"), feed, treballant),
-        informe ? h("section", { class: "targeta", "aria-labelledby": "t-informe" },
-          h("h2", { id: "t-informe" }, "Informe"), markdown(informe)) : null,
-        enMarxa || !sessio.conversa ? null : caixaResposta({
-          ...(sessio.estat === "esperant"
-            ? { titol: "La teua resposta", boto: "Envia i continua", placeholder: "P1: …\nP2: …" }
-            : { titol: "Escriu-li a Claude", boto: "Envia", placeholder: "p. ex. Continua." }),
-          url: `/api/sessions/${a}/${c}/respon`,
-          enviat: () => anar(`#/sessio/${a}/${c}/progres`),
-        })),
-      h("aside", { class: "col-lateral" },
-        h("section", { class: "targeta compacta", "aria-labelledby": "t-sessio" },
-          h("h2", { id: "t-sessio" }, "Sessió"),
-          h("dl", { class: "dades" },
-            h("dt", {}, enMarxa ? "Temps" : "Últim torn"), tempsEl,
-            h("dt", {}, "Tokens"), tokensEl,
-            h("dt", {}, "Estat"), h("dd", { style: "font-family: var(--sans)" }, ESTATS[sessio.estat])),
-          enMarxa ? h("button", { type: "button", class: "boto-sec",
-            onclick: async (e) => {
-              e.currentTarget.disabled = true;
-              try { await api(`/api/sessions/${a}/${c}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
-            } }, icona("stop", 14), "Atura") : null),
-        sessio.fitxers.length ? h("section", { class: "targeta compacta", "aria-labelledby": "t-fitxers" },
-          h("h2", { id: "t-fitxers" }, "Fitxers"),
-          h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
-            h("a", { href: urlFitxer(a, f), target: "_blank" }, f.startsWith(propi) ? f.slice(propi.length) : f))))) : null)),
-  );
+  if (sessio.estat !== "acabada") cos.append(passos);
+  if (enMarxa) {
+    const atura = h("button", { type: "button", class: "boto-sec",
+      onclick: async (e) => {
+        e.currentTarget.disabled = true;
+        try { await api(`/api/sessions/${a}/${c}/atura`, { method: "POST" }); } catch (err) { avisa(err.message); }
+      } }, icona("stop", 14), "Atura");
+    estat = targetaEstat(sessio, nomQuadern(assig, sessio.quadern), { tempsEl, tokensEl, atura });
+    cos.append(estat.targeta);
+  } else {
+    const avis = avisDeProgres(sessio, assig);
+    if (avis) cos.append(avis);
+    const missatge = sessio.ultim_missatge ? netejaText(sessio.ultim_missatge) : "";
+    if (missatge) {
+      cos.append(h("section", { class: "targeta missatge-claude", "aria-labelledby": "t-missatge" },
+        h("h2", { id: "t-missatge" }, sessio.estat === "acabada" ? "Què diu Claude" : "L'últim missatge de Claude"),
+        markdown(missatge)));
+    }
+    if (sessio.conversa) {
+      cos.append(caixaResposta({
+        ...(sessio.estat === "esperant"
+          ? { titol: "La teua resposta", boto: "Envia i continua", placeholder: "P1: …\nP2: …" }
+          : { titol: "Escriu-li a Claude", boto: "Envia", placeholder: "p. ex. Continua." }),
+        url: `/api/sessions/${a}/${c}/respon`,
+        enviat: () => anar(`#/sessio/${a}/${c}/progres`),
+      }));
+    }
+  }
+
+  if (informe) cos.append(plegable("Informe", "informe.md", markdown(informe)));
+  cos.append(plegable("Detall del que fa Claude", enMarxa ? accionsEl
+    : [accionsEl, ` · ${tokens(sessio.tokens)} tokens`, sessio.durada_torn ? ` · últim torn: ${durada(sessio.durada_torn)}` : null],
+  feed));
+  if (sessio.fitxers.length) {
+    cos.append(plegable("Fitxers de la sessió", `${sessio.fitxers.length} ${sessio.fitxers.length === 1 ? "fitxer" : "fitxers"}`,
+      h("ul", { class: "fitxers" }, sessio.fitxers.map((f) => h("li", {},
+        h("a", { href: urlFitxer(a, f), target: "_blank" }, f.startsWith(propi) ? f.slice(propi.length) : f))))));
+  }
 }
 
 // El que fa Claude en una sessió o en les correccions d'un quadern: primer les vistos línies que ja hi havia
 // al registre i després el que arriba en directe. Quan acaba un torn en directe, es torna a pintar la pàgina.
 // tempsEl i tokensEl (si n'hi ha) van dient el temps del torn i els tokens; passos, el pas on és Claude.
+// compta(n) rep quantes accions porta, i canviaPas(n), cada pas nou mentre treballa (la targeta de «Progrés»).
 // Amb caixa, el registre té la seua barra de desplaçament i es queda baix de tot.
-function registreClaude({ url, vistos, enMarxa, tokensAbans, tempsEl, tokensEl, passos, caixa }) {
+function registreClaude({ url, vistos, enMarxa, tokensAbans, tempsEl, tokensEl, passos, caixa, compta, canviaPas }) {
   const feed = h("div", { class: "feed" + (caixa ? " caixa" : ""), "aria-live": "polite" });
   let rebuts = 0;
+  let accions = 0;
   let eines = null;     // la llista d'eines on van les línies seguides
   let iniciTorn = null;
   let tokensTorn = 0;
@@ -1396,6 +1473,7 @@ function registreClaude({ url, vistos, enMarxa, tokensAbans, tempsEl, tokensEl, 
       case "pas":
         afegeix(h("h3", { class: "titol-pas" }, `Pas ${ev.n} · ${PASSOS[ev.n] || ""}`));
         if (viu && passos) pintaPassos(passos, ev.n, "en_marxa");
+        if (viu && canviaPas) canviaPas(ev.n);
         break;
       case "text": {
         const text = netejaText(ev.text);
@@ -1404,7 +1482,11 @@ function registreClaude({ url, vistos, enMarxa, tokensAbans, tempsEl, tokensEl, 
       }
       case "eina": {
         const verb = ev.nom in VERBS ? VERBS[ev.nom] : ev.nom;
-        if (verb !== null) liniaEina(verb, ev.detall);
+        if (verb !== null) {
+          liniaEina(verb, ev.detall);
+          accions += 1;
+          if (compta) compta(accions);
+        }
         break;
       }
       case "error_eina":
