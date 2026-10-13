@@ -373,6 +373,82 @@ details.plegable > summary::after { content: "Mostra"; margin-left: auto; font-s
 details.plegable[open] > summary::after { content: "Amaga"; }
 details.plegable > summary:hover { background: var(--fons); }
 .titol-plegable { font-weight: 600; }
+
+/* El punt de control (guia B, fase 2): una targeta per pregunta, l'esquema de blocs i el resum. */
+.preguntes { display: flex; flex-direction: column; gap: 16px; }
+.pregunta {
+  background: var(--superficie); border: 1px solid var(--vora); border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column; min-width: 0; scroll-margin-top: 16px;
+}
+.pregunta.resposta-feta { border-color: #C9D5F0; }
+.preg-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 14px 20px; border-bottom: 1px solid var(--linia); }
+.preg-num { font: 600 14px var(--mono); padding: 2px 9px; border-radius: 6px; background: var(--tinta); color: #FFFFFF; }
+.preg-bloc { font-weight: 600; }
+.preg-cap .detall { font-size: 13px; }
+.preg-estat { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--suau); }
+.resposta-feta .preg-estat { color: var(--blau-text); }
+.preg-cos { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; padding: 18px 20px 20px; align-items: start; }
+.preg-cos.sense-context { grid-template-columns: minmax(0, 1fr); }
+.context { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.etiqueta { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.retall {
+  width: 100%; max-width: 100%; border: 1px solid var(--vora); border-radius: 8px;
+  background-color: var(--fons); background-repeat: no-repeat;
+}
+.peu-retall { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 13px; color: var(--suau); }
+.compara { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 0; }
+.compara dt { font-size: 13px; font-weight: 600; color: var(--suau); padding-top: 2px; }
+.compara dd { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+fieldset.decidir { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+fieldset.decidir > legend { padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 500; overflow-wrap: anywhere; }
+.opcions, .sino { display: flex; flex-direction: column; gap: 8px; }
+.sino { flex-flow: row wrap; }
+.sino .opcio { flex: 1 1 180px; }
+.opcio {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border: 1px solid var(--vora-forta);
+  border-radius: 10px; background: var(--superficie); font-size: 15px; cursor: pointer; min-width: 0;
+}
+.opcio input[type="radio"] { margin: 3px 0 0; flex: none; accent-color: var(--blau); }
+.opcio:has(input[type="radio"]:checked) { border-color: var(--blau); box-shadow: inset 0 0 0 1px var(--blau); background: var(--blau-fons); }
+.opcio:has(input[type="radio"]:focus-visible) { outline: 2px solid var(--blau); outline-offset: 2px; }
+.text-opcio { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.text-opcio small { flex-basis: 100%; font-size: 13px; color: var(--suau); }
+.lletra { font: 600 14px var(--mono); color: var(--suau); }
+.camp-opcio { flex: 1 1 160px; min-width: 0; }
+.camp-opcio:disabled { opacity: 0.5; }
+.barra-accio > .comptador { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+.comptador i { width: 26px; height: 6px; border-radius: 3px; background: #4A505C; }
+.comptador i.fet { background: #8FB0F2; }
+.blocs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.blocs li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 14px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--linia); }
+.blocs li:first-child { border-top: 0; }
+.blocs .id { font: 600 13px var(--mono); color: var(--suau); }
+.blocs .que { min-width: 0; overflow-wrap: anywhere; }
+.blocs .que .on { display: block; font-size: 13px; color: var(--suau); }
+.marques { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.xip { display: inline-flex; align-items: center; padding: 1px 9px; border-radius: 999px; font: 600 12.5px var(--sans); border: 1px solid transparent; }
+.xip.font { background: var(--blau-clar); color: var(--blau-text); }
+.xip.sense { background: var(--lateral); color: var(--suau); }
+.xip.corr { background: var(--roig-clar); color: var(--roig-text); }
+.xip.nota { background: var(--superficie); color: var(--blau-text); border-color: #C9D5F0; }
+.xip.preg { background: var(--taronja-clar); color: var(--taronja-text); cursor: pointer; }
+button.xip.preg:hover { border-color: var(--taronja); }
+.claude-diu { margin: 0; padding: 10px 14px; background: var(--fons); border-radius: 8px; font-size: 14px; }
+#comentari-esquema { width: 100%; }
+.resum-xifres { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.resum-xifres div { padding: 12px 14px; border: 1px solid var(--linia); border-radius: 10px; background: var(--fons); display: flex; flex-direction: column; gap: 2px; }
+.resum-xifres b { font: 600 26px/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.resum-xifres span { font-size: 13px; color: var(--suau); }
+.resum-respostes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+@media (max-width: 760px) {
+  /* En un mòbil, la barra d'enviar en una línia, perquè no tape les preguntes. */
+  .barra-respostes { flex-wrap: nowrap; gap: 10px; padding: 10px 14px; }
+  .barra-respostes > div span, .barra-respostes > .comptador { display: none; }
+  .barra-respostes .boto.gran { min-height: 40px; padding: 0 16px; font-size: 14px; white-space: nowrap; }
+  .preg-cos { grid-template-columns: minmax(0, 1fr); }
+  .blocs li { grid-template-columns: 36px minmax(0, 1fr); }
+  .marques { grid-column: 2; justify-content: flex-start; }
+}
 details.plegable > .dins { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* Markdown dels missatges i de l'informe. */

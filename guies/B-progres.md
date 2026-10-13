@@ -1,6 +1,6 @@
 # Guia B · «Progrés» nou i punt de control propi
 
-**Estat:** aprovada el 13/10/2026. En dues fases, cada una amb la seua prova a `localhost:8300` i el seu commit. La fase 1 està feta; la 2, per fer.
+**Estat:** feta el 13/10/2026, en dues fases, cada una amb la seua prova a `localhost:8300` i el seu commit. Falta provar-la amb Claude treballant de veritat, amb l'eina de proves amb agents (vegeu l'estat de cada fase).
 
 **Mock-up:** [`guies/B-mockup.html`](B-mockup.html), publicat a https://claude.ai/artifact/BeCvuYUAN3HTii7to52CgB. Té tres pantalles i, davall, vuit parts explicades. Quan ací es diu «part 4», és la part 4 del mock-up. Les fotos són a `guies/img/`, fora de git.
 
@@ -198,6 +198,47 @@ A `localhost:8300`:
 ---
 
 ## Fase 2 · Punt de control propi
+
+**Estat:** feta el 13/10/2026. Provada a `localhost:8300` sense gastar tokens. Es va fer amb una còpia de la sessió del 07/10 esperant, amb un `punt-control.json` escrit a mà amb les quatre preguntes reals i els 13 blocs. La còpia ja és a la paperera.
+
+- **Les targetes:**
+  - les quatre ixen amb els trossos de foto al lloc (el de la P1 és l'exemple de $H_1H_2$ de la p. 18) i les fórmules ben escrites, sense errors de KaTeX;
+  - la P4 ix sense foto, només amb el context.
+- **Respondre:**
+  - (a) a la P1, «No, és…» amb text a la P2, (b) a la P3 i «Una altra resposta» a la P4;
+  - cada targeta es marca «✓ Resposta», el comptador passa a «4 de 4» i el botó s'activa.
+- **Les respostes a mitges:** en recarregar la pàgina, hi continuen.
+- **L'esquema:**
+  - plegat, amb la línia «13 blocs · 4 a la font · 1 nota de Claude»;
+  - en obrir-lo, els 13 blocs amb les etiquetes i el quadre de comentaris;
+  - «P2» i «P3» porten a la pregunta.
+- **Enviar:** es va interceptar a la pàgina, sense arrancar Claude, i el missatge era exactament el de l'exemple: «P1: (a) …», «P2: No, és: …», «P3: (b) …», «P4 (una altra resposta): …» i «Comentaris a l'esquema: …».
+- **Quan falla el fitxer:** amb una pregunta sense `forma`, amb el JSON trencat i amb el fitxer d'un torn anterior, ix el missatge de Claude i el quadre de text, com a la fase 1.
+- **Zones dolentes** (fora de la foto, al revés, una foto que no és de la sessió): les preguntes ixen sense tros de foto, amb l'enllaç a la foto si n'hi ha, i la resta funciona.
+- **Sense preguntes:** l'esquema ix obert, el botó diu «Continua» i envia «Punt de control: cap pregunta. L'esquema està bé: continua.».
+- **Quan acaba, amb resum:** el resum dalt (pàgines, blocs, a la font, correccions, notetes i les respostes, amb fórmules) i l'esquema plegat, sense quadre de comentaris.
+- **«Espera»:** pintant la secció amb una sessió on un altre Claude treballa en el quadern (la dada canviada a mà), la barra diu «Espera · Claude està corregint el quadern: podràs enviar-les quan acabe» i el botó està desactivat.
+- **En tornar a passar a net:** es va cridar `passa_a_net` dins del contenidor sense arrancar Claude. El `punt-control.json` d'abans va anar a `registre/punt-control-<data>.json`.
+- **Les instruccions:** l'exemple de `web/prompt.md` és JSON vàlid també després que la web òmpliga el prompt d'una sessió.
+- **Regressió:** les sessions d'abans, sense fitxer, ixen com a la fase 1. A l'amplària d'un mòbil no ix res per un costat.
+
+**Pendent, per a l'eina de proves amb agents:**
+
+- que Claude escriga el fitxer, amb les zones al lloc;
+- que entenga el missatge de les respostes;
+- que escriga el resum;
+- l'«Espera» de veritat, amb un altre Claude corregint el quadern.
+
+**Canvis respecte al que deia la guia:**
+
+- Els textos del fitxer no passen per Markdown: es posen tal qual i només s'escriuen les fórmules amb KaTeX. Així `\{` i `_` no es perden.
+- El camp `bloc` de cada pregunta és el text que es veu a la targeta («B01 · Exemple»), no només el número.
+- «P1» de l'esquema salta directament a la pregunta, sense animació. Amb animació, no sempre arribava.
+- Les respostes es guarden al navegador només quan en canvies alguna, no en pintar la pàgina.
+- En un mòbil, la barra d'enviar fa una sola línia («0 de 4 respostes» i el botó), perquè no tape les preguntes.
+- La barra diu «Espera» al lloc del comptador quan un altre Claude treballa en el quadern.
+- Per provar l'enviament no es va fer servir una conversa falsa, com deia la guia. No estava clar que Claude només donara un error, i podria haver començat una conversa nova. Es va interceptar l'enviament a la pàgina.
+- `flux.html` passa a la v11.
 
 ### Què notaràs
 

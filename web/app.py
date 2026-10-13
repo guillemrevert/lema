@@ -376,6 +376,23 @@ def resum_registre(carpeta):
             "durada_torn": durada}
 
 
+def punt_control(carpeta, torn):
+    """punt-control.json de la sessió (guia B, fase 2): el que Claude hi ha escrit, quan, i si és d'este torn
+    (escrit després que començara l'últim torn). La pàgina ensenya les preguntes només si és d'este torn; el
+    resum del final, sempre. Obri el fitxer i en mira la data amb el fitxer obert: un sol accés al disc."""
+    try:
+        with open(carpeta / "punt-control.json", encoding="utf-8") as f:
+            modificat = os.fstat(f.fileno()).st_mtime
+            dades = json.load(f)
+    except (FileNotFoundError, ValueError):  # no n'hi ha, o no és JSON: la pàgina fa com abans
+        return {"punt_control": None, "punt_control_data": None, "punt_control_vigent": False}
+    try:
+        vigent = modificat >= datetime.fromisoformat(torn["ts"]).timestamp()
+    except (TypeError, KeyError, ValueError):
+        vigent = False
+    return {"punt_control": dades, "punt_control_data": modificat, "punt_control_vigent": vigent}
+
+
 # ---------- Assignatures, fonts i quaderns ----------
 
 @app.get("/api/assignatures")
@@ -651,8 +668,10 @@ def sessio(a: str, s: str):
             fitxers += sorted(f"quaderns/{quadern.name}/blocs/{s}/{b.name}" for b in document["blocs"].iterdir())
     # Si un altre Claude treballa en el quadern, esta sessió no es pot passar a net fins que acabe.
     ocupat = claude_al_quadern(a, dades["quadern"]) if dades["quadern"] and (a, s) not in processos else None
+    registre = resum_registre(carpeta)
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
-            "editats": editats_de_sessio(a, dades), **resum_registre(carpeta), "ocupat": ocupat}
+            "editats": editats_de_sessio(a, dades), **registre, **punt_control(carpeta, registre["torn"]),
+            "ocupat": ocupat}
 
 
 # ---------- Quaderns ----------
@@ -1090,6 +1109,12 @@ async def passa_a_net(a: str, s: str):
         (carpeta / "registre").mkdir(exist_ok=True)
         escriu(carpeta / "registre" / f"edicions-{datetime.now():%Y%m%d-%H%M%S}.json", {"blocs": {f: totes[f] for f in propis}})
         desa_edicions(quadern, {f: d for f, d in totes.items() if f not in propis})
+    # Les preguntes i el resum de la passada d'abans se'n van al registre, com les edicions (guia B).
+    (carpeta / "registre").mkdir(exist_ok=True)
+    try:
+        (carpeta / "punt-control.json").rename(carpeta / "registre" / f"punt-control-{datetime.now():%Y%m%d-%H%M%S}.json")
+    except FileNotFoundError:
+        pass
     afegeix_event(carpeta, t="inici")
     processos[(a, s)] = None  # reservat fins que arranca el procés
     desa_sessio(a, s, estat="en_marxa", pas=None, conversa=None)

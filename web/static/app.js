@@ -113,6 +113,12 @@ function textEstat(c) {
   return ESTATS[c.estat] || c.estat;
 }
 
+// Les fórmules dels missatges de Claude i del punt de control, per a KaTeX.
+const DELIMITADORS = [
+  { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
+  { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false },
+];
+
 function markdown(text) {
   const div = h("div", { class: "md" });
   if (!window.marked) {
@@ -122,13 +128,7 @@ function markdown(text) {
   }
   div.innerHTML = marked.parse(text, { breaks: true });
   if (window.renderMathInElement) {
-    renderMathInElement(div, {
-      throwOnError: false,
-      delimiters: [
-        { left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true },
-        { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false },
-      ],
-    });
+    renderMathInElement(div, { throwOnError: false, delimiters: DELIMITADORS });
   }
   return div;
 }
@@ -1363,6 +1363,239 @@ function plegable(titol, resum, ...contingut) {
     h("div", { class: "dins" }, contingut));
 }
 
+// ---------- Punt de control (guia B, fase 2) ----------
+// Claude escriu les preguntes i l'esquema a punt-control.json, i la web ensenya cada pregunta en la seua secció,
+// amb el tros de foto a què es refereix i les respostes. Si el fitxer no és bo, «Progrés» fa com abans.
+
+const LLETRES = "abcdefghijklmnopqrstuvwxyz";
+const MARQUES = { correccio: ["corr", "Correcció"], noteta: ["nota", "Noteta"], pendent: ["preg", "Pendent"],
+  noclasse: ["nota", "No vist a classe"] };
+
+// Un text curt del fitxer, amb les fórmules ($…$) escrites amb KaTeX. Sense Markdown: el text es posa tal qual.
+function formules(text, tag = "span", props = {}) {
+  const el = h(tag, props, String(text ?? ""));
+  if (window.renderMathInElement) renderMathInElement(el, { throwOnError: false, delimiters: DELIMITADORS });
+  return el;
+}
+
+// Si el fitxer té preguntes ben fetes. Si en falla una, es fa servir el missatge per a tot: van juntes.
+function puntDeControlBo(pc) {
+  if (!pc || typeof pc !== "object" || !Array.isArray(pc.preguntes)) return false;
+  if (pc.blocs != null && !Array.isArray(pc.blocs)) return false;
+  return pc.preguntes.every((p) => p && typeof p.id === "string" && typeof p.pregunta === "string"
+    && (p.forma === "sino" || (p.forma === "opcions" && Array.isArray(p.respostes) && p.respostes.length > 0
+      && p.respostes.every((r) => r && typeof r.text === "string"))));
+}
+
+// El tros de la foto on és el dubte: la foto de fons, ampliada i desplaçada fins a la zona, amb un 2 % de marge
+// i almenys un 6 % d'alt. null si la zona no és bona o la foto no és una imatge de la sessió.
+function trosDeFoto(sessio, p) {
+  if (typeof p.foto !== "string" || !sessio.apunts.includes(p.foto) || /\.pdf$/i.test(p.foto)) return null;
+  const z = p.zona;
+  if (!Array.isArray(z) || z.length !== 4 || !z.every((x) => typeof x === "number" && Number.isFinite(x))) return null;
+  let [x0, y0, x1, y1] = z.map((x) => Math.min(1, Math.max(0, x)));
+  if (x1 <= x0 || y1 <= y0) return null;
+  x0 = Math.max(0, x0 - 0.02); y0 = Math.max(0, y0 - 0.02);
+  x1 = Math.min(1, x1 + 0.02); y1 = Math.min(1, y1 + 0.02);
+  if (y1 - y0 < 0.06) {
+    y0 = Math.max(0, Math.min((y0 + y1) / 2 - 0.03, 0.94));
+    y1 = y0 + 0.06;
+  }
+  const w = x1 - x0;
+  const alt = y1 - y0;
+  const src = urlFitxer(sessio.assignatura, "sessions", sessio.id, "apunts", p.foto);
+  const tros = h("div", { class: "retall", role: "img", "aria-label": `Tros de la foto ${sessio.apunts.indexOf(p.foto) + 1} on és el dubte de la ${p.id}` });
+  tros.style.backgroundImage = `url("${src}")`;
+  tros.style.backgroundSize = `${100 / w}% auto`;
+  tros.style.backgroundPosition = `${w < 1 ? (x0 / (1 - w)) * 100 : 0}% ${alt < 1 ? (y0 / (1 - alt)) * 100 : 0}%`;
+  tros.style.aspectRatio = "4";  // fins que se sàpia la mida de la foto
+  const img = new Image();
+  img.onload = () => { tros.style.aspectRatio = String((w * img.naturalWidth) / (alt * img.naturalHeight)); };
+  img.src = src;
+  return { tros, src };
+}
+
+// Si la pregunta té resposta: una opció, «Sí», o «No, és…» i «Una altra resposta» amb text.
+const teResposta = (r) => Boolean(r && r.tria != null && (!["no", "altra"].includes(r.tria) || r.text?.trim()));
+
+// El missatge que rep Claude, en un sol torn (decisió 5).
+function textDeRespostes(pc, respostes, comentari) {
+  const linies = pc.preguntes.length ? ["Respostes del punt de control:"] : ["Punt de control: cap pregunta."];
+  for (const p of pc.preguntes) {
+    const r = respostes[p.id];
+    if (r.tria === "altra") linies.push(`${p.id} (una altra resposta): ${r.text.trim()}`);
+    else if (r.tria === "si") linies.push(`${p.id}: Sí`);
+    else if (r.tria === "no") linies.push(`${p.id}: No, és: ${r.text.trim()}`);
+    else linies.push(`${p.id}: (${LLETRES[r.tria]}) ${p.respostes[r.tria].text}`);
+  }
+  if (comentari.trim()) linies.push(`Comentaris a l'esquema: ${comentari.trim()}`);
+  else if (!pc.preguntes.length) linies.push("L'esquema està bé: continua.");
+  return linies.join("\n");
+}
+
+// Una pregunta en la seua secció: dalt, el número, el bloc i el tipus de dubte; a l'esquerra, a què es refereix;
+// a la dreta, la pregunta i les respostes. canvia() avisa quan canvia la resposta.
+function targetaPregunta(sessio, p, r, canvia) {
+  const estat = h("span", { class: "preg-estat" });
+  const targeta = h("article", { class: "pregunta", id: `preg-${p.id}`, "aria-labelledby": `t-preg-${p.id}` });
+  const marca = () => {
+    const feta = teResposta(r);
+    targeta.classList.toggle("resposta-feta", feta);
+    estat.textContent = feta ? "✓ Resposta" : "Sense resposta";
+  };
+  const nom = `resposta-${p.id}`;
+  const camps = [];  // els camps de text de «No, és…» i «Una altra resposta…»
+  const tria = (valor) => {
+    r.tria = valor;
+    for (const c of camps) c.camp.disabled = c.valor !== valor;
+    marca();
+    canvia();
+  };
+  const opcio = (valor, ...contingut) => h("label", { class: "opcio" },
+    h("input", { type: "radio", name: nom, value: String(valor), checked: r.tria === valor,
+      onchange: () => tria(valor) }), h("span", { class: "text-opcio" }, contingut));
+  const ambText = (valor, etiqueta, placeholder) => {
+    const camp = h("input", { type: "text", class: "camp-opcio", placeholder, "aria-label": etiqueta,
+      disabled: r.tria !== valor, value: r.tria === valor ? r.text || "" : "",
+      oninput: (e) => { r.text = e.target.value; marca(); canvia(); } });
+    camps.push({ valor, camp });
+    return h("label", { class: "opcio amb-text" },
+      h("input", { type: "radio", name: nom, value: valor, checked: r.tria === valor,
+        onchange: () => { r.text = camp.value; tria(valor); camp.focus(); } }),
+      h("span", { class: "text-opcio" }, etiqueta, camp));
+  };
+  const respostes = p.forma === "sino"
+    ? [opcio("si", "Sí"), ambText("no", "No, és…", "com és")]
+    : [...p.respostes.map((x, i) => opcio(i, h("span", { class: "lletra" }, LLETRES[i]), " · ", formules(x.text),
+      x.detall ? formules(x.detall, "small") : null)), ambText("altra", "Una altra resposta…", "escriu-la ací")];
+
+  const foto = trosDeFoto(sessio, p);
+  const context = Array.isArray(p.context) ? p.context.filter((x) => Array.isArray(x) && x.length === 2) : [];
+  const numFoto = sessio.apunts.indexOf(p.foto) + 1;
+  const esquerra = foto || context.length ? h("div", { class: "context" },
+    h("span", { class: "etiqueta" }, "A què es refereix"),
+    foto ? [foto.tros, h("div", { class: "peu-retall" }, h("span", {}, `Foto ${numFoto}`),
+      h("a", { href: foto.src, target: "_blank" }, "Obre la foto sencera"))]
+      : numFoto > 0 ? h("div", { class: "peu-retall" }, h("a", { href: urlFitxer(sessio.assignatura, "sessions", sessio.id, "apunts", p.foto),
+        target: "_blank" }, `Obre la foto ${numFoto}`)) : null,
+    context.length ? h("dl", { class: "compara" }, context.map(([etiqueta, text]) => [
+      h("dt", {}, String(etiqueta)), formules(text, "dd")])) : null) : null;
+
+  targeta.append(
+    h("div", { class: "preg-cap" },
+      h("span", { class: "preg-num" }, p.id),
+      p.bloc ? h("span", { class: "preg-bloc" }, String(p.bloc)) : null,
+      p.tipus ? h("span", { class: "detall" }, String(p.tipus)) : null,
+      estat),
+    h("div", { class: "preg-cos" + (esquerra ? "" : " sense-context") },
+      esquerra,
+      h("fieldset", { class: "decidir" },
+        formules(p.pregunta, "legend", { id: `t-preg-${p.id}` }),
+        h("div", { class: p.forma === "sino" ? "sino" : "opcions" }, respostes))));
+  marca();
+  return targeta;
+}
+
+// L'esquema de blocs, plegat (obert si no hi ha cap pregunta). Amb comentari, el quadre per dir què no quadra.
+function seccioEsquema(pc, { obert, comentari }) {
+  const blocs = (pc.blocs || []).filter((b) => b && typeof b === "object");
+  const aLaFont = blocs.filter((b) => b.font).length;
+  const anarA = (id) => document.getElementById(`preg-${id}`)?.scrollIntoView({ block: "start" });
+  const files = blocs.map((b) => h("li", {},
+    h("span", { class: "id" }, String(b.id ?? "")),
+    h("span", { class: "que" }, h("b", {}, String(b.tipus ?? "")), b.titol ? [" · ", formules(b.titol)] : null,
+      b.apunts ? h("span", { class: "on" }, String(b.apunts)) : null),
+    h("span", { class: "marques" },
+      b.font ? formules(b.font, "span", { class: "xip font" })
+        : h("span", { class: "xip sense" }, b.relacionat ? `Relacionat: ${b.relacionat}` : "No és a la font"),
+      (Array.isArray(b.marques) ? b.marques : []).filter((m) => MARQUES[m]).map((m) =>
+        h("span", { class: `xip ${MARQUES[m][0]}` }, MARQUES[m][1])),
+      (Array.isArray(b.preguntes) ? b.preguntes : []).map((id) => h("button", { type: "button", class: "xip preg",
+        title: `Vés a la ${id}`, onclick: () => anarA(id) }, String(id))))));
+  const plegada = plegable("Esquema de blocs", [`${blocs.length} ${blocs.length === 1 ? "bloc" : "blocs"}`,
+    ` · ${aLaFont} a la font`, pc.nota ? " · 1 nota de Claude" : ""],
+  pc.nota ? formules(pc.nota, "p", { class: "claude-diu" }) : null,
+  files.length ? h("ul", { class: "blocs" }, files) : h("p", { class: "nota-petita" }, "Claude no ha escrit cap bloc."),
+  comentari ? [h("label", { for: "comentari-esquema", class: "titol-plegable" }, "Alguna cosa no quadra a l'esquema? ",
+    h("span", { class: "opcional" }, "(opcional)")), comentari] : null);
+  plegada.open = Boolean(obert);
+  return plegada;
+}
+
+// Les preguntes, l'esquema i la barra d'enviar. Les respostes a mitges es guarden al navegador fins que s'envien.
+function pintaPuntDeControl(cos, sessio) {
+  const a = sessio.assignatura;
+  const c = sessio.id;
+  const pc = sessio.punt_control;
+  const clau = `lema-respostes-${a}-${c}-${sessio.punt_control_data}`;
+  let desat = {};
+  try { desat = JSON.parse(llegeix(clau) || "{}"); } catch { desat = {}; }
+  const respostes = Object.fromEntries(pc.preguntes.map((p) => [p.id, desat.respostes?.[p.id] || { tria: null, text: "" }]));
+  const comentari = h("textarea", { id: "comentari-esquema", rows: 3,
+    placeholder: "p. ex. Falta un bloc entre B09 i B10: a la p. 19 hi ha una observació.", oninput: () => actualitza() });
+  comentari.value = desat.comentari || "";
+
+  const fetes = h("strong", {});
+  const comptador = h("div", { class: "comptador", "aria-hidden": "true" });
+  const envia = h("button", { type: "button", class: "boto gran", onclick: () => enviar() },
+    pc.preguntes.length ? "Envia les respostes" : "Continua");
+  const explica = h("span", {});
+
+  // Sense desa (en pintar la pàgina), no es guarda res: només quan respons alguna cosa.
+  function actualitza(desa = true) {
+    if (desa) recorda(clau, JSON.stringify({ respostes, comentari: comentari.value }));
+    const n = pc.preguntes.filter((p) => teResposta(respostes[p.id])).length;
+    const total = pc.preguntes.length;
+    fetes.textContent = sessio.ocupat ? "Espera"
+      : total ? `${n} de ${total} ${total === 1 ? "resposta" : "respostes"}` : "Cap pregunta";
+    comptador.replaceChildren(...pc.preguntes.map((p) => h("i", { class: teResposta(respostes[p.id]) ? "fet" : null })));
+    envia.disabled = n < total || Boolean(sessio.ocupat);
+    explica.textContent = sessio.ocupat ? `${sessio.ocupat}: podràs enviar-les quan acabe.`
+      : n < total ? "Quan les tingues totes, s'envien juntes i Claude continua."
+        : "Ja les tens totes: envia-les i Claude continuarà.";
+  }
+
+  async function enviar() {
+    envia.disabled = true;
+    const f = new FormData();
+    f.append("text", textDeRespostes(pc, respostes, comentari.value));
+    try {
+      await api(`/api/sessions/${a}/${c}/respon`, { method: "POST", body: f });
+      try { localStorage.removeItem(clau); } catch { /* sense emmagatzematge */ }
+      anar(`#/sessio/${a}/${c}/progres`);
+    } catch (err) {
+      avisa(err.message);
+      actualitza();
+    }
+  }
+
+  const n = pc.preguntes.length;
+  cos.append(
+    h("div", { class: "avis taronja", role: "status" }, icona("avis", 22, 2),
+      h("div", {}, h("strong", {}, n ? `Claude t'espera: ${n} ${n === 1 ? "pregunta" : "preguntes"}` : "Claude t'espera: revisa l'esquema"),
+        h("span", {}, !n ? "No té cap pregunta. Mira l'esquema de blocs i, si tot quadra, continua."
+          : pc.blocs ? "Són les coses que la font no resol. Respon-les totes i envia-les juntes; després Claude escriurà els blocs."
+            : "Respon-les i envia-les juntes perquè continue."))),
+    n ? h("div", { class: "preguntes" }, pc.preguntes.map((p) => targetaPregunta(sessio, p, respostes[p.id], actualitza))) : null,
+    pc.blocs ? seccioEsquema(pc, { obert: !n, comentari }) : null,
+    h("div", { class: "barra-accio compacta barra-respostes" }, h("div", {}, fetes, explica), comptador, envia));
+  actualitza(false);
+}
+
+// Quan acaba: el resum que Claude escriu al pas 6, en lloc del seu últim missatge.
+function targetaResum(resum) {
+  const xifres = [["blocs", "blocs"], ["a_la_font", "trobats a la font"], ["correccions", "correccions marcades"], ["notetes", "notetes"]]
+    .filter(([camp]) => resum[camp] != null && resum[camp] !== "")
+    .map(([camp, nom]) => h("div", {}, h("b", {}, String(resum[camp])), h("span", {}, nom)));
+  const respostes = Array.isArray(resum.respostes) ? resum.respostes.filter((x) => typeof x === "string") : [];
+  return h("section", { class: "targeta", "aria-labelledby": "t-resum" },
+    h("div", { class: "quadern-cap" }, h("h2", { id: "t-resum" }, "Resum"),
+      resum.pagines ? h("span", { class: "detall" }, `Pàgines ${resum.pagines} del quadern`) : null),
+    xifres.length ? h("div", { class: "resum-xifres" }, xifres) : null,
+    respostes.length ? [h("p", { class: "titol-plegable" }, "Les teues respostes"),
+      h("ul", { class: "resum-respostes" }, respostes.map((x) => formules(x, "li")))] : null);
+}
+
 async function pintaProgres(cos, sessio) {
   const a = sessio.assignatura;
   const c = sessio.id;
@@ -1396,15 +1629,23 @@ async function pintaProgres(cos, sessio) {
       } }, icona("stop", 14), "Atura");
     estat = targetaEstat(sessio, nomQuadern(assig, sessio.quadern), { tempsEl, tokensEl, atura });
     cos.append(estat.targeta);
+  } else if (sessio.estat === "esperant" && sessio.punt_control_vigent && puntDeControlBo(sessio.punt_control)) {
+    // Claude espera i ha escrit les preguntes d'este torn: una per secció (fase 2).
+    pintaPuntDeControl(cos, sessio);
   } else {
     const avis = avisDeProgres(sessio, assig);
     if (avis) cos.append(avis);
+    // Quan acaba, el resum que Claude escriu a punt-control.json; si no n'hi ha, el seu últim missatge.
+    const pc = sessio.punt_control && typeof sessio.punt_control === "object" ? sessio.punt_control : null;
+    const resum = sessio.estat === "acabada" && pc?.resum && typeof pc.resum === "object" ? pc.resum : null;
     const missatge = sessio.ultim_missatge ? netejaText(sessio.ultim_missatge) : "";
-    if (missatge) {
+    if (resum) cos.append(targetaResum(resum));
+    else if (missatge) {
       cos.append(h("section", { class: "targeta missatge-claude", "aria-labelledby": "t-missatge" },
         h("h2", { id: "t-missatge" }, sessio.estat === "acabada" ? "Què diu Claude" : "L'últim missatge de Claude"),
         markdown(missatge)));
     }
+    if (sessio.estat === "acabada" && Array.isArray(pc?.blocs)) cos.append(seccioEsquema(pc, {}));
     if (sessio.conversa) {
       cos.append(caixaResposta({
         ...(sessio.estat === "esperant"

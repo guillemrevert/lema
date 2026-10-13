@@ -379,7 +379,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Claude ho mostra tot en una sola tanda: l'esquema de blocs, amb on ha trobat cada bloc a la font, i les preguntes obligatòries.",
         "Només pregunta el que la font no resol: un símbol dubtós dins d'una fórmula, una hipòtesi que sembla falsa sense saber si és un error dels apunts, o una pàgina o zona il·legible.",
         "Claude no continua fins que respons.",
-        "Les respostes es guarden al perfil de lletra: símbols, lletres i paraules, i abreviatures."
+        "Les respostes es guarden al perfil de lletra: símbols, lletres i paraules, i abreviatures.",
+        "Des de la web, Claude també escriu l'esquema i les preguntes a <code>punt-control.json</code>. La web ensenya cada pregunta per separat, amb el tros de foto a què es refereix i botons per respondre, i les respostes tornen a Claude totes juntes, en un sol missatge."
       ],
       on: "Passos 4 · Decisió 5"
     },
@@ -409,7 +410,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Compilar el PDF, amb aspecte de llibre (decisió 2).",
         "Entregar <code>tema.tex</code> i <code>tema.pdf</code>; l'esquema, el diccionari, el perfil de lletra i la fitxa com a fitxers de text; i un informe curt. Els problemes de l'eina van a <code>millores.md</code>.",
         "Des de la web, la sessió s'afegeix sempre al document del seu quadern (decisió 9): els blocs van a la carpeta del quadern, en una carpeta per sessió; al <code>quadern.tex</code> només s'hi afegeixen els <code>\\input</code> d'esta sessió, en ordre de data; les etiquetes dels blocs porten davant el nom de la sessió (<code>\\label{2026-10-10-B01}</code>); les notetes continuen la numeració del quadern; es compila el quadern, i l'informe diu a quines pàgines és la sessió.",
-        "Des de la web, les correccions es demanen a la pàgina del quadern, en una conversa de Claude per quadern, i l'usuari també pot editar el LaTeX dels blocs a «Costat a costat» (decisió 2). Les correccions no desfan les seues edicions; si n'hi ha una d'errònia, es diu amb una noteta."
+        "Des de la web, les correccions es demanen a la pàgina del quadern, en una conversa de Claude per quadern, i l'usuari també pot editar el LaTeX dels blocs a «Costat a costat» (decisió 2). Les correccions no desfan les seues edicions; si n'hi ha una d'errònia, es diu amb una noteta.",
+        "Des de la web, el resum (xifres, pàgines del quadern i com s'ha aplicat cada resposta) també va a <code>punt-control.json</code>, i la web l'ensenya quan la sessió acaba."
       ],
       on: "Passos 6 · Decisions 2 i 9"
     }
@@ -427,6 +429,14 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 11, data: "2026-10-13",
+      titol: "El punt de control es respon des de la web, pregunta a pregunta, amb el tros de foto de cada dubte.",
+      passos: {
+        pas4: "A més del missatge, Claude escriu l'esquema i les preguntes a <code>punt-control.json</code>: per a cada pregunta, la foto i la zona on és el dubte, què diuen els apunts i la font, i les respostes possibles. La web ensenya cada pregunta per separat i torna totes les respostes en un sol missatge («P1: (a) …»).",
+        pas6: "El resum de la sessió (xifres, pàgines del quadern i com s'ha aplicat cada resposta) també va a <code>punt-control.json</code>, i la web l'ensenya dalt quan la sessió acaba."
+      }
+    },
     {
       versio: 10, data: "2026-10-13",
       titol: "L'usuari pot editar les fonts des de la web: si la fitxa no quadra amb el font.json, mana el font.json.",

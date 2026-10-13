@@ -109,9 +109,9 @@ Tenen la mateixa numeració que el flux i que `flux.html`.
    - Apuntar al diccionari de notació com escriuen els apunts cada concepte, a partir de la comparació amb la font.
    - Decidir la versió segons la decisió 7.
    - Classificar els dubtes que la font no resol en obligatoris i notetes.
-4. **Punt de control.** Mostrar a l'usuari, **en una sola tanda**, l'esquema de blocs (amb on s'ha trobat cada bloc a la font) i les preguntes obligatòries. Esperar les respostes i guardar-les al perfil de lletra (símbols, lletres i paraules, abreviatures).
+4. **Punt de control.** Mostrar a l'usuari, **en una sola tanda**, l'esquema de blocs (amb on s'ha trobat cada bloc a la font) i les preguntes obligatòries. Esperar les respostes i guardar-les al perfil de lletra (símbols, lletres i paraules, abreviatures). Des de la web, l'esquema i les preguntes també es guarden a `punt-control.json`, perquè la web ensenye cada pregunta per separat, amb el tros de foto a què es refereix (el format, a `web/prompt.md`).
 5. **Escriure cada bloc** amb la versió decidida i la notació del diccionari. Citar la font i la pàgina. Aplicar la regla de "falta demo".
-6. **Muntatge i entrega** (Fase 3). Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF i entregar-lo amb l'informe. Des de la web (decisió 9), els blocs van a la carpeta del quadern, el document és `quadern.tex` i es compila el quadern; l'informe diu a quines pàgines és la sessió.
+6. **Muntatge i entrega** (Fase 3). Plantilla LaTeX mínima amb els entorns de cada tipus de bloc, les marques (dubte, correcció, nota, caixa "no vist a classe") i les notetes numerades al marge. Compilar el PDF i entregar-lo amb l'informe. Des de la web (decisió 9), els blocs van a la carpeta del quadern, el document és `quadern.tex` i es compila el quadern; l'informe diu a quines pàgines és la sessió. El resum (xifres, pàgines del quadern i com s'ha aplicat cada resposta) també va a `punt-control.json`.
 
 ## Què s'ha d'entregar
 
