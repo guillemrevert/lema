@@ -53,7 +53,7 @@ Totes amb la proposta del mock-up, menys l'esquema de blocs, que vas voler plega
 5. **Les respostes a mitges no es perden.** Si te'n vas de la pàgina o es recarrega abans d'enviar-les, en tornar hi són. Es guarden al navegador fins que les envies.
 6. **Les preguntes fora del punt de control també poden fer servir el fitxer** (proposta), sense esquema. Si Claude ha de preguntar alguna cosa a mitja feina, ix igual, una per secció. Si no ho fa, ix el missatge (decisió 3).
 
-**Encara pendent:** com es prova la fase 1 amb Claude treballant (vegeu «Com es prova» de la fase 1).
+**Les proves que necessiten Claude treballant** es faran amb la nova eina de proves amb agents, que s'implementarà prompte (ho vas dir el 13/10/2026). Fins aleshores, cada fase es tanca amb les proves que no gasten tokens, i les altres queden apuntades com a pendents a l'estat de la fase.
 
 ## Com es veu «Progrés» en cada moment
 
@@ -164,9 +164,7 @@ A `localhost:8300`:
    - en obrir el detall, el registre de sempre, amb el número d'accions correcte.
 2. **Les sessions d'abans** (05/10 i 30/09, 2a part): igual, sense errors.
 3. **Esperant, aturada i amb error.** Es fa amb una còpia de la del 07/10 amb l'estat canviat a mà, sense fer treballar Claude. En cada cas, l'avís que toca, l'últim missatge a la vista i el quadre per respondre.
-4. **En marxa:** la targeta de l'estat amb el pas, el temps i els tokens pujant, el detall comptant accions, «Atura» i, en acabar el torn, la pàgina que canvia sola a l'estat següent. Cal que Claude treballe. **Pendent que tries:**
-   - **amb una còpia** de la del 07/10 que s'atura al cap de mig minut, com a la prova de la H i la Q, que costa uns 150.000 tokens;
-   - **amb la pròxima sessió de veritat,** que no costa res de més, però la fase 1 es tanca sense haver-ho vist.
+4. **En marxa:** la targeta de l'estat amb el pas, el temps i els tokens pujant, el detall comptant accions, «Atura» i, en acabar el torn, la pàgina que canvia sola a l'estat següent. Cal que Claude treballe, així que **es farà amb la nova eina de proves amb agents.** Fins aleshores queda pendent, apuntat a l'estat de la fase.
 5. **Regressió:**
    - les correccions del quadern, que també fan servir `registreClaude`;
    - «Materials» i «Passa a net»;
@@ -370,10 +368,10 @@ A `localhost:8300`, primer **sense gastar tokens**, amb una còpia de la sessió
 7. **Una zona dolenta** (fora de la foto, al revés, amb una foto que no és de la sessió): la pregunta ix sense tros de foto i la resta funciona.
 8. **Un punt de control sense preguntes:** l'esquema obert i «Continua».
 9. **Quan acaba:** amb un `resum` escrit a mà, el resum dalt; sense, l'últim missatge.
-10. **«Espera»:** mentre un altre Claude corregeix el quadern, la barra diu «Espera». Es prova amb una correcció del quadern de prova, que costa uns 100.000 tokens, o amb la pròxima correcció de veritat.
+10. **«Espera»:** mentre un altre Claude corregeix el quadern, la barra diu «Espera». Cal que Claude treballe: **amb la nova eina de proves amb agents.**
 11. **Regressió:** la fase 1 sencera, les correccions del quadern i «Passa a net».
 
-**Amb Claude de veritat:** la pròxima sessió que passes a net. S'ha de mirar:
+**Amb Claude de veritat,** amb la nova eina de proves amb agents o amb la pròxima sessió que passes a net. S'ha de mirar:
 
 - que escriga el fitxer;
 - que les zones de les fotos caiguen al lloc;
