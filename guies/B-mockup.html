@@ -1,0 +1,645 @@
+<title>Progrés i punt de control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+/* Mock-up estàtic de la B: «Progrés» nou i punt de control propi.
+   Dalt, tres pantalles netes dins d'un marc de navegador; davall, l'explicació part per part.
+   Només tema clar, com la web de LEMA (mateixos colors i lletres que web/static/style.css).
+   Les fotos són les de la sessió del 07/10 (guies/img/, fora de git). Els retalls es fan amb CSS:
+   la foto sencera de fons, ampliada i desplaçada fins a la zona, com ho faria la web. */
+:root {
+  color-scheme: light;
+  --pagina: #E7E5DD;
+  --fons: #F7F6F2;
+  --lateral: #EFEEE8;
+  --sup: #FFFFFF;
+  --tinta: #1B1E24;
+  --text-2: #3A404B;
+  --suau: #5A606B;
+  --apagat: #8A8F99;
+  --vora: #DEDCD4;
+  --vora-forta: #CFCDC4;
+  --linia: #ECEBE5;
+  --blau: #1F4FB8;
+  --blau-clar: #E8EEFA;
+  --blau-fons: #F6F8FD;
+  --blau-text: #1A43A0;
+  --blau-vora: #C9D5F0;
+  --taronja: #B45309;
+  --taronja-clar: #FDF1E4;
+  --taronja-vora: #F0CBA4;
+  --taronja-text: #6E3306;
+  --roig: #B42318;
+  --roig-clar: #FBE9E7;
+  --roig-vora: #EFC2BD;
+  --roig-text: #7A1812;
+  --serif: 'Newsreader', Georgia, serif;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--pagina); color: var(--tinta); font: 15px/1.55 var(--sans); padding-block: 32px 80px; padding-inline: 16px; }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--blau); }
+button { font: inherit; }
+code { font: 0.9em var(--mono); background: var(--lateral); padding: 1px 5px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+
+/* ---------- Document ---------- */
+.doc { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px; }
+.intro { display: flex; flex-direction: column; gap: 14px; max-width: 780px; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--suau); }
+.intro h1 { font: 600 46px/1.05 var(--serif); text-wrap: balance; }
+.intro p { font-size: 17px; color: var(--text-2); }
+.seccio { display: flex; flex-direction: column; gap: 20px; }
+.seccio > header { display: flex; flex-direction: column; gap: 6px; max-width: 780px; }
+.seccio h2 { font: 600 32px/1.15 var(--serif); text-wrap: balance; }
+.seccio > header p { color: var(--text-2); font-size: 16px; }
+.pantalla { display: flex; flex-direction: column; gap: 10px; }
+.pantalla > h3 { font: 600 20px/1.2 var(--serif); }
+.pantalla > p { color: var(--text-2); max-width: 780px; }
+
+/* ---------- Marc del navegador ---------- */
+.marc { border: 1px solid var(--vora-forta); border-radius: 12px; overflow: hidden; background: var(--fons); box-shadow: 0 12px 32px rgba(27, 30, 36, 0.12); }
+.marc-barra { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--lateral); border-bottom: 1px solid var(--vora); min-width: 0; }
+.marc-barra i { width: 11px; height: 11px; border-radius: 50%; background: var(--vora-forta); flex: none; }
+.marc-barra .url { margin-left: 10px; flex: 1; min-width: 0; padding: 4px 12px; border-radius: 6px; background: var(--sup); font: 12px var(--mono); color: var(--suau); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- La web de LEMA (sense la barra lateral, que no canvia) ---------- */
+.principal { min-width: 0; padding: 30px clamp(16px, 2.6vw, 36px) 36px; display: flex; flex-direction: column; gap: 20px; max-width: 1040px; }
+.capcalera { display: flex; flex-direction: column; gap: 14px; }
+.capcalera .detall { font-size: 14px; color: var(--suau); }
+.capcalera h2 { font: 600 34px/1.1 var(--serif); text-wrap: balance; }
+.pestanyes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--vora); }
+.pestanyes span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--suau); }
+.pestanyes .actiu { margin-bottom: -1px; border-bottom: 2px solid var(--blau); color: var(--tinta); font-weight: 600; }
+
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.entre { justify-content: space-between; }
+.boto { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 18px; border: 0; border-radius: 8px; background: var(--blau); color: #FFFFFF; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.boto.gran { min-height: 48px; padding: 0 24px; font-size: 16px; }
+.boto[aria-disabled="true"] { background: #9AA6C2; cursor: default; }
+.boto-sec { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border-radius: 8px; background: var(--sup); border: 1px solid var(--vora-forta); color: var(--tinta); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.targeta { background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.targeta > h3, .cap-targeta h3 { font: 600 21px/1.2 var(--serif); }
+.cap-targeta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; }
+.cap-targeta .detall { font-size: 13px; color: var(--suau); }
+.nota-petita { font-size: 13px; color: var(--suau); }
+
+/* Passos */
+.passos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.passos li { display: flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; border-radius: 999px; border: 1px solid var(--vora); font-size: 14px; color: var(--suau); }
+.passos .cercle { width: 26px; height: 26px; border-radius: 50%; background: #E9E8E2; display: flex; align-items: center; justify-content: center; font-size: 12px; flex: none; }
+.passos .fet { background: var(--sup); color: var(--tinta); }
+.passos .fet .cercle { background: var(--blau); color: #FFFFFF; }
+.passos .actual, .passos .aturat { background: var(--sup); color: var(--tinta); font-weight: 600; padding: 4px 14px 4px 4px; border-width: 2px; }
+.passos .actual { border-color: var(--blau); }
+.passos .actual .cercle { background: var(--sup); border: 2px solid var(--blau); color: var(--blau); }
+.passos .aturat { border-color: var(--taronja); }
+.passos .aturat .cercle { background: var(--sup); border: 2px solid var(--taronja); color: var(--taronja); }
+
+/* L'estat d'ara */
+.ara { border: 2px solid var(--blau-vora); background: var(--blau-fons); }
+.ara-cap { display: flex; align-items: center; gap: 14px; }
+.gira { width: 22px; height: 22px; border-radius: 50%; border: 3px solid #C3CFEC; border-top-color: var(--blau); flex: none; }
+.ara-cap h3 { font: 600 24px/1.2 var(--serif); text-wrap: balance; }
+.xifres { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 14px; color: var(--text-2); }
+.xifres b { font: 600 14px var(--mono); color: var(--tinta); font-variant-numeric: tabular-nums; }
+.seguent { font-size: 15px; color: var(--text-2); }
+
+/* Avisos */
+.avis { display: flex; gap: 14px; align-items: flex-start; padding: 16px 20px; border-radius: 12px; border: 1px solid; }
+.avis > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.avis.taronja { background: var(--taronja-clar); border-color: var(--taronja-vora); color: var(--taronja-text); }
+.avis.blau { background: var(--blau-clar); border-color: var(--blau-vora); color: #173A8A; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.icona-avis { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid currentColor; display: flex; align-items: center; justify-content: center; font: 700 13px var(--sans); }
+
+/* Detall plegat */
+details.detall-claude { background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; }
+details.detall-claude summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 14px 20px; font-weight: 600; }
+details.detall-claude summary::-webkit-details-marker { display: none; }
+details.detall-claude summary span { font-weight: 400; font-size: 13px; color: var(--suau); }
+details.detall-claude summary::after { content: "Mostra"; font-size: 13px; font-weight: 600; color: var(--blau); }
+details.detall-claude[open] summary::after { content: "Amaga"; }
+.eines { list-style: none; margin: 0 20px 18px; padding: 10px 12px; background: var(--fons); border-radius: 8px; display: flex; flex-direction: column; gap: 6px; font: 13px/1.45 var(--mono); overflow-x: auto; }
+.eines li { display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.eines .verb { color: var(--suau); flex: none; min-width: 4.5em; }
+
+/* Preguntes */
+.preguntes { display: flex; flex-direction: column; gap: 16px; }
+.pregunta { background: var(--sup); border: 1px solid var(--vora); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.pregunta.resposta-feta { border-color: var(--blau-vora); }
+.preg-cap { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 14px 20px; border-bottom: 1px solid var(--linia); }
+.preg-num { font: 600 14px var(--mono); padding: 2px 9px; border-radius: 6px; background: var(--tinta); color: #FFFFFF; }
+.preg-bloc { font-weight: 600; }
+.preg-cap .detall { font-size: 13px; color: var(--suau); }
+.preg-estat { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--suau); }
+.resposta-feta .preg-estat { color: var(--blau-text); }
+.preg-cos { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; padding: 18px 20px 20px; align-items: start; }
+.preg-cos.sense-foto { grid-template-columns: minmax(0, 1fr); }
+.context { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.etiqueta { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--suau); }
+.retall { width: 100%; border: 1px solid var(--vora); border-radius: 8px; background-color: var(--fons); background-repeat: no-repeat; }
+.peu-retall { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 13px; color: var(--suau); }
+.compara { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 14.5px; margin: 0; }
+.compara dt { font-size: 13px; font-weight: 600; color: var(--suau); padding-top: 2px; }
+.compara dd { margin: 0; font-family: var(--serif); font-size: 17px; overflow-wrap: anywhere; }
+.decidir { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.decidir > p { font-size: 16px; font-weight: 500; }
+.opcions { display: flex; flex-direction: column; gap: 8px; }
+.opcio { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border: 1px solid var(--vora-forta); border-radius: 10px; background: var(--sup); font-size: 15px; cursor: pointer; }
+.opcio .rodona { width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--vora-forta); flex: none; }
+.opcio.triada { border: 2px solid var(--blau); background: var(--blau-fons); padding: 10px 13px; }
+.opcio.triada .rodona { border: 5px solid var(--blau); }
+.opcio .lletra { font: 600 14px var(--mono); color: var(--suau); }
+.opcio small { display: block; font-size: 13px; color: var(--suau); }
+.opcio.altra { color: var(--suau); }
+.opcio .camp-altra { flex: 1; min-width: 0; border-bottom: 1px dashed var(--vora-forta); }
+.sino { display: flex; flex-wrap: wrap; gap: 8px; }
+.sino .opcio { flex: 1 1 160px; }
+
+/* Barra d'enviar */
+.barra-accio { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-radius: 12px; background: var(--tinta); color: #FFFFFF; }
+.barra-accio > div { display: flex; flex-direction: column; gap: 2px; }
+.barra-accio span { font-size: 14px; color: #C9CCD3; }
+.comptador { display: flex; gap: 6px; }
+.comptador i { width: 26px; height: 6px; border-radius: 3px; background: #4A505C; }
+.comptador i.fet { background: #8FB0F2; }
+
+/* Esquema de blocs */
+.blocs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.blocs li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 14px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--linia); }
+.blocs li:first-child { border-top: 0; }
+.blocs .id { font: 600 13px var(--mono); color: var(--suau); }
+.blocs .que { display: flex; flex-direction: column; min-width: 0; }
+.blocs .que b { font-weight: 600; }
+.blocs .que span { font-size: 13px; color: var(--suau); }
+.marques { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.xip { display: inline-flex; align-items: center; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; border: 1px solid transparent; }
+.xip.font { background: var(--blau-clar); color: var(--blau-text); }
+.xip.sense { background: var(--lateral); color: var(--suau); }
+.xip.corr { background: var(--roig-clar); color: var(--roig-text); }
+.xip.nota { background: var(--sup); color: var(--blau-text); border-color: var(--blau-vora); }
+.xip.preg { background: var(--taronja-clar); color: var(--taronja-text); }
+details.esquema .dins { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.comentari { min-height: 64px; padding: 12px; border: 1px solid var(--vora-forta); border-radius: 8px; font-size: 15px; color: var(--apagat); }
+.claude-diu { padding: 10px 14px; background: var(--fons); border-radius: 8px; font-size: 14px; color: var(--text-2); }
+
+/* Acabada */
+.resum { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.resum div { padding: 12px 14px; border: 1px solid var(--linia); border-radius: 10px; background: var(--fons); display: flex; flex-direction: column; gap: 2px; }
+.resum b { font: 600 26px/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.resum span { font-size: 13px; color: var(--suau); }
+.informe { display: flex; flex-direction: column; gap: 8px; font-size: 15px; max-width: 72ch; }
+.informe ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+/* ---------- Guia part per part ---------- */
+.parts { display: flex; flex-direction: column; gap: 20px; }
+.part { background: var(--sup); border: 1px solid var(--vora); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 20px; }
+.part-cap { display: flex; align-items: center; gap: 14px; }
+.part-num { width: 34px; height: 34px; border-radius: 50%; background: var(--tinta); color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font: 600 15px var(--mono); flex: none; }
+.part-cap h3 { font: 600 25px/1.2 var(--serif); text-wrap: balance; }
+.part-text { display: flex; flex-direction: column; gap: 12px; max-width: 72ch; }
+.part-text p b { font-weight: 600; }
+.cal { padding: 12px 16px; background: var(--fons); border-radius: 10px; font-size: 14px; color: var(--text-2); }
+.cal b { color: var(--tinta); }
+.alternatives { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; align-items: start; }
+.alt { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--linia); border-radius: 12px; background: var(--fons); }
+.alt strong { font-size: 16px; }
+.alt > span { font-size: 14px; color: var(--text-2); }
+.reco { align-self: flex-start; padding: 1px 9px; border-radius: 999px; background: var(--blau-clar); color: var(--blau-text); font-size: 12px; font-weight: 600; }
+.mostra { background: var(--sup); border: 1px solid var(--linia); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; min-width: 0; }
+.mostra .linia-feina { display: flex; align-items: center; gap: 8px; color: var(--text-2); }
+.mostra .gira { width: 14px; height: 14px; border-width: 2px; }
+.pagina-marcada { position: relative; width: 100%; max-width: 220px; }
+.pagina-marcada img { display: block; width: 100%; height: auto; border: 1px solid var(--vora); border-radius: 6px; }
+.pagina-marcada .zona { position: absolute; border: 3px solid var(--taronja); border-radius: 4px; background: rgba(180, 83, 9, 0.12); }
+.ruta { font: 12.5px/1.65 var(--mono); background: var(--sup); border: 1px solid var(--linia); border-radius: 8px; padding: 12px 14px; white-space: pre; overflow-x: auto; margin: 0; }
+.decisions { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; max-width: 860px; font-size: 16px; }
+.decisions li::marker { font-weight: 600; }
+.decisions span { color: var(--text-2); }
+
+@media (max-width: 760px) {
+  .preg-cos { grid-template-columns: minmax(0, 1fr); }
+  .blocs li { grid-template-columns: 36px minmax(0, 1fr); }
+  .marques { grid-column: 2; justify-content: flex-start; }
+}
+@media (max-width: 640px) {
+  .intro h1 { font-size: 36px; }
+  .capcalera h2 { font-size: 28px; }
+  .part { padding: 18px; }
+}
+</style>
+
+<div class="doc">
+
+<!-- ================= Introducció ================= -->
+<header class="intro">
+  <span class="eyebrow">LEMA · web local · mock-up de la B</span>
+  <h1>Progrés i punt de control</h1>
+  <p>Ara, a «Progrés», el primer que veus és tot el que fa Claude, línia a línia: cada fitxer que llig, cada ordre que executa… I quan arriba el punt de control, les preguntes vénen dins d'un missatge llarg, i les respons totes en un sol quadre de text, escrivint «P1: …, P2: …» a mà.</p>
+  <p>La proposta: <b>dalt, només el que necessites saber</b> (en quin pas és Claude i què ve després), i el detall plegat al final. Al punt de control, <b>cada pregunta en la seua secció</b>, amb el tros de la foto a què es refereix i botons per triar la resposta.</p>
+  <p>És un mock-up: no funciona res, només ensenya com seria. Fa servir la sessió del 07/10, amb les seues fotos i les quatre preguntes que va fer Claude.</p>
+</header>
+
+<!-- ================= Pantalles ================= -->
+<section class="seccio" aria-labelledby="t-pantalles">
+  <header>
+    <h2 id="t-pantalles">Les pantalles</h2>
+    <p>«Progrés» en tres moments: mentre Claude treballa, al punt de control i quan ha acabat. La barra lateral no canvia i no ix.</p>
+  </header>
+
+  <!-- Pantalla 1 -->
+  <div class="pantalla">
+    <h3>1 · Mentre Claude treballa</h3>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/sessio/estructures-algebraiques/2026-10-07/progres</span></div>
+      <div class="principal">
+        <div class="capcalera">
+          <div>
+            <span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <h2>Sessió del 07/10/2026</h2>
+          </div>
+          <nav class="pestanyes" aria-label="Seccions de la sessió (mock-up)"><span>Materials</span><span class="actiu">Progrés</span></nav>
+        </div>
+        <ol class="passos" aria-label="Passos (mock-up)">
+          <li class="fet"><span class="cercle">✓</span>Preparació</li>
+          <li class="fet"><span class="cercle">✓</span>Lectura general</li>
+          <li class="fet"><span class="cercle">✓</span>Divisió en blocs</li>
+          <li class="actual"><span class="cercle">3</span>Per a cada bloc</li>
+          <li><span class="cercle">4</span>Punt de control</li>
+          <li><span class="cercle">5</span>Escriure</li>
+          <li><span class="cercle">6</span>Muntatge i PDF</li>
+        </ol>
+        <section class="targeta ara" aria-label="Què fa Claude ara">
+          <div class="ara-cap"><span class="gira" aria-hidden="true"></span><h3>Claude busca cada bloc a la font</h3></div>
+          <div class="xifres"><span>Pas <b>3</b> de 6</span><span>Temps <b>6 min 40 s</b></span><span>Tokens <b>1.214.880</b></span></div>
+          <p class="seguent">Després s'aturarà per fer-te, totes juntes, les preguntes que la font no resol. Pots deixar esta pàgina: quan t'espere, la sessió ho dirà a la barra lateral.</p>
+          <div><span class="boto-sec">■ Atura</span></div>
+        </section>
+        <details class="detall-claude">
+          <summary>Detall del que fa Claude <span>47 accions · l'última, fa 3 s</span></summary>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 2 -->
+  <div class="pantalla">
+    <h3>2 · Al punt de control</h3>
+    <p>Claude s'ha aturat amb quatre preguntes. Ja has respost la primera.</p>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/sessio/estructures-algebraiques/2026-10-07/progres</span></div>
+      <div class="principal">
+        <div class="capcalera">
+          <div>
+            <span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <h2>Sessió del 07/10/2026</h2>
+          </div>
+          <nav class="pestanyes" aria-label="Seccions de la sessió (mock-up)"><span>Materials</span><span class="actiu">Progrés</span></nav>
+        </div>
+        <ol class="passos" aria-label="Passos (mock-up)">
+          <li class="fet"><span class="cercle">✓</span>Preparació</li>
+          <li class="fet"><span class="cercle">✓</span>Lectura general</li>
+          <li class="fet"><span class="cercle">✓</span>Divisió en blocs</li>
+          <li class="fet"><span class="cercle">✓</span>Per a cada bloc</li>
+          <li class="aturat"><span class="cercle">4</span>Punt de control</li>
+          <li><span class="cercle">5</span>Escriure</li>
+          <li><span class="cercle">6</span>Muntatge i PDF</li>
+        </ol>
+        <div class="avis taronja" role="status"><span class="icona-avis" aria-hidden="true">!</span>
+          <div><strong>Claude t'espera: 4 preguntes</strong><span>Són les coses que la font no resol. Respon-les totes i envia-les juntes; després Claude escriurà els blocs.</span></div>
+        </div>
+
+        <div class="preguntes">
+          <!-- P1 -->
+          <article class="pregunta resposta-feta" aria-label="Pregunta 1">
+            <div class="preg-cap"><span class="preg-num">P1</span><span class="preg-bloc">B01 · Exemple</span><span class="detall">Sembla un error dels apunts</span><span class="preg-estat">✓ Resposta</span></div>
+            <div class="preg-cos">
+              <div class="context">
+                <span class="etiqueta">A què es refereix</span>
+                <div class="retall" role="img" aria-label="Tros de la foto de la pàgina 18: l'exemple amb H1 i H2" style="background-image: url(img/b-p18.jpeg); aspect-ratio: 3.11; background-size: 123% auto; background-position: 35.8% 9.1%;"></div>
+                <div class="peu-retall"><span>Foto 1 · pàgina 18 · «Ex»</span><a href="img/b-p18.jpeg" target="_blank">Obre la foto sencera</a></div>
+                <dl class="compara">
+                  <dt>Apunts</dt><dd>H₁H₂ = {1, (1 2), (1 3), (1 2 3)}</dd>
+                  <dt>Quadern</dt><dd>(1 2)(1 3) = (1 3 2), perquè cd = c∘d</dd>
+                </dl>
+              </div>
+              <div class="decidir">
+                <p>Els apunts fan el producte en l'ordre contrari al del quadern. Com que no són teus, potser l'altre alumne fa servir l'altre conveni. Què faig?</p>
+                <div class="opcions">
+                  <div class="opcio triada"><span class="rodona"></span><span>Corregeix-ho a (1 3 2) i marca la correcció</span></div>
+                  <div class="opcio"><span class="rodona"></span><span>Deixa (1 2 3), com als apunts</span></div>
+                  <div class="opcio altra"><span class="rodona"></span><span class="camp-altra">Una altra resposta…</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- P2 -->
+          <article class="pregunta" aria-label="Pregunta 2">
+            <div class="preg-cap"><span class="preg-num">P2</span><span class="preg-bloc">B13 · Exercici 11</span><span class="detall">Lectura dubtosa</span><span class="preg-estat">Sense resposta</span></div>
+            <div class="preg-cos">
+              <div class="context">
+                <span class="etiqueta">A què es refereix</span>
+                <div class="retall" role="img" aria-label="Tros de la foto del full P3: la línia del cas n = 2" style="background-image: url(img/b-p3.jpeg); aspect-ratio: 4.8; background-size: 166.7% auto; background-position: 30% 60.2%;"></div>
+                <div class="peu-retall"><span>Foto 3 · full «P3 Estructures» · exercici 11</span><a href="img/b-p3.jpeg" target="_blank">Obre la foto sencera</a></div>
+                <dl class="compara">
+                  <dt>Llig</dt><dd>Σ₂ = (1, a) → 1a = a = a1</dd>
+                  <dt>Entenc</dt><dd>Σ₂ = {1, a}, amb a = (1 2)</dd>
+                </dl>
+              </div>
+              <div class="decidir">
+                <p>Pel context, els parèntesis han de ser claus i <i>a</i> és la transposició (1 2). Ho he entés bé?</p>
+                <div class="sino">
+                  <div class="opcio"><span class="rodona"></span><span>Sí</span></div>
+                  <div class="opcio altra"><span class="rodona"></span><span class="camp-altra">No, és…</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- P3 -->
+          <article class="pregunta" aria-label="Pregunta 3">
+            <div class="preg-cap"><span class="preg-num">P3</span><span class="preg-bloc">B13 · Exercici 11</span><span class="detall">Acaba a mitja frase</span><span class="preg-estat">Sense resposta</span></div>
+            <div class="preg-cos">
+              <div class="context">
+                <span class="etiqueta">A què es refereix</span>
+                <div class="retall" role="img" aria-label="Tros de la foto del full P3: el cas n major o igual que 3, que acaba a mitja frase" style="background-image: url(img/b-p3.jpeg); aspect-ratio: 3.78; background-size: 119% auto; background-position: 75% 69.7%;"></div>
+                <div class="peu-retall"><span>Foto 3 · full «P3 Estructures» · exercici 11</span><a href="img/b-p3.jpeg" target="_blank">Obre la foto sencera</a></div>
+                <dl class="compara">
+                  <dt>Apunts</dt><dd>«…c es pot escriure com multiplicació de transposicions» i no continua</dd>
+                  <dt>Font</dt><dd>Wuolah T1, Prop. 1.9: Z(Σₙ) = 1 per a n ≥ 3</dd>
+                </dl>
+              </div>
+              <div class="decidir">
+                <p>La solució del cas n ≥ 3 queda a mitges. Què faig?</p>
+                <div class="opcions">
+                  <div class="opcio"><span class="rodona"></span><span><span class="lletra">a</span> · Deixa-la pendent<small>Al PDF: «Demostració pendent».</small></span></div>
+                  <div class="opcio"><span class="rodona"></span><span><span class="lletra">b</span> · Completa-la amb un contraexemple<small>(1 2)(1 3) ≠ (1 3)(1 2), en una caixa «No vist a classe, tret de Wuolah T1».</small></span></div>
+                  <div class="opcio altra"><span class="rodona"></span><span class="camp-altra">Una altra resposta…</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- P4 -->
+          <article class="pregunta" aria-label="Pregunta 4">
+            <div class="preg-cap"><span class="preg-num">P4</span><span class="preg-bloc">Perfil de lletra</span><span class="detall">De tota la sessió</span><span class="preg-estat">Sense resposta</span></div>
+            <div class="preg-cos sense-foto">
+              <div class="context">
+                <span class="etiqueta">A què es refereix</span>
+                <dl class="compara">
+                  <dt>Nota</dt><dd>«Les imatges no són meues, aleshores el diccionari no funcionarà.»</dd>
+                </dl>
+              </div>
+              <div class="decidir">
+                <p>Les respostes de lletra d'esta tanda (com la P2), on les guarde?</p>
+                <div class="opcions">
+                  <div class="opcio"><span class="rodona"></span><span>Al perfil, en una secció a part, «Altres alumnes»</span></div>
+                  <div class="opcio"><span class="rodona"></span><span>No les guardes</span></div>
+                  <div class="opcio altra"><span class="rodona"></span><span class="camp-altra">Una altra resposta…</span></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <details class="detall-claude esquema">
+          <summary>Esquema de blocs <span>13 blocs · 4 a la font · 1 nota de Claude</span></summary>
+          <div class="dins">
+          <p class="claude-diu">Les fotos van arribar en ordre invers; les he ordenades pel número de pàgina: p. 18, p. 19 i el full «P3 Estructures».</p>
+          <ul class="blocs">
+            <li><span class="id">B01</span><span class="que"><b>Exemple</b><span>H₁H₂ no és subgrup, |H₁H₂| = 4 · p. 18</span></span><span class="marques"><span class="xip sense">No és a la font</span><span class="xip preg">P1</span></span></li>
+            <li><span class="id">B02</span><span class="que"><b>Definició · Subgrup generat ⟨X⟩</b><span>p. 18</span></span><span class="marques"><span class="xip font">En part: T1 Def. 1.34, p. 13</span></span></li>
+            <li><span class="id">B03</span><span class="que"><b>Observació</b><span>⟨X⟩ és el menor subgrup que conté X · p. 18</span></span><span class="marques"><span class="xip sense">No és a la font</span></span></li>
+            <li><span class="id">B04</span><span class="que"><b>Teorema</b><span>⟨X⟩ són els productes d'elements de X ∪ X⁻¹ · p. 18</span></span><span class="marques"><span class="xip sense">No és a la font</span><span class="xip nota">Noteta</span></span></li>
+            <li><span class="id">B05</span><span class="que"><b>Demostració de B04</b><span>p. 18</span></span><span class="marques"><span class="xip sense">No és a la font</span><span class="xip corr">Correcció</span></span></li>
+            <li><span class="id">B06</span><span class="que"><b>Notació</b><span>⟨x₁, …, xₙ⟩, grup finitament generat · p. 19</span></span><span class="marques"><span class="xip sense">No és a la font</span></span></li>
+            <li><span class="id">B07</span><span class="que"><b>Definició · Grup cíclic</b><span>p. 19</span></span><span class="marques"><span class="xip font">T1 Def. 1.35, p. 13</span></span></li>
+            <li><span class="id">B08</span><span class="que"><b>Observació</b><span>⟨x⟩ segons l'ordre de x · p. 19</span></span><span class="marques"><span class="xip font">T1, p. 13–14</span><span class="xip corr">Correcció</span></span></li>
+            <li><span class="id">B09</span><span class="que"><b>Exemple</b><span>(ℤ, +) = ⟨1⟩ i ℤₙ = ⟨1̄⟩ · p. 19</span></span><span class="marques"><span class="xip sense">No és a la font</span><span class="xip nota">Noteta</span></span></li>
+            <li><span class="id">B10</span><span class="que"><b>Teorema · Subgrups d'un grup cíclic</b><span>p. 19</span></span><span class="marques"><span class="xip font">T1 Teor. 1.37 i 1.39, p. 13–14</span><span class="xip corr">Correcció</span><span class="xip nota">Noteta</span></span></li>
+            <li><span class="id">B11</span><span class="que"><b>Exercici 9</b><span>∀σ ∃τ: τστ⁻¹ = σ⁻¹ · full P3</span></span><span class="marques"><span class="xip sense">Relacionat: T2 Lema 2.17</span><span class="xip corr">Correcció</span></span></li>
+            <li><span class="id">B12</span><span class="que"><b>Exercici 10</b><span>Ordre màxim a Σ₈: 15 · full P3</span></span><span class="marques"><span class="xip sense">Relacionat: T2 Teor. 2.10</span><span class="xip nota">Noteta</span></span></li>
+            <li><span class="id">B13</span><span class="que"><b>Exercici 11</b><span>Σₙ és abelià ⇔ n ≤ 2 · full P3</span></span><span class="marques"><span class="xip sense">Relacionat: T1 Prop. 1.9</span><span class="xip preg">P2</span><span class="xip preg">P3</span></span></li>
+          </ul>
+          <div class="cap-targeta"><h3>Alguna cosa no quadra a l'esquema?</h3><span class="detall">Opcional</span></div>
+          <div class="comentari">p. ex. Falta un bloc entre B09 i B10: a la p. 19 hi ha una observació sobre ℤₙ.</div>
+          </div>
+        </details>
+
+        <div class="barra-accio">
+          <div><strong>1 de 4 respostes</strong><span>Quan les tingues totes, s'envien juntes i Claude continua.</span></div>
+          <div class="comptador" aria-hidden="true"><i class="fet"></i><i></i><i></i><i></i></div>
+          <span class="boto gran" aria-disabled="true">Envia les respostes</span>
+        </div>
+
+        <details class="detall-claude">
+          <summary>Detall del que fa Claude <span>58 accions · 4 passos</span></summary>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla 3 -->
+  <div class="pantalla">
+    <h3>3 · Quan ha acabat</h3>
+    <div class="marc">
+      <div class="marc-barra" aria-hidden="true"><i></i><i></i><i></i><span class="url">localhost:8300/#/sessio/estructures-algebraiques/2026-10-07/progres</span></div>
+      <div class="principal">
+        <div class="capcalera">
+          <div>
+            <span class="detall">Estructures Algebraiques · Tema 1. Grups. Subgrups. Homomorfismes de grups</span>
+            <h2>Sessió del 07/10/2026</h2>
+          </div>
+          <nav class="pestanyes" aria-label="Seccions de la sessió (mock-up)"><span>Materials</span><span class="actiu">Progrés</span></nav>
+        </div>
+        <div class="avis blau" role="status">
+          <div><strong>Acabada: la sessió és a les pàgines 12–14 del quadern</strong><span>Tema 1. Grups. Subgrups. Homomorfismes de grups · 14 pàgines</span></div>
+          <span class="boto">Mira-la al quadern</span>
+        </div>
+        <section class="targeta" aria-label="Resum">
+          <div class="cap-targeta"><h3>Resum</h3><span class="detall">12 min · 2.496.180 tokens</span></div>
+          <div class="resum">
+            <div><b>13</b><span>blocs</span></div>
+            <div><b>4</b><span>trobats a la font</span></div>
+            <div><b>6</b><span>correccions marcades</span></div>
+            <div><b>10</b><span>notetes (N29–N38)</span></div>
+          </div>
+          <div class="informe">
+            <p><b>Les teues respostes</b></p>
+            <ul>
+              <li>P1 · Corregit a (1 3 2), marcat.</li>
+              <li>P2 · Σ₂ = {1, a}, amb a = (1 2).</li>
+              <li>P3 · Completat amb un contraexemple, en una caixa «No vist a classe».</li>
+              <li>P4 · Guardades al perfil, a «Altres alumnes».</li>
+            </ul>
+            <p class="nota-petita">L'informe sencer i els fitxers, davall.</p>
+          </div>
+        </section>
+        <details class="detall-claude"><summary>Informe sencer <span>informe.md</span></summary></details>
+        <details class="detall-claude"><summary>Esquema de blocs <span>13 blocs</span></summary></details>
+        <details class="detall-claude"><summary>Detall del que fa Claude <span>71 accions · 6 passos</span></summary></details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Parts ================= -->
+<section class="seccio" aria-labelledby="t-parts">
+  <header>
+    <h2 id="t-parts">Part per part</h2>
+    <p>Què veus, què pots fer, per a què serveix i què cal. Quan hi ha més d'una manera de fer-ho, les opcions van una al costat de l'altra; la marcada és la proposta.</p>
+  </header>
+
+  <div class="parts">
+
+    <!-- Part 1 -->
+    <article class="part" aria-labelledby="p1">
+      <div class="part-cap"><span class="part-num">1</span><h3 id="p1">El detall del que fa Claude, plegat</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Al final de la pàgina, una línia: «Detall del que fa Claude · 47 accions». Si la cliques, s'obri la llista d'ara (cada fitxer que llig, cada ordre…), amb els seus missatges.</p>
+        <p><b>Per a què.</b> Normalment no et cal: és per quan alguna cosa va malament i vols saber per què. Ara és el primer que veus i omple la pàgina.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>Plegat al final</strong><span>Hi és si el vols, però no estorba.</span>
+          <div class="mostra"><span class="linia-feina"><b>Detall del que fa Claude</b> · 47 accions · <a href="#p1">Mostra</a></span></div>
+        </figure>
+        <figure class="alt"><strong>Només l'última acció</strong><span>Una línia davall de l'estat, que va canviant. Sense llista.</span>
+          <div class="mostra"><span class="linia-feina"><span class="gira" aria-hidden="true"></span>Llig wuolah-premium-Tema-1-EA.txt · p. 13</span></div>
+        </figure>
+        <figure class="alt"><strong>Amagat del tot</strong><span>Només l'estat. El detall quedaria als fitxers del registre.</span>
+          <div class="mostra"><span class="linia-feina">—</span></div>
+        </figure>
+      </div>
+    </article>
+
+    <!-- Part 2 -->
+    <article class="part" aria-labelledby="p2">
+      <div class="part-cap"><span class="part-num">2</span><h3 id="p2">L'estat d'ara</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Una targeta blava, dalt: què fa Claude en paraules («Claude busca cada bloc a la font»), el pas, el temps, els tokens i «Atura». Davall, què passarà després: «S'aturarà per fer-te les preguntes que la font no resol».</p>
+        <p><b>Per a què.</b> Saber d'un colp d'ull on és i si has de fer alguna cosa. Els passos de dalt (les píndoles) es queden com ara.</p>
+        <p class="cal"><b>Què cal:</b> res de nou. La web ja sap el pas, perquè Claude escriu «PAS 3 · …». Cada pas tindrà la seua frase («llig els apunts», «divideix en blocs», «busca cada bloc a la font», «escriu els blocs», «compila el PDF»).</p>
+      </div>
+    </article>
+
+    <!-- Part 3 -->
+    <article class="part" aria-labelledby="p3">
+      <div class="part-cap"><span class="part-num">3</span><h3 id="p3">Cada pregunta, la seua secció</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Al punt de control, una targeta per pregunta. Dalt, el número (P1), el bloc (B01 · Exemple) i de quin tipus és el dubte (sembla un error, lectura dubtosa, acaba a mitja frase…). A l'esquerra, a què es refereix (part 4). A la dreta, la pregunta i les respostes.</p>
+        <p><b>Què pots fer.</b> Triar una resposta amb un clic. Segons la pregunta:</p>
+        <ul>
+          <li><b>Opcions</b> (P1, P3, P4): una rodona per opció, amb una explicació curta si cal.</li>
+          <li><b>Sí o no</b> (P2): «Sí» o «No, és…», amb un camp per escriure com és.</li>
+          <li><b>Sempre</b>, una última opció, «Una altra resposta…», per escriure el que vulgues.</li>
+        </ul>
+        <p>Quan respons, la targeta es marca «✓ Resposta». Ara, «sí a tot» es va haver d'interpretar, perquè la P3 no era de sí o no; així no pot passar.</p>
+      </div>
+    </article>
+
+    <!-- Part 4 -->
+    <article class="part" aria-labelledby="p4">
+      <div class="part-cap"><span class="part-num">4</span><h3 id="p4">A què es refereix cada pregunta</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> El tros de la foto on és el dubte, i davall, en dues línies, què diuen els apunts i què diu la font o el quadern («Apunts: … / Quadern: …», o «Llig: … / Entenc: …»). Un enllaç obri la foto sencera.</p>
+        <p><b>Per a què.</b> Respondre sense haver de buscar la pàgina ni recordar què deia el bloc B13.</p>
+        <p class="cal"><b>Què cal:</b> que Claude diga, per a cada pregunta, quina foto és i la zona, en proporcions de la foto (per exemple, de 8 % a 23 % de dalt a baix). La web retalla la foto amb això, sense fer imatges noves. <b>Risc:</b> la zona pot quedar un poc desplaçada, perquè Claude la calcula a ull; per això hi ha «Obre la foto sencera».</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>El tros de la foto</strong><span>Es llig bé i ocupa poc.</span>
+          <div class="retall" role="img" aria-label="Exemple: tros de la foto de la pàgina 18" style="background-image: url(img/b-p18.jpeg); aspect-ratio: 3.11; background-size: 123% auto; background-position: 35.8% 9.1%;"></div>
+        </figure>
+        <figure class="alt"><strong>La foto sencera, amb la zona marcada</strong><span>Es veu on és dins de la pàgina, però la lletra queda menuda.</span>
+          <div class="pagina-marcada"><img src="img/b-p18.jpeg" alt="Exemple: la pàgina 18 sencera, amb la zona de l'exemple marcada"><span class="zona" style="left: 6.7%; top: 7.8%; width: 81.3%; height: 14.7%;"></span></div>
+        </figure>
+        <figure class="alt"><strong>Només el text</strong><span>«Apunts: … / Quadern: …», sense foto. No cal que Claude calcule cap zona.</span>
+          <div class="mostra"><span><b>Apunts:</b> H₁H₂ = {1, (1 2), (1 3), (1 2 3)}</span><span><b>Quadern:</b> (1 2)(1 3) = (1 3 2)</span></div>
+        </figure>
+      </div>
+    </article>
+
+    <!-- Part 5 -->
+    <article class="part" aria-labelledby="p5">
+      <div class="part-cap"><span class="part-num">5</span><h3 id="p5">Enviar les respostes</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Una barra fosca enganxada a baix de la pantalla, com la de «Passa a net» a Materials: «1 de 4 respostes», unes ratlletes que es van omplint i «Envia les respostes». Al mock-up ix al final de tot.</p>
+        <p><b>Què passa en enviar.</b> La web ajunta les respostes en un missatge per a Claude, com el que escrius ara («P1: Corregeix-ho a (1 3 2) i marca la correcció. P2: Sí…»), i Claude continua. Totes van juntes, com diu la decisió 5.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><span class="reco">Proposta</span><strong>Només quan totes tenen resposta</strong><span>El botó no s'activa fins aleshores. Són obligatòries: Claude no pot continuar sense.</span></figure>
+        <figure class="alt"><strong>També amb alguna en blanc</strong><span>Claude tria en les que falten i hi deixa una noteta, perquè ho canvies després.</span></figure>
+      </div>
+    </article>
+
+    <!-- Part 6 -->
+    <article class="part" aria-labelledby="p6">
+      <div class="part-cap"><span class="part-num">6</span><h3 id="p6">L'esquema de blocs</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> Davall de les preguntes, una línia plegada: «Esquema de blocs · 13 blocs · 4 a la font». Si l'obris (clica-la, al mock-up també s'obri), hi ha els blocs de la sessió, un per línia: el número, el tipus i què és, la pàgina dels apunts, i unes etiquetes: on és a la font (o «No és a la font»), si hi ha correcció o noteta, i quina pregunta en parla (P1).</p>
+        <p><b>Per a què.</b> Revisar l'esquema al punt de control, com diu el pas 4, sense llegir una taula de sis columnes.</p>
+        <p><b>Si alguna cosa no quadra</b> (un bloc que falta, que sobra o que no és del tipus que diu), ho escrius al quadre del final de l'esquema, «Alguna cosa no quadra a l'esquema?». És opcional i va amb les respostes.</p>
+      </div>
+      <div class="alternatives">
+        <figure class="alt"><strong>Llista oberta davall de les preguntes</strong><span>Primer el que has de respondre; després, per revisar.</span></figure>
+        <figure class="alt"><strong>Taula com ara</strong><span>Totes les columnes («Comparació → decisió»…). Més completa, però es llig pitjor.</span></figure>
+        <figure class="alt"><span class="reco">Triada</span><strong>Plegada</strong><span>Només la línia «Esquema de blocs · 13 blocs», i s'obri si vols. Naix plegada.</span></figure>
+      </div>
+    </article>
+
+    <!-- Part 7 -->
+    <article class="part" aria-labelledby="p7">
+      <div class="part-cap"><span class="part-num">7</span><h3 id="p7">Quan ha acabat</h3></div>
+      <div class="part-text">
+        <p><b>Què veus.</b> L'avís blau amb les pàgines del quadern on és la sessió i «Mira-la al quadern». Davall, un resum: blocs, quants a la font, correccions i notetes, i com s'han aplicat les teues respostes. L'informe sencer, l'esquema i el detall, plegats.</p>
+        <p><b>Per a què.</b> Ara el resum final de Claude queda enterrat al final del registre. Així és el primer que veus.</p>
+        <p class="cal"><b>Què cal:</b> les xifres del resum les escriu Claude en el mateix fitxer que les preguntes (part 8), en acabar el pas 6. El quadre «Escriu-li a Claude» de «Progrés» es queda davall, per continuar la conversa de la sessió; les correccions del document es demanen al quadern.</p>
+      </div>
+    </article>
+
+    <!-- Part 8 -->
+    <article class="part" aria-labelledby="p8">
+      <div class="part-cap"><span class="part-num">8</span><h3 id="p8">Què canvia per dins</h3></div>
+      <div class="part-text">
+        <p>Perquè la web puga ensenyar cada pregunta per separat, Claude, a més del missatge d'ara, escriu un fitxer a la carpeta de la sessió, <code>punt-control.json</code>, amb l'esquema i les preguntes. Per exemple, la P1:</p>
+      </div>
+<pre class="ruta">{
+  "id": "P1",
+  "bloc": "B01",
+  "tipus": "error dels apunts",
+  "pregunta": "Els apunts fan el producte en l'ordre contrari al del quadern… Què faig?",
+  "foto": "WhatsApp Image 2026-10-08 at 09.40.26.jpeg",
+  "zona": [0.07, 0.08, 0.88, 0.23],
+  "context": [["Apunts", "H₁H₂ = {1, (1 2), (1 3), (1 2 3)}"],
+              ["Quadern", "(1 2)(1 3) = (1 3 2), perquè cd = c∘d"]],
+  "respostes": ["Corregeix-ho a (1 3 2) i marca la correcció",
+                "Deixa (1 2 3), com als apunts"]
+}</pre>
+      <div class="part-text">
+        <p class="cal"><b>Què cal:</b> canviar el pas 4 de les instruccions de Claude (<code>CLAUDE.md</code>, <code>web/prompt.md</code> i <code>flux.html</code>, amb una versió nova). Si un dia Claude no escriu el fitxer, o el fitxer està mal fet, la web ensenya el missatge com ara, amb el quadre de text, i no es perd res.</p>
+      </div>
+    </article>
+
+  </div>
+</section>
+
+<!-- ================= Decisions ================= -->
+<section class="seccio" aria-labelledby="t-decisions">
+  <header>
+    <h2 id="t-decisions">Què s'ha decidit</h2>
+    <p>El 13/10/2026 vas triar totes les propostes, menys l'esquema de blocs, que el vols plegable i plegat d'entrada.</p>
+  </header>
+  <ol class="decisions">
+    <li><b>El detall del que fa Claude</b> (part 1): <span>plegat al final (proposta), només l'última acció, o amagat del tot.</span></li>
+    <li><b>A què es refereix cada pregunta</b> (part 4): <span>el tros de la foto (proposta), la foto sencera amb la zona marcada, o només el text.</span></li>
+    <li><b>Enviar</b> (part 5): <span>només quan totes tenen resposta (proposta), o també amb alguna en blanc.</span></li>
+    <li><b>L'esquema de blocs</b> (part 6): <span><b>plegada, i plegada d'entrada</b> (triada); no: llista oberta davall de les preguntes (era la proposta) o taula com ara.</span></li>
+    <li><b>Comentaris a l'esquema</b> (part 6): <span>un quadre opcional al final de l'esquema plegat (proposta), o res: si cal, ho escrius a «Una altra resposta» d'alguna pregunta.</span></li>
+  </ol>
+</section>
+
+</div>
