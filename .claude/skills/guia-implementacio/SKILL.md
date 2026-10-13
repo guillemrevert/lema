@@ -28,5 +28,6 @@ En valencià i explicativa: cada punt s'explica en paraules planes, sense donar 
 
 1. Si és una pantalla nova, primer el mock-up: una pàgina HTML estàtica, sense res que funcione. La pantalla es mostra neta, tal com es veurà, sense etiquetes damunt. Davall, una explicació part per part (què veus, què pots fer, per a què serveix, què cal), amb les alternatives una al costat de l'altra. La guia l'enllaça.
 2. La guia, i esperar el vist-i-plau.
-3. Implementar seguint la guia. Si cal desviar-se'n, actualitzar-la.
-4. Provar, posar l'estat a «feta» i fer el commit amb la guia inclosa.
+3. Abans de tocar cap fitxer, apuntar-se a `hey.md`: la guia i la fase, la sessió i els fitxers. Si algun ja és d'una altra sessió, esperar o escriure-li.
+4. Implementar seguint la guia. Si cal desviar-se'n, actualitzar-la.
+5. Provar, posar l'estat a «feta», fer el commit amb la guia inclosa i llevar l'entrada de `hey.md`.
