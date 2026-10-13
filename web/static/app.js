@@ -303,14 +303,18 @@ function plegaLateral(si) {
   lateral.querySelector(".plega")?.focus();
 }
 
-function plegaGrup(id) {
+// desDelNom: s'ha clicat el nom de l'assignatura, no la fletxa; el focus torna on era.
+function plegaGrup(id, desDelNom) {
   const plegats = grupsPlegats();
   if (plegats.has(id)) plegats.delete(id);
   else plegats.add(id);
   recorda("lema-grups-plegats", JSON.stringify([...plegats]));
   pintaLateral(ruta());
-  lateral.querySelector(`[data-grup="${id}"]`)?.focus();
+  lateral.querySelector(`[${desDelNom ? "data-grup-nom" : "data-grup"}="${id}"]`)?.focus();
 }
+
+// La pàgina d'una assignatura, a l'última pestanya que s'hi ha mirat (guia W, fase 3).
+const paginaAssig = (a) => `#/assignatura/${a}/${llegeix(`lema-pestanya-${a}`) === "fonts" ? "fonts" : "quaderns"}`;
 
 function pintaLateral(r) {
   const plegada = llegeix("lema-lateral-plegada") === "1";
@@ -323,7 +327,7 @@ function pintaLateral(r) {
         "aria-expanded": "false", onclick: () => plegaLateral(false) }, icona("dreta", 16, 2)),
       h("a", { href: "#/", class: "inicial blau" + (r.vista ? "" : " actiu"), title: "Nova sessió", "aria-label": "Nova sessió" },
         icona("mes", 18, 2.2)),
-      ...assignatures.map((as) => h("a", { href: `#/assignatura/${as.id}/quaderns`,
+      ...assignatures.map((as) => h("a", { href: paginaAssig(as.id),
         class: "inicial" + (r.a === as.id ? " actiu" : ""), title: as.nom, "aria-label": as.nom }, inicials(as.nom))));
     return;
   }
@@ -362,15 +366,16 @@ function pintaLateral(r) {
       icona("mes", 16, 2.2), "Nova sessió"),
     assignatures.map((as) => {
       const plegat = plegats.has(as.id);
-      const fonts = r.vista === "assignatura" && r.a === as.id && r.c === "fonts";
-      const actiu = r.vista === "assignatura" && r.a === as.id && !fonts;
+      const actiu = r.vista === "assignatura" && r.a === as.id;
       return h("div", { class: "grup" },
         h("div", { class: "cap-grup" },
-          h("h2", {}, h("a", { href: `#/assignatura/${as.id}/quaderns`, class: actiu ? "actiu" : null,
-            "aria-current": actiu ? "page" : null }, as.nom)),
-          // La icona porta directament a la pestanya «Fonts» de l'assignatura (guia W).
-          h("a", { href: `#/assignatura/${as.id}/fonts`, class: "fonts-grup" + (fonts ? " actiu" : ""),
-            title: `Fonts ${de(as.nom)}`, "aria-label": `Fonts ${de(as.nom)}`, "aria-current": fonts ? "page" : null },
+          // El nom només plega, com la fletxa; la pàgina de l'assignatura s'obri amb la icona (guia W, fase 3).
+          h("h2", {}, h("button", { type: "button", class: "nom-grup", "data-grup-nom": as.id,
+            "aria-expanded": plegat ? "false" : "true", title: plegat ? "Desplega" : "Plega",
+            onclick: () => plegaGrup(as.id, true) }, as.nom)),
+          h("a", { href: paginaAssig(as.id), class: "fonts-grup" + (actiu ? " actiu" : ""),
+            title: `Quaderns i fonts ${de(as.nom)}`, "aria-label": `Quaderns i fonts ${de(as.nom)}`,
+            "aria-current": actiu ? "page" : null },
           icona("prestatge", 17)),
           h("button", { type: "button", class: "plega-grup", "data-grup": as.id, "aria-expanded": plegat ? "false" : "true",
             "aria-label": `${plegat ? "Desplega" : "Plega"} ${as.nom}`, title: plegat ? "Desplega" : "Plega",
@@ -470,6 +475,7 @@ function pintaAssignatura(a, pestanya, sub, pdf) {
   const as = assignatures.find((x) => x.id === a);
   if (!as) throw new Error("No existeix esta assignatura.");
   pestanya = pestanya === "fonts" ? "fonts" : "quaderns";
+  recorda(`lema-pestanya-${a}`, pestanya);  // la icona de la barra hi tornarà (guia W, fase 3)
   const nou = pestanya === "quaderns" ? formNouQuadern(as) : null;
   const noms = { quaderns: "Quaderns", fonts: "Fonts" };
   const cos = h("div", { class: "contingut" },

@@ -1,6 +1,6 @@
 # Guia W · Les fonts de cada assignatura
 
-**Estat:** feta el 13/10/2026, en dues fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
+**Estat:** feta el 13/10/2026, en tres fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/W-mockup.html`](W-mockup.html), publicat a https://claude.ai/artifact/Y1SRibQb7CyQkBHgC8z9Si (versió 2). Ensenya dues pantalles netes i, davall, set parts explicades. Quan ací es diu «part 3», és la part 3 del mock-up. Les imatges són a `guies/img/`, fora de git.
 
@@ -37,6 +37,7 @@ Totes amb la proposta del mock-up («Les teues propostes en tot», 13/10/2026). 
 | --- | --- | --- |
 | 1 | **Llegir.** La icona a la barra, la pestanya «Fonts» nova amb la fila de fonts, la llista de PDF, el visor i «+ Nova font». La fitxa es veu, però encara no s'edita | Només toca la pàgina (`app.js` i `style.css`). Ja et deixa revisar les fonts, que és el que demanaves |
 | 2 | **Editar.** La fitxa, afegir i llevar PDF, i esborrar la font | Necessita rutes noves al servidor i una línia nova a les instruccions de Claude |
+| 3 | **Tot a la icona.** La icona porta a la pàgina de l'assignatura (quaderns i fonts), i el nom només plega | La vas demanar després de provar les dues primeres |
 
 ---
 
@@ -243,3 +244,73 @@ Amb una font de prova a Anàlisi II, perquè Wuolah no es toque. A `localhost:83
 8. **Esborrar.** Esborra la font: l'avís diu que l'ha triada 1 sessió, sense començar. Després, la font és a la paperera, la pestanya ensenya el formulari, i Materials de la sessió diu que falta triar la font.
 9. **Claude.** Genera el prompt d'una sessió d'Estructures Algebraiques sense enviar-lo, i comprova que diu la línia nova de la fitxa.
 10. Esborra la sessió de prova des de la web (va a la paperera). El quadern de prova, a mà, també a la paperera: la web encara no esborra quaderns.
+
+---
+
+## Fase 3 · Tot a la icona
+
+**Estat:** feta el 13/10/2026. Provada a `localhost:8300`, llegint la pàgina:
+
+- el nom d'Estructures Algebraiques és un botó: el primer clic plega (sense canviar de pàgina, i el focus es queda en el nom), el segon desplega;
+- sense res recordat, la icona porta a «Quaderns» i es veu blava; després de passar per «Fonts» i anar a un quadern, la icona (que allí no és blava) torna a «Fonts», amb Wuolah;
+- el títol de la icona diu «Quaderns i fonts d'Estructures Algebraiques»;
+- a la barra plegada, la inicial d'Estructures Algebraiques porta a «Fonts» i la d'Anàlisi II, a «Quaderns».
+
+### Què i per què
+
+Després de provar les fases 1 i 2, vas dir: «Quaderns i fonts tot a la emoticona i res al nom». Ara, a la barra lateral, el nom de l'assignatura porta a «Quaderns» i la icona porta a «Fonts»: dos llocs per a la mateixa pàgina. Amb esta fase, la icona és l'única porta a la pàgina de l'assignatura, i el nom només serveix per plegar.
+
+### Decisions
+
+Triades el 13/10/2026:
+
+| Què | Triat | No triat |
+| --- | --- | --- |
+| Quina pestanya obri la icona | L'última que vas mirar en eixa assignatura; la primera vegada, «Quaderns» | Sempre «Quaderns»; sempre «Fonts» |
+| Què fa el nom | Plega l'assignatura, com la fletxa del costat | Res: només text |
+
+### Què notaràs
+
+- **La icona dels llibres** porta a la pàgina de l'assignatura, a la pestanya on eres l'última vegada («Quaderns» o «Fonts»). Si eres a «Fonts», també a l'última font que vas mirar (fase 1). La icona es veu blava mentre eres a qualsevol de les dues pestanyes. En passar-hi per damunt diu «Quaderns i fonts d'Estructures Algebraiques».
+- **El nom de l'assignatura** ja no porta enlloc: plega i desplega els quaderns i les sessions d'eixa assignatura, igual que la fletxa.
+- **La barra plegada** (la tira d'inicials): cada inicial també porta a l'última pestanya que vas mirar.
+- «+ Nou quadern», a la barra, continua obrint «Quaderns» amb el formulari obert.
+
+### Com funciona per dins
+
+- **L'última pestanya** es recorda al navegador, una per assignatura (`lema-pestanya-<assignatura>`), cada vegada que obris la pàgina de l'assignatura. Com l'última font de la fase 1.
+- **La icona i les inicials** fan servir eixa pestanya en l'adreça (`#/assignatura/<a>/quaderns` o `…/fonts`).
+- **El nom** passa de ser un enllaç a ser un botó que crida el mateix que la fletxa (`plegaGrup`). Després de plegar, el focus torna al botó que has clicat, perquè amb el teclat no et perdes.
+
+### Fitxers
+
+| Fitxer | Què hi canvia |
+| --- | --- |
+| `web/static/app.js` | `pintaLateral`: el nom, un botó que plega; la icona i les inicials, amb l'última pestanya. `pintaAssignatura` recorda la pestanya. `plegaGrup` torna el focus al botó clicat |
+| `web/static/style.css` | El nom com a botó (sense subratllat d'enllaç actiu) |
+| `web-local.md` | La línia de «Les fonts de l'assignatura» i la W del pla |
+
+### Instruccions de Claude
+
+Cap canvi.
+
+### Dades
+
+Cap canvi.
+
+### Passos
+
+1. `web/static/app.js` i `style.css`.
+2. `web-local.md`.
+3. Prova (baix).
+4. Tancar: guia «feta» i commit.
+
+### Com es prova
+
+A `localhost:8300`:
+
+1. Clica el nom d'Estructures Algebraiques: es pleguen els quaderns i les sessions, i la pàgina no canvia. Torna'l a clicar: es despleguen.
+2. Clica la icona d'Estructures Algebraiques: «Quaderns» (si no hi havies estat abans, o hi eres l'última vegada). Ves a «Fonts» amb la pestanya de dalt, ves a un quadern i torna a clicar la icona: obri «Fonts», amb Wuolah.
+3. La icona es veu blava a «Quaderns» i a «Fonts», i no a la pàgina d'un quadern o d'una sessió.
+4. Plega la barra sencera: la inicial d'Estructures Algebraiques porta també a «Fonts».
+5. Amb el teclat (Tab fins al nom i Intro), el nom plega i el focus es queda en el nom.
