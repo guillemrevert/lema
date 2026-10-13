@@ -345,6 +345,37 @@ def nombre_events(carpeta):
     return ruta.read_text(encoding="utf-8").count("\n") if ruta.exists() else 0
 
 
+def text_net(text):
+    """El text d'un missatge de Claude sense les línies «PAS n · …» i «ESTAT: …», que són per a la web."""
+    return re.sub(r"^\W*ESTAT:.*$", "", re.sub(r"^\W*PAS\s+\d\b.*$", "", text, flags=re.M), flags=re.M | re.I).strip()
+
+
+def resum_registre(carpeta):
+    """El registre de Claude de la sessió, en una sola lectura (cada accés al disc costa, guia X): quantes línies
+    té, com i quan va començar l'últim torn («inici», en passar a net, o «usuari», amb un missatge teu), l'últim
+    text o error de Claude en eixe torn i quant va durar. «Progrés» ho ensenya sense esperar el registre (guia B)."""
+    try:
+        linies = (carpeta / "registre" / "events.jsonl").read_text(encoding="utf-8").split("\n")[:-1]
+    except FileNotFoundError:
+        return {"events": 0, "torn": None, "ultim_missatge": None, "ultim_error": None, "durada_torn": None}
+    torn = missatge = error = durada = None
+    for linia in linies:
+        try:
+            ev = json.loads(linia)
+        except ValueError:
+            continue
+        if ev.get("t") in ("inici", "usuari"):
+            torn, missatge, error, durada = {"tipus": ev["t"], "ts": ev.get("ts")}, None, None, None
+        elif ev.get("t") == "text" and text_net(ev.get("text", "")):
+            missatge = ev["text"]
+        elif ev.get("t") == "error":
+            error = ev.get("text")
+        elif ev.get("t") == "fi":
+            durada = ev.get("durada")
+    return {"events": len(linies), "torn": torn, "ultim_missatge": missatge, "ultim_error": error,
+            "durada_torn": durada}
+
+
 # ---------- Assignatures, fonts i quaderns ----------
 
 @app.get("/api/assignatures")
@@ -621,7 +652,7 @@ def sessio(a: str, s: str):
     # Si un altre Claude treballa en el quadern, esta sessió no es pot passar a net fins que acabe.
     ocupat = claude_al_quadern(a, dades["quadern"]) if dades["quadern"] and (a, s) not in processos else None
     return {**dades, "fitxers": fitxers, "pdf": document["pdf"] if document else None,
-            "editats": editats_de_sessio(a, dades), "events": nombre_events(carpeta), "ocupat": ocupat}
+            "editats": editats_de_sessio(a, dades), **resum_registre(carpeta), "ocupat": ocupat}
 
 
 # ---------- Quaderns ----------
