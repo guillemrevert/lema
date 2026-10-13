@@ -8,7 +8,13 @@ Treballes des de la web local (`web-local.md`), així que els materials no són 
 - **Fonts:**
 {fonts}
 
-  Què és i d'on surt cada una, al `font.json` de la seua carpeta. El text de cada PDF ja està extret en un `.txt` al costat, i `index.txt` té una línia per cada definició, teorema, lema… amb la pàgina. Mira primer l'índex, després el text de les pàgines que calguen, i la pàgina com a imatge només si has de copiar una fórmula: al text, els subíndexs i superíndexs ixen aplanats.
+  Què és i d'on surt cada una, al `font.json` de la seua carpeta. El text de cada PDF ja està extret, i `busca-font.py` te n'ensenya només el que cal:
+
+  - `python busca-font.py <carpeta de la font> --index <PDF>…`: l'índex (una línia per cada definició, teorema, lema… amb la pàgina), només dels temes de la sessió. Si no se sap el tema, sense cap PDF: l'índex sencer.
+  - `python busca-font.py <carpeta de la font> "Teorema 2.19" "Lema 2.17" …`: el passatge de cada resultat, amb la demostració i la pàgina. Demana'ls tots en una sola ordre.
+  - `python busca-font.py <carpeta de la font> --pagina <PDF> <pàgina>`: una pàgina sencera, per als exemples i les observacions, que no tenen número.
+
+  No llegeixes els `.txt` sencers ni pàgines senceres per buscar un resultat. Mira la pàgina del PDF com a imatge només si has de copiar una fórmula: al text, els subíndexs i superíndexs ixen aplanats.
 
   Si hi ha més d'una font, busca cada bloc a totes. Si és a més d'una i no coincideixen, segueix la decisió 7 de `CLAUDE.md`.
 - **Nota de l'usuari:** {nota}

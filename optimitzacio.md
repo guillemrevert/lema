@@ -52,7 +52,7 @@ Dades de la primera crida de cada sessió, que és la que llig els materials:
 | 8 | Compilar amb [`compila.py`](compila.py): fa les dues passades de `pdflatex` i només torna "OK, N pàgines" o l'error amb fitxer i línia | Baix–mitjà | Aplicada: la web l'usa |
 | 9 | No mirar el PDF compilat com a imatge: Claude es fia de `compila.py` i el PDF el revisa l'usuari | Mitjà | Acordat |
 | 10 | Un dossier de la sessió fet per un programa (rutes, fitxa, perfil, diccionari, materials) i un prompt que no convide a explorar | Uns 8.000–10.000 tokens i 4–6 accions per sessió | Aprovada: [guia](guies/optimitzacio-tokens.md), fase 4 |
-| 11 | `busca-font.py`: l'índex només dels temes de la sessió i el passatge exacte de cada resultat. La cerca per semblança, la idea de partida, va eixir malament en el prototip (vegeu baix) | Uns 5.000 tokens per sessió | Aprovada: guia, fase 3 |
+| 11 | `busca-font.py`: l'índex només dels temes de la sessió i el passatge exacte de cada resultat. La cerca per semblança, la idea de partida, va eixir malament en el prototip (vegeu baix) | Uns 5.000 tokens per sessió (a la del 07/10, de 27.000 a 12.400 caràcters de la font) | Feta el 13/10/2026 (guia, fase 3) |
 | 12 | [`retalla.py`](retalla.py): retallar i ampliar una zona de la foto (Pillow) en lloc de compilar un PDF | De 8.000 a uns 200–1.000 tokens per ampliació | Feta el 13/10/2026 (guia, fase 2). Claude encara no la coneix: el prompt la presentarà a la fase 4 |
 | 13 | Carregar només les eines que calen a Claude Code (`--tools "Bash,Read,Write,Edit"` i `--disable-slash-commands`) | Part dels 27.000 tokens de començar, a cada crida | Feta el 13/10/2026 (guia, fase 1). Falta mesurar quant baixa |
 | 14 | Respondre el punt de control abans d'una hora | Evita uns 0,85 $ per sessió | Consell per a l'usuari |
@@ -75,6 +75,7 @@ Les mesures 10–13 juntes podrien estalviar entre un 15 i un 25 % per sessió, 
 - **Subíndexs i superíndexs aplanats:** `σ i(α1)` pot ser σ^i(α₁) o σ_i(α₁). Per al pas 3 (identificar i comparar) el text basta. Per copiar una fórmula al document final, cal mirar eixa pàgina com a imatge.
 - **Espais perduts** al voltant dels símbols (`SigaGun grup`). Es llig bé igualment.
 - **Delimitadors grans** (claus de casos, parèntesis molt grans) que ixen com a lletres soltes: `®`, `Ç`, `å`.
+- **La ce trencada ix partida** (`a¸ cò`): `extreu-font.py` arregla els accents, però no la ce trencada. Es llig bé igualment; es podria afegir a la taula d'accents.
 - **Específic de Wuolah:** l'script coneix la portada i el peu de pàgina de Wuolah. Amb una altra font (llibre, diapositives) caldrà comprovar on va el número de pàgina. Si no el troba, posa `p. ?` i deixa el número del PDF.
 - **Fonts escanejades:** amb un escaneig no hi ha text i la mesura 2 no serveix.
 
