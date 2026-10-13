@@ -30,4 +30,4 @@ En valencià i explicativa: cada punt s'explica en paraules planes, sense donar 
 2. La guia, i esperar el vist-i-plau.
 3. Abans de tocar cap fitxer, apuntar-se a `hey.md`: la guia i la fase, la sessió i els fitxers. Si algun ja és d'una altra sessió, esperar o escriure-li.
 4. Implementar seguint la guia. Si cal desviar-se'n, actualitzar-la.
-5. Provar, posar l'estat a «feta», fer el commit amb la guia inclosa i llevar l'entrada de `hey.md`.
+5. Provar, posar l'estat a «feta», fer el commit amb la guia inclosa i llevar l'entrada de `hey.md`. Si la feina ha deixat alguna cosa que una sessió nova ha de saber abans de tocar `web/` i que no es veu al codi, s'afig a `web/CLAUDE.md` en el mateix commit.

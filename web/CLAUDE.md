@@ -1,0 +1,8 @@
+# web/ · el que cal saber abans de tocar la web
+
+Claude Code carrega este fitxer quan una sessió treballa amb fitxers de `web/`. Com funciona la web, en detall: «Com funciona» de [`web-local.md`](../web-local.md).
+
+- **El disc de `dades/` és lent.** És a Windows i el contenidor el veu a través del muntatge de Docker Desktop: cada accés (mirar si existeix, obrir, llegir, llistar una carpeta) tarda 15–35 ms, i en una pàgina se'n sumen molts. Per llegir moltes fitxes, `alhora()` i `resultats()` (o `totes_les_sessions()`), no un bucle. No mires si un fitxer existeix si després l'has d'obrir igualment: obri'l i, si no hi és, ja fallarà ([guia X](../guies/X-velocitat.md)).
+- **El servidor es recarrega sol.** Els canvis a `web/*.py` s'apliquen en desar (uvicorn `--reload`), i la pàgina oberta es recarrega sola quan canvia `web/static/` (guia R). Un canvi a `docker-compose.yml` necessita `docker compose up -d`; al `Dockerfile`, `docker compose build` i després `up -d`. Tots dos tornen a crear el contenidor i aturen el Claude que estiga passant a net: abans, mira que no n'hi haja cap (`docker compose exec lema ps -eo args`).
+- **Les dades són les de l'usuari.** Les proves es fan amb còpies o carpetes temporals dins de `dades/`, i s'esborren en acabar. Si la prova crea una carpeta que no existia (p. ex. `dades/assignatures/analisi-2/`), també.
+- **Per mesurar o provar dins del contenidor**, sense tocar el codi: un script que importa `web/app.py` (`sys.path.insert(0, "/lema/web")`) i crida les funcions, amb `docker compose exec -T lema python - < script.py` (des de Git Bash, amb `MSYS_NO_PATHCONV=1`).

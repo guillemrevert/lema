@@ -59,6 +59,7 @@ Els canvis a `web/` s'apliquen sense reconstruir la imatge; els del `Dockerfile`
 - **Quaderns i sessions** (decisió 9 de `CLAUDE.md`): un quadern és un document que creix sessió a sessió (un tema, unes pràctiques, un article…), i una sessió és cada vegada que s'hi afegeixen apunts. Cada sessió té quadern, obligatori (desplegable i «+» a Nova sessió i a Materials). Claude escriu els blocs a `quaderns/<quadern>/blocs/<sessió>/`, amb etiquetes `\label{<sessió>-Bnn}`, n'afegeix els `\input` al `quadern.tex` en ordre de data i compila el quadern. L'esquema, l'informe i `millores.md` es queden a la carpeta de la sessió, i Resultat ensenya el PDF del quadern. Les sessions sense quadern (d'abans) ixen a «Sense quadern» i no es poden passar a net fins que en tenen un.
 - **Versió de la pàgina** (guia R): cada vegada que et mous per la web, la pàgina demana `/api/versio` (la data de l'últim canvi a `web/static/`). Si ha canviat des que es va obrir la pestanya, es recarrega sola.
 - **`dades/` es llig alhora** (guia X): `dades/` és a Windows i el contenidor la veu a través del muntatge de Docker Desktop, on cada accés al disc tarda 15–35 ms (al disc del contenidor, menys de 0,1 ms). Per això el servidor llig les fitxes de les sessions, les fonts i els quaderns totes alhora, amb 16 fils (`lectors`, `alhora()` i `totes_les_sessions()` a `web/app.py`), i no una darrere l'altra: `/api/assignatures`, que la pàgina demana en cada clic, ha passat de 0,5–3 s a uns 0,1 s, i ja no creix amb cada sessió. El port es publica també a `[::1]`: Windows prova primer IPv6 en escriure `localhost`, i sense ningú allí perdia 0,2–0,3 s cada vegada que s'obria una connexió.
+- **Instruccions per a qui toca la web** ([`guies/instruccions-web.md`](guies/instruccions-web.md)): [`web/CLAUDE.md`](web/CLAUDE.md) diu, en poques línies, el que una sessió ha de saber abans de programar la web i que no es veu al codi (el disc lent, com es recarrega el servidor, que les dades són les de l'usuari, com es prova dins del contenidor). Claude Code el carrega sol quan una sessió llig o edita un fitxer de `web/`. El Claude que passa a net no el veu, perquè no treballa dins de `web/`. Es manté al dia en tancar cada guia (skill `guia-implementacio`, pas 5).
 - **Compilar:** Claude fa servir [`compila.py`](compila.py) i [`plantilla-base.tex`](plantilla-base.tex), que ara és a l'arrel del repositori.
 - **La pàgina del quadern** (guia Q, fase 2; `#/quadern/<assignatura>/<quadern>`): el document, «PDF sencer» o «Costat a costat», i la llista de sessions. La barra lateral té els quaderns, cada un amb un enllaç al document i les seues sessions dins. La sessió només té «Materials» i «Progrés» (l'informe i els fitxers són a «Progrés»), i quan està acabada un avís porta al quadern.
 - **Correccions del quadern** (guia Q, fase 3): a la pàgina del quadern, davall de «Sessions», «Hi ha alguna cosa malament al quadern?». Cada quadern té la seua conversa de Claude per a les correccions: la primera la crea amb `web/prompt-quadern.md` i les següents la continuen. La conversa, l'estat i els tokens van a `quadern.json`; el que fa Claude, a `quaderns/<quadern>/registre/`, i els fitxers adjunts, a `adjunts/`. Només hi pot haver un Claude alhora en cada quadern: mentre el corregeix, no es pot passar a net ni esborrar cap sessió del quadern ni editar el LaTeX, i al revés. Les sessions es queden amb la seua conversa per passar a net i per al punt de control.
@@ -197,6 +198,16 @@ El 13/10/2026 l'usuari va triar llegir les fitxes alhora. Les altres maneres de 
 - **Moure `dades/` a un disc de Docker:** les dades deixarien de vore's des de Windows.
 
 Per a la connexió: obrir sempre la web a `127.0.0.1:8300`, o que el servidor no tanque les connexions als 5 s. Es va triar publicar el port també a `[::1]`.
+
+### Instruccions per a qui toca la web (`web/CLAUDE.md`)
+
+El 13/10/2026 l'usuari va triar `web/CLAUDE.md`, que només veuen les sessions que toquen `web/`. No es van triar:
+
+- **Posar-ho a `CLAUDE.md` de l'arrel:** el llig també el Claude que passa a net, en cada sessió, i no li serveix de res.
+- **Només un enllaç des de l'arrel:** Claude no obri un fitxer enllaçat si no decideix que li cal.
+- **Copiar-hi «Com funciona» sencer:** seria el mateix escrit en dos llocs, i un envelliria.
+- **Moure-hi «Com treballar amb l'usuari»:** les sessions que no toquen `web/` (`flux.html`, la plantilla, les guies) no el veurien.
+- **Que cada sessió ho guarde a la seua memòria:** la memòria no viatja amb el repositori.
 
 ### Motor
 
