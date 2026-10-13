@@ -4,6 +4,7 @@ services:
     restart: unless-stopped        # torna a arrancar sola quan s'obri Docker Desktop
     ports:
       - "127.0.0.1:8300:8000"   # http://localhost:8300, només des d'este ordinador
+      - "[::1]:8300:8000"       # també en IPv6: Windows prova primer ::1 i, si no hi ha ningú, hi perd 0,2–0,3 s (guia X)
     env_file:
       - path: .env               # CLAUDE_CODE_OAUTH_TOKEN (vegeu .env.example)
         required: false

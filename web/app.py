@@ -28,6 +28,7 @@ import shutil
 import subprocess
 import sys
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
@@ -54,6 +55,8 @@ app = FastAPI()
 processos = {}  # (assignatura, sessió), o clau_quadern() per a les correccions -> procés de Claude en marxa
 aturats = set()  # claus de processos que l'usuari ha aturat
 tasques = set()  # perquè asyncio no perda les tasques en segon pla
+# dades/ és a Windows: cada accés al disc tarda 15–35 ms, però se'n poden fer molts alhora (guia X).
+lectors = ThreadPoolExecutor(16)
 
 
 # ---------- Utilitats ----------
@@ -93,6 +96,31 @@ def dins(base, ruta):
 
 def llig(ruta):
     return json.loads(ruta.read_text(encoding="utf-8"))
+
+
+def subcarpetes(carpeta):
+    """Els noms de dins de la carpeta, ordenats, o [] si no existeix. Un sol accés al disc."""
+    try:
+        return sorted(os.listdir(carpeta))
+    except FileNotFoundError:
+        return []
+
+
+def alhora(funcio, elements):
+    """Comença funcio(element) per a cada element, tots alhora (guia X). resultats() els espera."""
+    return [lectors.submit(funcio, e) for e in elements]
+
+
+def resultats(futurs):
+    """Els resultats d'alhora(), en ordre, sense els elements que no tenen fitxa (una carpeta sense
+    sessio.json, font.json o quadern.json)."""
+    res = []
+    for futur in futurs:
+        try:
+            res.append(futur.result())
+        except (FileNotFoundError, NotADirectoryError):
+            pass
+    return res
 
 
 def escriu(ruta, dades):
@@ -164,11 +192,21 @@ def migra_dades():
     print(f"LEMA: temes i classes passen a quaderns i sessions. Còpia d'abans a {copia}", flush=True)
 
 
-def llig_sessio(a, s):
-    dades = migra_sessio(llig(carpeta_sessio(a, s) / "sessio.json"))
-    if dades["estat"] == "en_marxa" and (a, s) not in processos:
+def fitxa_sessio(a, carpeta):
+    dades = migra_sessio(llig(carpeta / "sessio.json"))
+    if dades["estat"] == "en_marxa" and (a, carpeta.name) not in processos:
         dades["estat"] = "aturada"  # el servidor s'ha reiniciat a mitges
     return dades
+
+
+def llig_sessio(a, s):
+    return fitxa_sessio(a, carpeta_sessio(a, s))
+
+
+def totes_les_sessions(a):
+    """[(carpeta, dades de sessio.json)] de les sessions de l'assignatura, per ordre de carpeta, llegides alhora."""
+    base = carpeta_assig(a) / "sessions"
+    return resultats(alhora(lambda s: (s, fitxa_sessio(a, base / s)), subcarpetes(base)))
 
 
 def desa_sessio(a, s, **canvis):
@@ -226,10 +264,12 @@ def info_quadern(carpeta):
     dades = llig(carpeta / "quadern.json")
     info = {"id": carpeta.name, "nom": dades["nom"], "creat": dades.get("creat"), "pdf": None}
     pdf = carpeta / "quadern.pdf"
-    if pdf.exists():
-        st = pdf.stat()
-        info["pdf"] = {"pagines": pagines_pdf(pdf, st.st_mtime_ns),
-                       "data": datetime.fromtimestamp(st.st_mtime).astimezone().isoformat(timespec="seconds")}
+    try:
+        st = pdf.stat()  # un sol accés al disc, en lloc de exists() i stat()
+    except FileNotFoundError:
+        return info
+    info["pdf"] = {"pagines": pagines_pdf(pdf, st.st_mtime_ns),
+                   "data": datetime.fromtimestamp(st.st_mtime).astimezone().isoformat(timespec="seconds")}
     return info
 
 
@@ -309,18 +349,22 @@ def nombre_events(carpeta):
 
 @app.get("/api/assignatures")
 def assignatures():
+    """La pàgina la demana cada vegada que et mous per la web. Primer les carpetes de totes les assignatures i
+    després totes les fitxes, cada tanda alhora: una darrere l'altra tardaven de 0,5 a 3 s (guia X)."""
+    carpetes = {(a, tipus): carpeta_assig(a) / tipus for a in ASSIGNATURES for tipus in ("sessions", "fonts", "quaderns")}
+    noms = dict(zip(carpetes, lectors.map(subcarpetes, carpetes.values())))
+    fitxes = {}
+    for (a, tipus), carpeta in carpetes.items():
+        llegeix = {"sessions": lambda c, a=a: fitxa_sessio(a, c), "fonts": info_font, "quaderns": info_quadern}[tipus]
+        fitxes[a, tipus] = alhora(llegeix, [carpeta / n for n in noms[a, tipus]])
     resultat = []
     for a, nom in ASSIGNATURES.items():
-        base = carpeta_assig(a)
-        sessions = []
-        for fitxa in sorted((base / "sessions").glob("*/sessio.json"), reverse=True):
-            d = llig_sessio(a, fitxa.parent.name)
-            # fonts: la pestanya «Fonts» diu en quantes sessions s'ha triat cada una (guia W).
-            sessions.append({k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "quadern", "fonts")})
-        fonts = [info_font(f.parent) for f in sorted((base / "fonts").glob("*/font.json"))]
-        quaderns = sorted((info_quadern(f.parent) for f in (base / "quaderns").glob("*/quadern.json")),
-                          key=lambda q: ordre_natural(q["nom"]))
-        resultat.append({"id": a, "nom": nom, "sessions": sessions, "fonts": fonts, "quaderns": quaderns})
+        # fonts: la pestanya «Fonts» diu en quantes sessions s'ha triat cada una (guia W).
+        sessions = [{k: d.get(k) for k in ("id", "data", "titol", "estat", "pas", "quadern", "fonts")}
+                    for d in reversed(resultats(fitxes[a, "sessions"]))]
+        quaderns = sorted(resultats(fitxes[a, "quaderns"]), key=lambda q: ordre_natural(q["nom"]))
+        resultat.append({"id": a, "nom": nom, "sessions": sessions, "fonts": resultats(fitxes[a, "fonts"]),
+                         "quaderns": quaderns})
     return resultat
 
 
@@ -397,12 +441,7 @@ def carpeta_font(a, f):
 
 def sessions_amb_font(a, f):
     """Les sessions de l'assignatura que tenen triada la font: [(sessió, dades de sessio.json)]."""
-    sessions = []
-    for fitxa in sorted((carpeta_assig(a) / "sessions").glob("*/sessio.json")):
-        dades = llig_sessio(a, fitxa.parent.name)
-        if any(t["id"] == f for t in dades["fonts"]):
-            sessions.append((fitxa.parent.name, dades))
-    return sessions
+    return [(s, dades) for s, dades in totes_les_sessions(a) if any(t["id"] == f for t in dades["fonts"])]
 
 
 def claude_amb_font(a, sessions):
@@ -611,11 +650,7 @@ def blocs_del_quadern(carpeta):
 
 def sessions_del_quadern(a, q):
     """Les sessions del quadern, en ordre de data."""
-    sessions = []
-    for fitxa in (carpeta_assig(a) / "sessions").glob("*/sessio.json"):
-        d = llig_sessio(a, fitxa.parent.name)
-        if d["quadern"] == q:
-            sessions.append(d)
+    sessions = [d for _, d in totes_les_sessions(a) if d["quadern"] == q]
     return sorted(sessions, key=lambda d: (d["data"], ordre_natural(d["id"])))
 
 
@@ -1149,8 +1184,10 @@ async def events_quadern(a: str, q: str, des_de: int = 0):
 @app.get("/api/versio")
 def versio():
     """Canvia cada vegada que canvia un fitxer de la pàgina (web/static/). La pàgina oberta la compara
-    amb la que tenia en carregar-se i, si és diferent, es recarrega (guia R)."""
-    return {"versio": str(max(f.stat().st_mtime_ns for f in (ARREL / "web" / "static").iterdir() if f.is_file()))}
+    amb la que tenia en carregar-se i, si és diferent, es recarrega (guia R). Les dates, alhora (guia X)."""
+    with os.scandir(ARREL / "web" / "static") as entrades:
+        fitxers = [e.path for e in entrades if e.is_file()]
+    return {"versio": str(max(lectors.map(lambda f: os.stat(f).st_mtime_ns, fitxers)))}
 
 
 @app.middleware("http")
