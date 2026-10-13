@@ -102,6 +102,7 @@ Canvis que es van apuntant des del 06/10/2026. Es fan per fases, i cada fase té
 | V | `pdftoppm` (poppler-utils) al `Dockerfile`, perquè Claude puga mirar el PDF compilat com a imatge per revisar-lo. `millores.md` del 07/10 | `docker compose build` |
 | W | Fonts per assignatura: una icona al costat del nom de cada assignatura, a la barra lateral, obri directament la pestanya «Fonts». Allí es tria la font, es llig el PDF dins de la web i s'edita (fitxa, afegir o llevar PDF, esborrar-la). Demanat el 13/10/2026: la web no tenia cap manera de revisar les fonts. Mock-up: [`guies/W-mockup.html`](guies/W-mockup.html), publicat a https://claude.ai/artifact/Y1SRibQb7CyQkBHgC8z9Si (versió 2), amb cinc decisions al final: l'usuari va triar totes les propostes. Guia [`guies/W-fonts.md`](guies/W-fonts.md), en dues fases. **Feta** el 13/10/2026: fase 1 (llegir: la icona a la barra, la fila de fonts, la llista de PDF, el visor i la fitxa) i fase 2 (editar: la fitxa, afegir i llevar PDF, esborrar la font; `flux.html` v10). Fase 3, demanada i feta el mateix dia: «Quaderns i fonts tot a la emoticona i res al nom» (la icona obri l'última pestanya de l'assignatura i el nom només plega) | — |
 | X | Que moure's per la web no tarde. Cada clic demana la llista sencera (`/api/assignatures`), que tarda de 0,4 a 3 s: el servidor fa ~34 accessos a `dades/`, un darrere l'altre, i a través del muntatge de Windows cada un tarda 15–35 ms (i creix amb cada sessió). A més, `localhost` perd 0,2–0,3 s provant primer IPv6 cada vegada que s'obri una connexió. Es va veure en fer la W (13/10/2026). Guia [`guies/X-velocitat.md`](guies/X-velocitat.md). **Feta** el 13/10/2026: el servidor llig les fitxes alhora i amb menys accessos (la llista, de 749 a 119 ms dins del contenidor, comparades en el mateix moment; la pàgina del quadern, de 626 a 148 ms), i el port es publica també a `[::1]` (la connexió, de 210 a 2 ms) | — |
+| Y | La web amb l'estil nou de `disseny/disseny.md`, tota d'un colp: l'estil B, «Nit d'estudi» (barra lateral blau fosc amb degradat i estrelles, centre crema, taronja per destacar, títols en Outfit i el mussol on toca). L'usuari va triar la B el 13/10/2026 entre tres estils. Mock-up: [`guies/Y-mockup.html`](guies/Y-mockup.html), publicat a https://claude.ai/artifact/6ZWK6MzZ8QFZkvhR77tAYB (versió 1, els tres estils; versió 2, totes les pantalles amb la B). Guia [`guies/Y-estil.md`](guies/Y-estil.md), en dues fases. **Fase 1 feta** el 13/10/2026: colors, lletres i formes a tota la web (`style.css`), Outfit, i el cap del mussol com a logo i icona de la pestanya (`/icona.svg`, que és `disseny/recursos-visuals/mascota.svg` retallat). Falta la fase 2: el mussol a Progrés, als errors, a les pantalles buides i a Nova sessió | Res |
 
 **Mock-up de la E, la O i la P (10/10/2026), estàtic:** https://claude.ai/artifact/WiexpoKYYX9KEYjDHxzhum (el fitxer és `guies/E-mockup.html`). Quatre pantalles netes (nova classe; la classe creada amb els materials; pàgina d'assignatura; barra lateral plegada) i setze parts explicades amb les alternatives una al costat de l'altra. La guia `guies/E-temes.md` té la taula de decisions i quatre preguntes pendents (si la creu de la captura és esborrar la classe, si el Tema 1 comença amb el document que ja hi ha, si el formulari de pujar fonts se'n va a l'assignatura, i barra lateral amb una o dues línies per classe).
 
@@ -219,6 +220,19 @@ El 13/10/2026 l'usuari va triar que les instruccions partiren de la guia de marc
 - **Aplicar-les també al PDF:** colors o mascota als apunts passats a net. El PDF continua amb el seu aspecte de llibre.
 - **Adaptar la web dins de la mateixa guia,** en lloc d'una guia pròpia amb mock-up.
 - **Triar ja una lletra nova** en lloc de les de la web d'ara.
+
+### Estil de la web (guia Y)
+
+El 13/10/2026 l'usuari va triar l'estil B, «Nit d'estudi», entre els tres de la versió 1 del mock-up (`guies/Y-mockup.html`). No es van triar:
+
+- **A · Quadern de quadrícula:** tot pla, sense degradats, barra lateral crema, cantons poc arredonits, una quadrícula fluixa darrere del títol i on espera el mussol, i títols en Fraunces. La més tranquil·la i la més pareguda a la web d'abans.
+- **C · Plomes i albada:** fons crema amb un resplendor préssec, barra lateral blanca que sura, tot molt rodó (24 px) amb ombres càlides, un núvol amb rínxols darrere del títol, les taques de la panxa del mussol com a estampat i títols en Nunito. La més amable, però la més decorada.
+- **Lletra del nom i dels títols:** Fraunces, Nunito o Newsreader (la d'abans) en lloc d'Outfit.
+- **Logo:** només el nom LEMA, sense el cap del mussol.
+- **Barra lateral sense estrelles,** només amb el degradat.
+- **Barra d'acció blanca** amb el botó blau fosc, en lloc de blau fosc amb el botó taronja.
+- **El mussol content quan acaba la sessió** (tanca els ulls i balanceja el cap al costat del resum). Caldria afegir «quan acaba» a `disseny.md`.
+- **Implementar sense mock-up de totes les pantalles** i revisar-ho directament a la web.
 
 ### Progrés i punt de control (guia B)
 

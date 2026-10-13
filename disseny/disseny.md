@@ -10,7 +10,15 @@ Les instruccions per a tot el que és visual. Parteixen de la guia de marca ([`r
 
 El PDF dels apunts no: manté el seu aspecte de llibre (decisió 2 de `CLAUDE.md`).
 
-**Mentre la web no s'adapte.** La web encara té l'aspecte d'abans (fons gris clar, blau `#1F4FB8`). S'adaptarà a esta guia tota d'un colp, amb una guia pròpia i un mock-up. Fins llavors, les pantalles de la web i els seus mock-ups mantenen l'aspecte d'ara, perquè la web no quede mig vella mig nova. Només s'hi pot afegir la mascota. Les pàgines publicades ja segueixen este document.
+**La web.** Des del 13/10/2026 segueix esta guia, amb l'estil B, «Nit d'estudi» ([guia Y](../guies/Y-estil.md), mock-up a [`guies/Y-mockup.html`](../guies/Y-mockup.html)):
+
+- la barra lateral, blau fosc amb un degradat i unes estrelles, i el text en crema;
+- el centre, crema amb targetes blanques;
+- botons i interruptors en forma de pastilla;
+- el taronja, per destacar damunt del blau fosc;
+- les etiquetes de l'esquema de blocs, amb els colors de les marques del PDF.
+
+Les pantalles noves i els seus mock-ups es fan igual: les variables de `web/static/style.css` són la referència. El mussol hi arriba a la fase 2 de la guia Y.
 
 ## Nom
 
@@ -47,7 +55,7 @@ La guia de marca no en fixa cap. De moment:
 
 - **IBM Plex Sans** per al text.
 - **IBM Plex Mono** per al codi.
-- La lletra del nom LEMA es triarà en la guia d'adaptar la web. Mentrestant, la de la web d'ara (Newsreader).
+- **Outfit** per al nom LEMA, els títols i les xifres grans (guia Y).
 
 ## Formes i espai
 

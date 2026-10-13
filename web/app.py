@@ -34,7 +34,7 @@ from datetime import datetime
 from pathlib import Path, PurePosixPath
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from PIL import Image
 from pydantic import BaseModel
@@ -1313,6 +1313,15 @@ def versio():
     with os.scandir(ARREL / "web" / "static") as entrades:
         fitxers = [e.path for e in entrades if e.is_file()]
     return {"versio": str(max(lectors.map(lambda f: os.stat(f).st_mtime_ns, fitxers)))}
+
+
+@app.get("/icona.svg")
+def icona():
+    """El cap del mussol, per al logo de la barra i la icona de la pestanya (guia Y): el mascota.svg de
+    disseny/recursos-visuals/ amb el requadre retallat pel cap. No es deforma res: només se'n mira un tros."""
+    svg = (ARREL / "disseny" / "recursos-visuals" / "mascota.svg").read_text(encoding="utf-8")
+    svg = svg.replace('viewBox="0 0 700 860" width="700" height="860"', 'viewBox="35 5 630 630"', 1)
+    return Response(svg, media_type="image/svg+xml")
 
 
 @app.middleware("http")

@@ -322,7 +322,7 @@ function pintaLateral(r) {
   // Plegada: el logo, el «+» de nova sessió i una inicial per assignatura.
   if (plegada) {
     lateral.replaceChildren(
-      h("a", { href: "#/", class: "logo-mini", title: "LEMA", "aria-label": "LEMA" }, "L"),
+      h("a", { href: "#/", class: "logo-mini", title: "LEMA", "aria-label": "LEMA" }, h("img", { src: "/icona.svg", alt: "" })),
       h("button", { type: "button", class: "plega", title: "Desplega la barra", "aria-label": "Desplega la barra lateral",
         "aria-expanded": "false", onclick: () => plegaLateral(false) }, icona("dreta", 16, 2)),
       h("a", { href: "#/", class: "inicial blau" + (r.vista ? "" : " actiu"), title: "Nova sessió", "aria-label": "Nova sessió" },
@@ -358,8 +358,11 @@ function pintaLateral(r) {
   lateral.replaceChildren(...[
     h("div", { class: "cap-lateral" },
       h("a", { href: "#/", class: "logo" },
-        h("span", { class: "logo-nom" }, "LEMA"),
-        h("span", { class: "logo-sub" }, "Lector i Editor de Manuscrits Acadèmics")),
+        // El cap del mussol (guia Y): /icona.svg és mascota.svg retallat pel cap.
+        h("img", { class: "logo-cap", src: "/icona.svg", alt: "" }),
+        h("span", { class: "logo-text" },
+          h("span", { class: "logo-nom" }, "LEMA"),
+          h("span", { class: "logo-sub" }, "Lector i Editor de Manuscrits Acadèmics"))),
       h("button", { type: "button", class: "plega", title: "Plega la barra", "aria-label": "Plega la barra lateral",
         "aria-expanded": "true", onclick: () => plegaLateral(true) }, icona("esquerra", 16, 2))),
     h("a", { href: "#/", class: "boto-sec" + (r.vista ? "" : " actiu") },

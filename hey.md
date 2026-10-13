@@ -14,13 +14,11 @@ Hi ha fitxers que toca quasi tothom: `web/app.py`, `web/static/app.js`, `web/sta
 
 | Què | Sessió | Fitxers | Des de |
 | --- | --- | --- | --- |
-| Guia B, fase 2 (punt de control propi), implementant | MathWrite Notes app features [5f04be] | `web/app.py`, `web/static/app.js`, `web/static/style.css`, `web/prompt.md`, `CLAUDE.md`, `flux.html`, `web-local.md`, `guies/B-progres.md` | 13/10/2026 |
 
 ## Esperant
 
 | Què | Sessió | Fitxers | Espera |
 | --- | --- | --- | --- |
-| Guia d'optimització de tokens: fase 1 feta (commit `3c866df`); falten les fases 2–4. Ara no té cap fitxer | Optimització del projecte [85ade1] | — | Que l'usuari diga de continuar amb la fase 2 (`web/requirements.txt`, `retalla.py`) |
 
 ## Canvis sense commit i sense entrada
 
