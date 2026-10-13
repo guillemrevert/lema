@@ -372,13 +372,144 @@ async def puja_font(a: str, nom: str = Form(...), que_es: str = Form(...),
     for f in fitxers:
         (carpeta / nom_lliure(carpeta, f.filename)).write_bytes(await f.read())
     escriu(carpeta / "font.json", {"nom": nom.strip(), "que_es": que_es.strip(), "origen": origen.strip()})
-    # Text i índex de cada PDF, sense passar per Claude (mesures 2 i 5 d'optimitzacio.md).
+    return await extreu_text(carpeta)
+
+
+async def extreu_text(carpeta):
+    """Text i índex de cada PDF, sense passar per Claude (mesures 2 i 5 d'optimitzacio.md), i els PDF i les
+    pàgines tornats a comptar a font.json."""
     proc = await asyncio.to_thread(
         subprocess.run, [sys.executable, str(ARREL / "extreu-font.py"), str(carpeta)],
         capture_output=True, text=True, encoding="utf-8")
     if proc.returncode:
         raise HTTPException(500, f"No s'ha pogut extraure el text: {proc.stderr[-400:]}")
+    dades = llig(carpeta / "font.json")
+    dades.update(compta_font(carpeta))
+    escriu(carpeta / "font.json", dades)
     return info_font(carpeta)
+
+
+# ---------- Editar una font (guia W, fase 2) ----------
+
+def carpeta_font(a, f):
+    return dins(carpeta_assig(a) / "fonts", f)
+
+
+def sessions_amb_font(a, f):
+    """Les sessions de l'assignatura que tenen triada la font: [(sessió, dades de sessio.json)]."""
+    sessions = []
+    for fitxa in sorted((carpeta_assig(a) / "sessions").glob("*/sessio.json")):
+        dades = llig_sessio(a, fitxa.parent.name)
+        if any(t["id"] == f for t in dades["fonts"]):
+            sessions.append((fitxa.parent.name, dades))
+    return sessions
+
+
+def claude_amb_font(a, sessions):
+    """Si Claude passa a net alguna d'estes sessions (en marxa o esperant al punt de control), per què no es
+    pot tocar la font: està llegint els seus fitxers."""
+    for s, d in sessions:
+        if (a, s) in processos or d["estat"] in ("en_marxa", "esperant"):
+            qui = f"«{d['titol']}»" if d["titol"] else f"la sessió del {d['data'][8:10]}/{d['data'][5:7]}"
+            return f"Claude està passant a net {qui} amb esta font: espera que acabe"
+    return None
+
+
+def lleva_de_les_sessions(a, f, sessions, pdf=None):
+    """Lleva la font de les fonts triades de cada sessió o, amb pdf, eixe PDF dels marcats de la font."""
+    for s, d in sessions:
+        if pdf is None:
+            fonts = [t for t in d["fonts"] if t["id"] != f]
+        else:
+            fonts = [{**t, "temes": [n for n in t["temes"] if n != pdf]} if t["id"] == f else t for t in d["fonts"]]
+        desa_sessio(a, s, fonts=fonts)
+
+
+def paperera_font(a, f):
+    """Una carpeta nova (encara no existeix) a dades/paperera/<assignatura>/ per al que es lleva d'una font."""
+    base = DADES / "paperera" / a / f"font-{f}-{datetime.now():%Y%m%d-%H%M%S}"
+    desti, n = base, 2
+    while desti.exists():  # dues coses de la mateixa font en el mateix segon
+        desti, n = base.with_name(f"{base.name}-{n}"), n + 1
+    desti.parent.mkdir(parents=True, exist_ok=True)
+    return desti
+
+
+class CanvisFont(BaseModel):
+    nom: str
+    que_es: str
+    origen: str = ""
+    fitxa: str | None = None  # el text de fitxa.yaml; buit: la fitxa va a la paperera i Claude en farà una de nova
+
+
+@app.put("/api/assignatures/{a}/fonts/{f}")
+def desa_fitxa_font(a: str, f: str, canvis: CanvisFont):
+    """Els tres camps de l'usuari, a font.json, i la fitxa de Claude, a fitxa.yaml. La carpeta es queda
+    igual encara que canvie el nom, perquè les sessions que la tenen triada no la perden."""
+    carpeta = carpeta_font(a, f)
+    if not canvis.nom.strip() or not canvis.que_es.strip():
+        raise HTTPException(400, "La font necessita un nom curt i què és")
+    dades = llig(carpeta / "font.json")
+    dades.update(nom=canvis.nom.strip(), que_es=canvis.que_es.strip(), origen=canvis.origen.strip())
+    escriu(carpeta / "font.json", dades)
+    fitxa = carpeta / "fitxa.yaml"
+    if canvis.fitxa is not None and canvis.fitxa.strip():
+        fitxa.write_text(canvis.fitxa.rstrip() + "\n", encoding="utf-8")
+    elif canvis.fitxa is not None and fitxa.exists():
+        desti = paperera_font(a, f)
+        desti.mkdir()
+        shutil.move(fitxa, desti / fitxa.name)
+    return info_font(carpeta)
+
+
+@app.post("/api/assignatures/{a}/fonts/{f}/pdfs")
+async def afegeix_pdfs(a: str, f: str, fitxers: list[UploadFile] = File(...)):
+    carpeta = carpeta_font(a, f)
+    if not fitxers or any(Path(x.filename or "").suffix.lower() != ".pdf" for x in fitxers):
+        raise HTTPException(400, "Han de ser fitxers PDF")
+    qui = claude_amb_font(a, sessions_amb_font(a, f))  # extreu-font.py torna a escriure el text i l'índex
+    if qui:
+        raise HTTPException(409, qui)
+    for x in fitxers:
+        (carpeta / nom_lliure(carpeta, x.filename)).write_bytes(await x.read())
+    return await extreu_text(carpeta)
+
+
+@app.delete("/api/assignatures/{a}/fonts/{f}/pdfs/{nom}")
+async def lleva_pdf(a: str, f: str, nom: str):
+    """El PDF i el seu text, a la paperera; l'índex es torna a fer amb els que queden."""
+    carpeta = carpeta_font(a, f)
+    pdf = dins(carpeta, nom)
+    if pdf.suffix.lower() != ".pdf":
+        raise HTTPException(404, "No existeix")
+    if len(list(carpeta.glob("*.pdf"))) < 2:
+        raise HTTPException(400, "Una font necessita almenys un PDF: si no la vols, esborra-la")
+    sessions = sessions_amb_font(a, f)
+    qui = claude_amb_font(a, sessions)
+    if qui:
+        raise HTTPException(409, qui)
+    desti = paperera_font(a, f)
+    desti.mkdir()
+    for fitxer in (pdf, pdf.with_suffix(".txt")):
+        if fitxer.exists():
+            shutil.move(fitxer, desti / fitxer.name)
+    lleva_de_les_sessions(a, f, sessions, pdf=nom)
+    return await extreu_text(carpeta)
+
+
+@app.delete("/api/assignatures/{a}/fonts/{f}")
+def esborra_font(a: str, f: str):
+    """La carpeta de la font, sencera, a dades/paperera/; les sessions que la tenien triada la perden. Els
+    blocs ja escrits no canvien: continuen citant la font."""
+    carpeta = carpeta_font(a, f)
+    sessions = sessions_amb_font(a, f)
+    qui = claude_amb_font(a, sessions)
+    if qui:
+        raise HTTPException(409, qui)
+    desti = paperera_font(a, f)
+    shutil.move(carpeta, desti)
+    lleva_de_les_sessions(a, f, sessions)
+    return {"paperera": desti.relative_to(ARREL).as_posix()}
 
 
 # ---------- Sessions ----------

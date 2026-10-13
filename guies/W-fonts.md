@@ -1,6 +1,6 @@
 # Guia W · Les fonts de cada assignatura
 
-**Estat:** aprovada el 13/10/2026. Dues fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit. **Fase 1 feta** el 13/10/2026; falta la fase 2.
+**Estat:** feta el 13/10/2026, en dues fases, cada una amb el seu vist-i-plau, la seua prova a `localhost:8300` i el seu commit.
 
 **Mock-up:** [`guies/W-mockup.html`](W-mockup.html), publicat a https://claude.ai/artifact/Y1SRibQb7CyQkBHgC8z9Si (versió 2). Ensenya dues pantalles netes i, davall, set parts explicades. Quan ací es diu «part 3», és la part 3 del mock-up. Les imatges són a `guies/img/`, fora de git.
 
@@ -137,6 +137,20 @@ No es puja cap font de prova en esta fase: el formulari és el mateix d'ara.
 ---
 
 ## Fase 2 · Editar
+
+**Estat:** feta el 13/10/2026. Provada a `localhost:8300` amb fonts de prova a Anàlisi II, sense tocar Wuolah:
+
+- **Per l'API** (un script de prova): desar la fitxa (els accents i «σ∘τ» arriben bé a `fitxa.yaml`), sense nom no; afegir un PDF (l'índex passa de 116 a 163 entrades), un fitxer que no és PDF no; amb la sessió de prova «esperant», llevar, afegir i esborrar responen «Claude està passant a net «Prova W» amb esta font: espera que acabe»; llevar el Tema 2 el mou amb el seu `.txt` a `dades/paperera/analisi-2/font-prova-…/`, el lleva de l'índex i dels PDF marcats de la sessió; l'últim PDF no; la fitxa buida va a la paperera; esborrar la font mou la carpeta i la sessió es queda sense fonts. Una ruta amb `..` la rebutja el servidor abans d'arribar a la funció (405), sense tocar res.
+- **A la web:** «Edita la fitxa» de la capçalera obri el formulari i posa el cursor al nom; «Cancel·la» torna a la fitxa; «Desa» la desa i la pàgina ensenya el text nou. La ✕ posa la línia roja («Va a la paperera. Prova W el té marcat a Materials.»), «Cancel·la» la torna com era, i «Lleva'l» el lleva. Arrossegar un PDF a «Afegeix PDF» diu «Pujant i extraient el text…» i l'afegeix. «Esborra la font» diu «L'ha triada 1 sessió: 1 sense acabar (Prova W): es queda sense esta font», i «Esborra-la» la porta a la paperera i ensenya el formulari. Amb la sessió «esperant», la ✕ i «Esborra la font» ja ho diuen sense preguntar.
+- **El prompt** d'una sessió d'Estructures Algebraiques, generat sense enviar-lo, té la línia nova de la fitxa.
+- `flux.html` v10, republicat. Les dades de prova són a `dades/paperera/analisi-2/`; les de Wuolah i les sessions d'Estructures Algebraiques no han canviat.
+
+**Canvis respecte al que deia la guia:**
+
+- **«Afegeix PDF» tampoc es pot mentre Claude hi treballa**, com la ✕ i «Esborra la font»: `extreu-font.py` torna a escriure el text i l'índex que Claude està llegint.
+- **La fitxa de Claude buida va a la paperera**, i Claude en farà una de nova. La guia només deia que no es crea si no n'hi havia.
+- **La web ho comprova abans de preguntar**: si Claude hi treballa, o si només queda un PDF, ho diu de seguida, sense la línia roja ni l'avís. El servidor també ho comprova.
+- **Dues coses de la mateixa font en el mateix segon** van a carpetes diferents de la paperera (`…-2`).
 
 ### Què notaràs
 

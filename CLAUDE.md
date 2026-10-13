@@ -95,7 +95,7 @@ Tenen la mateixa numeració que el flux i que `flux.html`.
 
 0. **Preparació.**
    - Preparar la carpeta de treball amb l'estructura mínima de l'especificació (secció "Formats de dades"), només per a l'assignatura i el tema de la prova. Res més.
-   - Fer la fitxa de la font a partir de la descripció de l'usuari.
+   - Fer la fitxa de la font a partir de la descripció de l'usuari. Des de la web, si la font ja té fitxa, es reutilitza, perquè l'usuari la pot haver editada; si no quadra amb el `font.json` de la font (què és, d'on surt, els PDF), mana el `font.json` i es corregeix la fitxa.
 1. **Lectura general** (Fase 1).
    - Comprovar la qualitat de les fotos; si alguna no es pot llegir, avisar abans de continuar.
    - Llegir els apunts sencers.

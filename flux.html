@@ -326,7 +326,8 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
       instr: [
         "Preparar la carpeta de treball amb l'estructura mínima de l'especificació, només per a l'assignatura i el tema de la prova. Res més.",
         "Fer la fitxa de la font a partir del <code>.txt</code>.",
-        "Des de la web, la carpeta de la sessió i la del seu quadern ja existeixen. El prompt de la web diu on és cada cosa."
+        "Des de la web, la carpeta de la sessió i la del seu quadern ja existeixen. El prompt de la web diu on és cada cosa.",
+        "Des de la web, si la font ja té fitxa, es reutilitza: l'usuari la pot haver editada. Si no quadra amb el <code>font.json</code> (què és, d'on surt, els PDF), mana el <code>font.json</code> i es corregeix la fitxa."
       ],
       on: "Passos 0 · Materials d'entrada"
     },
@@ -426,6 +427,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 10, data: "2026-10-13",
+      titol: "L'usuari pot editar les fonts des de la web: si la fitxa no quadra amb el font.json, mana el font.json.",
+      passos: {
+        pas0: "Des de la web, l'usuari pot canviar què és i d'on surt cada font, afegir-hi o llevar-ne PDF i editar la fitxa. Si la fitxa ja existeix, es reutilitza; si no quadra amb el <code>font.json</code>, mana el <code>font.json</code> i es corregeix la fitxa."
+      }
+    },
     {
       versio: 9, data: "2026-10-11",
       titol: "Les correccions del document es demanen a la pàgina del quadern, en una conversa de Claude per quadern.",

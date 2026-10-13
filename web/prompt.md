@@ -16,7 +16,7 @@ Treballes des de la web local (`web-local.md`), així que els materials no són 
 On va cada cosa:
 
 {document}
-- La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix, reutilitza-la.
+- La fitxa de cada font, a `fitxa.yaml`, dins de la carpeta de la font. Si ja existeix, reutilitza-la: l'usuari la pot haver editada des de la web. Si no quadra amb el `font.json` (què és, d'on surt o la llista de PDF), mana el `font.json`: corregeix la fitxa.
 - El diccionari de notació, a `{carpeta_assig}/notacio.yaml`. Si ja existeix, consulta'l i amplia'l.
 - El perfil de lletra, a `dades/perfil-lletra.md`. Si ja existeix, consulta'l en la lectura i amplia'l amb les respostes.
 - La plantilla és `plantilla-base.tex`, a l'arrel del repositori: `quadern.tex` la carrega amb `\input{{plantilla}}`. No la modifiques; si cal canviar-la, apunta-ho a `millores.md`.

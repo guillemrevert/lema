@@ -644,19 +644,34 @@ function pintaFonts(cos, as, idFont, nomPdf) {
   try { nom = nomPdf && decodeURIComponent(nomPdf); } catch { /* adreça mal escrita: el primer PDF */ }
   const pdf = font.pdfs.find((p) => p.nom === nom) || font.pdfs[0];
   const pagines = font.pdfs.reduce((s, p) => s + p.pagines, 0);
-  const triada = as.sessions.filter((c) => (c.fonts || []).some((t) => t.id === font.id)).length;
+  // Les sessions que l'han triada. Si Claude en passa a net alguna, està llegint els fitxers de la font:
+  // no es poden afegir ni llevar PDF ni esborrar-la (el servidor també ho comprova).
+  const sessions = as.sessions.filter((c) => (c.fonts || []).some((t) => t.id === font.id));
+  const ocupada = sessions.find((c) => ["en_marxa", "esperant"].includes(c.estat));
+  const motiu = ocupada && `Claude està passant a net «${nomSessio(ocupada)}» amb esta font: espera que acabe.`;
+
+  const fitxa = targetaFitxa(as, font);
+  const lloc = h("div", { class: "lloc-avis" });  // l'avís d'«Esborra la font»
   cos.append(h("div", { class: "font-cap" },
-    h("h2", {}, font.nom),
-    font.que_es || font.origen ? h("span", { class: "que" }, [font.que_es, font.origen].filter(Boolean).join(" · ")) : null,
-    h("span", { class: "detall" }, [`${font.pdfs.length} PDF`, `${pagines} pàgines`,
-      triada ? `triada en ${triada} ${triada === 1 ? "sessió" : "sessions"}` : "encara no s'ha triat en cap sessió"].join(" · "))));
+    h("div", {},
+      h("h2", {}, font.nom),
+      font.que_es || font.origen ? h("span", { class: "que" }, [font.que_es, font.origen].filter(Boolean).join(" · ")) : null,
+      h("span", { class: "detall" }, [`${font.pdfs.length} PDF`, `${pagines} pàgines`, sessions.length
+        ? `triada en ${sessions.length} ${sessions.length === 1 ? "sessió" : "sessions"}` : "encara no s'ha triat en cap sessió"].join(" · "))),
+    h("div", { class: "fila-botons" },
+      h("button", { type: "button", class: "boto-sec", onclick: () => fitxa.edita() }, icona("llapis", 16), "Edita la fitxa"),
+      h("button", { type: "button", class: "boto-sec perill",
+        onclick: () => avisEsborraFont(as, font, { sessions, motiu, base }, lloc) }, "Esborra la font"))),
+  lloc);
 
   // Els PDF, amb el nom curt («Tema 1»); el sencer, en passar-hi per damunt i a la barra del visor.
   // Canviar de PDF només canvia el visor i l'adreça: tornar a pintar la pàgina demana /api/assignatures,
   // que tarda uns segons. El botó d'arrere sí que torna a pintar (hashchange).
   const noms = nomsCurts(font.pdfs.map((p) => p.nom));
   const visor = h("iframe", { class: "visor-font" });
+  let actual = pdf;
   const obri = (p) => {
+    actual = p;
     visor.src = `${urlFitxer(as.id, "fonts", font.id, p.nom)}#navpanes=0&view=FitH`;
     visor.title = `${font.nom}: ${p.nom}`;
   };
@@ -680,31 +695,171 @@ function pintaFonts(cos, as, idFont, nomPdf) {
     ? h("span", { class: "detall" }, `${p.pagines} p. · text extret`)
     : h("span", { class: "detall avis-text" }, `${p.pagines} p. · sense text: es llegirà com a imatge`)));
   if (pdf) obri(pdf);
+
+  // La ✕ de cada PDF: la línia es posa roja i pregunta abans de llevar-lo.
+  function confirmaLleva(li, p, nomCurt) {
+    if (motiu) { avisa(motiu); return; }
+    if (font.pdfs.length < 2) { avisa("Una font necessita almenys un PDF: si no la vols, esborra-la."); return; }
+    const marcat = sessions.filter((c) => c.fonts.some((t) => t.id === font.id && t.temes.includes(p.nom))).map(nomSessio);
+    const abans = [...li.childNodes];
+    const torna = () => { li.classList.remove("confirmant"); li.replaceChildren(...abans); };
+    const boto = h("button", { type: "button", class: "boto perill", onclick: async () => {
+      boto.disabled = true;
+      try {
+        await api(`/api/assignatures/${as.id}/fonts/${font.id}/pdfs/${encodeURIComponent(p.nom)}`, { method: "DELETE" });
+        avisa(`«${nomCurt}» és a la paperera.`);
+        anar(p === actual ? `${base}/${font.id}` : location.hash);
+      } catch (err) {
+        avisa(err.message);
+        boto.disabled = false;
+      }
+    } }, "Lleva'l");
+    li.classList.add("confirmant");
+    li.replaceChildren(
+      h("div", { class: "nom-pdf" }, h("strong", {}, nomCurt), h("span", { class: "detall" }, "Va a la paperera." +
+        (marcat.length ? ` ${marcat.join(", ")} ${marcat.length === 1 ? "el té marcat" : "el tenen marcat"} a Materials.` : ""))),
+      h("div", { class: "botons" }, boto, h("button", { type: "button", class: "boto-sec", onclick: torna }, "Cancel·la")));
+    boto.focus();
+  }
+
+  // «Afegeix PDF»: es pugen a la font i el servidor en torna a traure el text i l'índex.
+  const triaPdfs = h("input", { id: "afegeix-pdfs", type: "file", class: "ocult", multiple: true, accept: "application/pdf",
+    onchange: () => puja([...triaPdfs.files]) });
+  const textZona = h("span", {}, h("strong", {}, "Afegeix PDF"), h("span", {}, "o arrossega'ls ací"));
+  const zona = h("label", { for: "afegeix-pdfs", class: "afegeix ample",
+    ondragover: (e) => e.preventDefault(),
+    ondrop: (e) => { e.preventDefault(); puja([...e.dataTransfer.files]); } },
+  icona("puja", 22), textZona);
+  async function puja(fitxers) {
+    if (!fitxers.length || triaPdfs.disabled) return;
+    if (motiu) { avisa(motiu); return; }
+    const dades = new FormData();
+    for (const f of fitxers) dades.append("fitxers", f);
+    triaPdfs.disabled = true;
+    textZona.replaceChildren(h("strong", {}, "Pujant i extraient el text…"));
+    try {
+      await api(`/api/assignatures/${as.id}/fonts/${font.id}/pdfs`, { method: "POST", body: dades });
+      avisa(fitxers.length === 1 ? "S'ha afegit el PDF." : `S'han afegit ${fitxers.length} PDF.`);
+      pinta();
+    } catch (err) {
+      avisa(err.message);
+      triaPdfs.disabled = false;
+      triaPdfs.value = "";
+      textZona.replaceChildren(h("strong", {}, "Afegeix PDF"), h("span", {}, "o arrossega'ls ací"));
+    }
+  }
+
   cos.append(h("div", { class: "font-cos" },
     h("section", { class: "pdfs-font", "aria-labelledby": "t-pdfs" },
       h("h3", { id: "t-pdfs" }, "PDF"),
-      h("ul", {}, enllacos.map((a) => h("li", {}, a)))),
-    pdf ? visor : null));
+      h("ul", {}, enllacos.map((a, i) => {
+        const li = h("li", {}, a);
+        li.append(h("button", { type: "button", class: "lleva-pdf", title: "Lleva este PDF",
+          "aria-label": `Lleva ${noms[i]}`, onclick: () => confirmaLleva(li, font.pdfs[i], noms[i]) }, icona("creu", 16)));
+        return li;
+      })),
+      zona, triaPdfs),
+    pdf ? visor : null),
+  fitxa);
+}
 
-  // La fitxa: la de l'usuari (font.json) i la que fa Claude (fitxa.yaml), si ja n'hi ha.
-  const fitxaClaude = h("p", { class: "detall" }, "Carregant…");
-  cos.append(h("section", { class: "targeta compacta fitxa-font", "aria-labelledby": "t-fitxa" },
-    h("h3", { id: "t-fitxa" }, "Fitxa"),
-    h("dl", { class: "fitxa" },
-      h("dt", {}, "Nom curt"), h("dd", {}, font.nom),
-      h("dt", {}, "Què és"), h("dd", {}, font.que_es || "—"),
-      h("dt", {}, "D'on surt"), h("dd", {}, font.origen || "—")),
-    h("div", { class: "cap-fitxa-claude" }, h("strong", {}, "Fitxa per a Claude"),
-      h("span", { class: "nota-petita" }, "La fa Claude la primera vegada que passa a net una sessió amb esta font, i després la reutilitza.")),
-    fitxaClaude));
-  fetch(urlFitxer(as.id, "fonts", font.id, "fitxa.yaml"))
-    .then(async (r) => {
-      if (!r.ok) throw new Error();
-      fitxaClaude.replaceWith(h("pre", { class: "fitxa-claude" }, await r.text()));
-    })
-    .catch(() => {
-      fitxaClaude.textContent = "Claude la farà la primera vegada que passe a net una sessió amb esta font.";
+// La fitxa d'una font: la de l'usuari (font.json) i la que fa Claude (fitxa.yaml), si ja n'hi ha.
+// edita() la converteix en un formulari; en desar, Claude rep els canvis la pròxima vegada que passe a net.
+function targetaFitxa(as, font) {
+  const targeta = h("section", { class: "targeta compacta fitxa-font", "aria-labelledby": "t-fitxa" });
+  const textClaude = fetch(urlFitxer(as.id, "fonts", font.id, "fitxa.yaml"))
+    .then((r) => (r.ok ? r.text() : null)).catch(() => null);
+
+  function veu() {
+    const claude = h("p", { class: "detall" }, "Carregant…");
+    targeta.replaceChildren(
+      h("div", { class: "quadern-cap" }, h("h3", { id: "t-fitxa" }, "Fitxa"),
+        h("button", { type: "button", class: "boto-sec", onclick: edita }, icona("llapis", 16), "Edita la fitxa")),
+      h("dl", { class: "fitxa" },
+        h("dt", {}, "Nom curt"), h("dd", {}, font.nom),
+        h("dt", {}, "Què és"), h("dd", {}, font.que_es || "—"),
+        h("dt", {}, "D'on surt"), h("dd", {}, font.origen || "—")),
+      h("div", { class: "cap-fitxa-claude" }, h("strong", {}, "Fitxa per a Claude"),
+        h("span", { class: "nota-petita" }, "La fa Claude la primera vegada que passa a net una sessió amb esta font, i després la reutilitza.")),
+      claude);
+    textClaude.then((text) => {
+      if (text === null) claude.textContent = "Claude la farà la primera vegada que passe a net una sessió amb esta font.";
+      else claude.replaceWith(h("pre", { class: "fitxa-claude" }, text));
     });
+  }
+
+  async function edita() {
+    const text = await textClaude;
+    const nom = h("input", { id: "ff-nom", type: "text", required: true, value: font.nom });
+    const que = h("input", { id: "ff-que", type: "text", required: true, value: font.que_es || "" });
+    const don = h("input", { id: "ff-don", type: "text", value: font.origen || "" });
+    const fitxa = h("textarea", { id: "ff-fitxa", class: "fitxa-edita", spellcheck: "false",
+      placeholder: "Encara no n'hi ha: Claude la farà la primera vegada que passe a net una sessió amb esta font." });
+    fitxa.value = text || "";
+    const boto = h("button", { type: "submit", class: "boto" }, "Desa");
+    targeta.replaceChildren(h("form", {
+      class: "form-fitxa",
+      onsubmit: async (e) => {
+        e.preventDefault();
+        boto.disabled = true;
+        try {
+          await api(`/api/assignatures/${as.id}/fonts/${font.id}`, ambJson("PUT",
+            { nom: nom.value, que_es: que.value, origen: don.value, fitxa: fitxa.value }));
+          avisa("S'ha desat la fitxa.");
+          pinta();
+        } catch (err) {
+          avisa(err.message);
+          boto.disabled = false;
+        }
+      },
+    },
+    h("h3", { id: "t-fitxa" }, "Fitxa"),
+    h("div", { class: "camps" }, camp("Nom curt", nom), camp("Què és", que), camp("D'on surt", don)),
+    camp("Fitxa per a Claude", fitxa),
+    h("p", { class: "nota-petita" }, "Claude la llig cada vegada que passa a net una sessió amb esta font. Si no quadra amb " +
+      "els tres camps de dalt, manen els de dalt i Claude la corregeix. Si la deixes buida, va a la paperera i Claude en fa una de nova."),
+    h("div", { class: "fila-botons" }, boto, h("button", { type: "button", class: "boto-sec", onclick: veu }, "Cancel·la"))));
+    targeta.scrollIntoView({ block: "start" });
+    nom.focus({ preventScroll: true });
+  }
+
+  veu();
+  targeta.edita = edita;
+  return targeta;
+}
+
+// L'avís d'«Esborra la font», a lloc: diu què passarà amb les sessions que l'han triada i pregunta.
+// sessions: les que l'han triada; motiu: per què no es pot ara (Claude hi treballa); base: on es va després.
+function avisEsborraFont(as, font, { sessions, motiu, base }, lloc) {
+  if (motiu) { avisa(motiu); return; }
+  const n = sessions.length;
+  const acabades = sessions.filter((c) => c.estat === "acabada");
+  const pendents = sessions.filter((c) => c.estat !== "acabada");
+  const boto = h("button", { type: "button", class: "boto perill", onclick: async () => {
+    boto.disabled = true;
+    try {
+      await api(`/api/assignatures/${as.id}/fonts/${font.id}`, { method: "DELETE" });
+      avisa(`«${font.nom}» és a la paperera.`);
+      anar(base);
+    } catch (err) {
+      avisa(err.message);
+      boto.disabled = false;
+    }
+  } }, "Esborra-la");
+  lloc.replaceChildren(h("div", { class: "avis roig", role: "alertdialog", "aria-labelledby": "t-esborra-font" },
+    icona("avis", 22),
+    h("div", {},
+      h("strong", { id: "t-esborra-font" }, `Esborres «${font.nom}»?`),
+      h("span", {}, n ? `Va a la paperera. ${n === 1 ? "L'ha triada 1 sessió" : `L'han triada ${n} sessions`}:`
+        : "Va a la paperera. No l'has triada en cap sessió."),
+      n ? h("ul", { class: "llista-avis" },
+        acabades.length ? h("li", {}, `${acabades.length} ${acabades.length === 1 ? "acabada" : "acabades"}: els seus blocs no canvien.`) : null,
+        pendents.length ? h("li", {}, `${pendents.length} sense acabar (${pendents.map(nomSessio).join(", ")}): ` +
+          `${pendents.length === 1 ? "es queda" : "es queden"} sense esta font.`) : null)
+        : null,
+      h("div", { class: "botons" }, boto,
+        h("button", { type: "button", class: "boto-sec", onclick: () => lloc.replaceChildren() }, "Cancel·la")))));
+  boto.focus();
 }
 
 // Formulari per pujar una font a l'assignatura. pujada(font) es crida quan ja s'ha extret el text.
