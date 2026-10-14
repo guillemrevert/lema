@@ -396,6 +396,6 @@ Les etapes 1-4 són la versió personal. L'etapa 5 és opcional: només es plant
 - [ ] Numeració: comuna per a teoremes, proposicions i lemes, o separada per tipus?
 - [ ] Caixa "no vist a classe": s'afegeix sempre que la font tinga la demostració, o només quan l'usuari ho demana?
 - [ ] Tipus de blocs addicionals: observació, nota, exercici, notació?
-- [ ] Llengua del document final: la dels apunts sempre, o configurable?
+- [x] Llengua del document final: la dels apunts sempre, o configurable? → Per defecte, la dels apunts; des de la web, triable per quadern entre set llengües (decisió 3 de `CLAUDE.md`). La web també es pot fer servir en les set (decisió 10)
 - [ ] Ferramenta exportable: aplicació web, d'escriptori o de línia d'ordres?
 - [ ] Materials de prova: quines sessions d'Anàlisi II i quina font primer?

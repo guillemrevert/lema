@@ -394,7 +394,7 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
         "Notació: sempre la de l'usuari, presa del diccionari. Si un símbol només apareix a la font, es manté el de la font (decisió 8).",
         "Citar la font i la pàgina.",
         "«Falta demo» (decisió 4): si els apunts no en diuen res, no s'afegeix cap demostració. Si hi posa «falta demo», es busca a la font i va en una caixa «No vist a classe, tret de [font], p. X». Si no es troba, es marca «Demostració pendent, no trobada a les fonts».",
-        "Idioma: sempre el dels apunts. El que ve d'una font en una altra llengua es tradueix (decisió 3)."
+        "Idioma: per defecte, el dels apunts. Des de la web es pot triar una altra llengua per quadern: català, castellà, anglès, francés, italià, alemany o portugués. El que ve d'una font en una altra llengua es tradueix (decisió 3)."
       ],
       on: "Passos 5 · Decisions 3, 4 i 8"
     },
@@ -429,6 +429,13 @@ figcaption { font-size: 13.5px; color: var(--muted); max-width: 62ch; margin-top
 
   // Una entrada per cada versió de les instruccions, la més nova primer.
   const HISTORIAL = [
+    {
+      versio: 12, data: "2026-10-14",
+      titol: "La llengua del document es pot triar per quadern; la web, en set llengües.",
+      passos: {
+        pas5: "La llengua és, per defecte, la dels apunts, però des de la web se'n pot triar una altra per quadern: català, castellà, anglès, francés, italià, alemany o portugués (decisió 3). La web també es pot fer servir en estes set llengües (decisió 10)."
+      }
+    },
     {
       versio: 11, data: "2026-10-13",
       titol: "El punt de control es respon des de la web, pregunta a pregunta, amb el tros de foto de cada dubte.",
