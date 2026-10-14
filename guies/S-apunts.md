@@ -1,6 +1,6 @@
 # Guia S · De qui són els apunts, i textos neutres
 
-**Estat:** proposta, 14/10/2026. Espera el teu vist-i-plau.
+**Estat:** aprovada el 14/10/2026, amb totes les propostes. Espera el sistema de llengües de la web (decisió 10 de `CLAUDE.md`): els textos nous de la S s'escriuran directament en les set llengües. Ordre acordat el 14/10/2026: el commit de la Y, la fase 1 de la guia Z (llengües), la S i la fase 2 de la Z. Els textos nous passen per `t("…")` a `app.js` (o `error(…)` a `app.py`), amb les altres sis llengües a `web/static/textos.json`, i `python web/comprova-textos.py` ha d'eixir net (secció «Textos nous, d'ara endavant» de [`guies/Z-llengues.md`](Z-llengues.md)).
 
 **Mock-up:** [`guies/S-mockup.html`](S-mockup.html), publicat a https://claude.ai/artifact/AVhuUCBu61scqxUkMYvCPc. Té dues pantalles i, davall, set parts explicades. Quan ací es diu «part 4», és la part 4 del mock-up. Segueix l'estil nou de la web (guia Y). El mussol és a `guies/img/`, fora de git.
 
@@ -49,8 +49,12 @@
 - **A Nova sessió** (pantalla 1 del mock-up), davall dels camps d'ara, «De qui són els apunts?»:
   - dues opcions en pastilla, «Propis» (la que ix d'entrada) i «Altres»;
   - si tries «Altres», un camp de text i, davall, els suggeriments: «Pissarra», «Alumne», «Professor» i, amb la vora puntejada, els noms que ja has fet servir. Si en cliques un, s'escriu al camp;
-  - una línia que diu què farà Claude: «Claude llegirà la lletra amb el perfil de "Pissarra", a part del teu…».
-- **A Materials** (pantalla 2), el mateix camp a la fitxa de la sessió. Si el canvies, s'aplica la pròxima vegada que la passes a net. Mentre Claude hi treballa, no es pot canviar, com el quadern.
+  - al costat de la pregunta, un botó **«i»** (ho vas demanar el 14/10/2026). En clicar-lo, un globus explica per què importa de qui són:
+    - **propis:** Claude aprén la teua lletra; cada sessió la guarda al teu perfil, i cada vegada la llig millor;
+    - **d'altres** (la pissarra, un company…): Claude ho té en compte en escriure; llig la lletra amb un perfil a part, no toca el teu i fa el document amb la teua notació.
+
+    Es tanca clicant fora o amb Esc. No hi ha cap línia d'ajuda fixa davall del camp: l'explicació és al botó, per no omplir la fitxa.
+- **A Materials** (pantalla 2), el mateix camp a la fitxa de la sessió, amb el seu botó «i». Si el canvies, s'aplica la pròxima vegada que la passes a net. Mentre Claude hi treballa, no es pot canviar, com el quadern.
 - **A la capçalera de la sessió,** si no són propis, una pastilla al costat del títol: «Apunts: Pissarra».
 - **Els textos** de la part 6 del mock-up: «Com va», el formulari de font nova i l'exemple de la nota per a Claude ja no parlen de professors ni d'alumnes.
 - **Quan Claude passa a net uns apunts que no són teus:**
@@ -74,6 +78,7 @@
 - **Els suggeriments** els trau la web de les sessions de totes les assignatures. Per això, `/api/assignatures` passa a dir també l'origen de cada sessió, que ja llig de `sessio.json`: cap accés al disc de més.
 - **El prompt** de la sessió (`web/prompt.md`) diu de qui són els apunts i, segons això, quin perfil de lletra ha de llegir i ampliar. Si no són propis, també diu que no amplie el diccionari de notació i què fa amb un concepte que el diccionari no té (decisió 5).
 - **La pastilla** de la capçalera és un text: el que hages escrit, tal qual, sense HTML.
+- **El botó «i»** és un botó de veritat: s'obri i es tanca amb el teclat (Intro i Esc), i els lectors de pantalla saben que obri una explicació. Si n'hi ha més a la web, es podrà fer servir igual.
 
 ### Fitxers
 
@@ -81,10 +86,10 @@
 | --- | --- |
 | `web/app.py` | `origen` a `sessio.json` (nova sessió, canviar-lo, i `migra_sessio` per a les d'abans); l'origen a la llista de `/api/assignatures`; el prompt, amb el perfil de lletra de cada origen |
 | `web/prompt.md` | De qui són els apunts; el perfil de lletra i el diccionari segons l'origen |
-| `web/static/app.js` | El camp a Nova sessió i a Materials, els suggeriments, la pastilla de la capçalera i els textos de la part 6 |
-| `web/static/style.css` | El camp (les dues pastilles, els suggeriments) i la pastilla de la capçalera |
+| `web/static/app.js` | El camp a Nova sessió i a Materials, el botó «i» amb el globus, els suggeriments, la pastilla de la capçalera i els textos de la part 6 |
+| `web/static/style.css` | El camp (les dues pastilles, els suggeriments), el botó «i» i el globus, i la pastilla de la capçalera |
 | `CLAUDE.md` | Els passos 3 i 4, la decisió 8 i els textos de la part 6 (vegeu baix) |
-| `flux.html` | Els mateixos canvis, i la versió següent a `HISTORIAL` (ara és la v11; seria la v12). Es republica |
+| `flux.html` | Els mateixos canvis, i la versió següent a `HISTORIAL` (ara és la v12; seria la v13). Es republica |
 | `web-local.md` | La S, feta; «Com funciona»; «Opcions no triades» |
 | `dades/perfil-lletra.md` i `dades/perfils-lletra/` | Si tries separar el perfil (part 4): les dues seccions passen als seus fitxers, a mà |
 
@@ -99,7 +104,7 @@
 
   La decisió 6, que explica que la primera prova es va fer amb apunts de Wuolah d'un alumne, es queda: diu una cosa que va passar.
 - **`web/prompt.md`:** una línia «De qui són els apunts» a la llista de materials. La línia del perfil de lletra i la del diccionari passen a dependre de l'origen.
-- **`flux.html`, la versió següent** (seria la v12): passos 3 i 4, la decisió 8 i els textos.
+- **`flux.html`, la versió següent** (seria la v13): passos 3 i 4, la decisió 8 i els textos.
 
 ### Dades
 
@@ -123,7 +128,7 @@
 6. Si separes el perfil: la còpia, els dos fitxers nous i les dues sessions.
 7. `web-local.md`, amb les opcions no triades.
 8. Prova (baix) i regressió.
-9. Tancar: guia «feta», commit i llevar l'entrada de `hey.md`.
+9. Tancar: guia «feta» i avisar-te que està a punt. El commit es fa quan tu ho digues, i llavors es lleva l'entrada de `hey.md`.
 
 ### Com es prova
 
@@ -131,6 +136,7 @@ A `localhost:8300`, sense gastar tokens:
 
 1. **Nova sessió:**
    - d'entrada, «Propis»;
+   - el botó «i» obri el globus, i es tanca clicant fora i amb Esc, també amb el teclat;
    - en triar «Altres», el camp i els suggeriments («Pissarra», «Alumne», «Professor» i els ja usats); en clicar-ne un, s'escriu;
    - es crea una sessió de prova amb «Altres · Marta», i `sessio.json` diu `"origen": "Marta"`.
 2. **La sessió de prova:**

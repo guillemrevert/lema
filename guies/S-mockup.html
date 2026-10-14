@@ -122,6 +122,16 @@ code { font: 0.9em var(--mono); background: var(--crema-fosc); padding: 1px 5px;
 .sug.usat { border-style: dashed; }
 .sug.on { background: var(--tinta); border-color: var(--tinta); color: var(--nit-text); }
 .ajuda { font-size: 13px; color: var(--suau); }
+/* El botó «i» del costat de «De qui són els apunts?» i el globus que obri. */
+.etiq-origen { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+.info { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--tinta); display: inline-flex; align-items: center; justify-content: center; font: 600 12px/1 var(--titol); color: var(--tinta); cursor: pointer; }
+.info.obert { background: var(--tinta); color: var(--nit-text); }
+.globus { position: relative; max-width: 420px; background: var(--superficie); border-radius: 14px; box-shadow: 0 2px 6px rgba(30, 42, 68, 0.1), 0 14px 32px rgba(30, 42, 68, 0.16); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.globus::before { content: ""; position: absolute; top: -7px; left: 22px; width: 14px; height: 14px; background: var(--superficie); transform: rotate(45deg); }
+.globus b.titol-globus { font: 600 16px/1.25 var(--titol); }
+.globus dl { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.globus dt { font-weight: 600; }
+.globus dd { margin: 0; color: var(--tinta); }
 .peu-form { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .boto { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 22px; border-radius: 999px; background: var(--tinta); color: var(--nit-text); font-weight: 600; }
 .avis { display: flex; gap: 12px; align-items: center; padding: 16px 20px; border-radius: var(--radi); background: var(--gris); }
@@ -216,13 +226,12 @@ td.abans { color: var(--suau); text-decoration: line-through; text-decoration-co
             </div>
             <div class="separa"></div>
             <div class="origen">
-              <span style="font-weight:600;font-size:14px">De qui són els apunts?</span>
+              <span class="etiq-origen">De qui són els apunts? <span class="info" role="img" aria-label="Per què importa">i</span></span>
               <div class="origen-fila">
                 <span class="tria" aria-hidden="true"><span>Propis</span><span class="on">Altres</span></span>
                 <div class="control focus">Pis|</div>
               </div>
               <div class="suggeriments"><span>Suggeriments:</span><span class="sug on">Pissarra</span><span class="sug">Alumne</span><span class="sug">Professor</span><span class="sug usat">Marta</span></div>
-              <p class="ajuda">Claude llegirà la lletra amb el perfil de «Pissarra», a part del teu, i hi apuntarà el que aprenga. El document es fa amb la teua notació.</p>
             </div>
             <div class="peu-form"><span class="ajuda">Els blocs de la sessió s'afegiran al document del quadern.</span><span class="boto">Crea la sessió</span></div>
           </div>
@@ -270,7 +279,7 @@ td.abans { color: var(--suau); text-decoration: line-through; text-decoration-co
             </div>
             <div class="separa"></div>
             <div class="origen">
-              <span style="font-weight:600;font-size:14px">De qui són els apunts?</span>
+              <span class="etiq-origen">De qui són els apunts? <span class="info" role="img" aria-label="Per què importa">i</span></span>
               <div class="origen-fila">
                 <span class="tria" aria-hidden="true"><span>Propis</span><span class="on">Altres</span></span>
                 <div class="control">Pissarra</div>
@@ -301,6 +310,19 @@ td.abans { color: var(--suau); text-decoration: line-through; text-decoration-co
         <p><b>Què hi poses.</b> El que vulgues: «Pissarra», «Alumne», «Professor», «Marta», «Apunts de Wuolah»… És el nom amb què Claude guardarà eixa lletra (part 3).</p>
         <p><b>Per a què.</b> Que Claude sàpia de qui és la lletra que llig. Ara ho dona per fet i, quan no són teus, cal dir-ho a la nota de la sessió o respondre-ho al punt de control (la P4 del 07/10).</p>
         <p class="cal"><b>Ja decidit</b> (13/10/2026): «Propis» o «Altres» amb text lliure. Si ets professor, «Propis» són els teus apunts de classe, i «Altres» poden ser els d'un alumne.</p>
+        <p><b>El botó «i».</b> Al costat de la pregunta, un botó «i» que diu per què importa. En clicar-lo, s'obri este globus; es tanca clicant fora o amb Esc. No hi ha cap línia d'ajuda fixa davall del camp: l'explicació és al botó, per no omplir la fitxa.</p>
+      </div>
+      <div class="part-text">
+        <span class="etiq-origen">De qui són els apunts? <span class="info obert" role="img" aria-label="Per què importa, obert">i</span></span>
+        <div class="globus" role="note">
+          <b class="titol-globus">Per què importa de qui són?</b>
+          <dl>
+            <dt>Propis</dt>
+            <dd>Claude aprén la teua lletra: cada sessió la guarda al teu perfil, i cada vegada la llig millor.</dd>
+            <dt>D'altres (la pissarra, un company…)</dt>
+            <dd>Claude ho té en compte en escriure: llig la lletra amb un perfil a part, no toca el teu, i fa el document amb la teua notació.</dd>
+          </dl>
+        </div>
       </div>
     </article>
 
